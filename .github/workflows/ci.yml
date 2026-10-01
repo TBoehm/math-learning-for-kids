@@ -1,0 +1,42 @@
+name: Tests
+
+# Veröffentlicht wird automatisch von GitHub Pages ("Deploy from a branch: main").
+# Dieser Workflow prüft jeden Push und jeden Pull Request.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit-Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Aufgaben-Generator, Prüf-Logik, Fortschritt
+        run: npm test
+
+  e2e:
+    name: Browser-Tests (Ende-zu-Ende)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Chromium installieren
+        run: npx playwright install --with-deps chromium
+      - name: Oberfläche im Browser testen (Handy, Tablet, Desktop)
+        run: npm run test:e2e

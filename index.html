@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Einhorn-Rechenranch</title>
+  <meta name="description" content="Halbschriftlich rechnen üben mit Einhörnern und Pferden – Plus, Minus, Mal und Geteilt bis 100 für die 3. Klasse.">
+  <meta name="theme-color" content="#b9e4ff">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Hintergrund-Szene -->
+  <div class="scene" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="rainbow"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+    <svg class="hills" viewBox="0 0 1440 260" preserveAspectRatio="none">
+      <path d="M0,150 C240,60 420,90 640,150 C860,210 1080,70 1440,120 L1440,260 L0,260 Z" fill="#bfe8a7"/>
+      <path d="M0,200 C300,130 520,170 760,200 C1000,230 1220,150 1440,180 L1440,260 L0,260 Z" fill="#9ed98a"/>
+    </svg>
+    <div class="flowers"></div>
+    <div class="twinkles"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon">🦄</span><span class="brand-text">Einhorn-<wbr>Rechenranch</span></div>
+    <div class="stats">
+      <span class="stat" title="Gesammelte Sterne"><span aria-hidden="true">⭐</span> <b id="starCount">0</b></span>
+      <span class="stat" title="Richtig ohne Fehler hintereinander"><span aria-hidden="true">🔥</span> <b id="streakCount">0</b></span>
+      <button class="icon-btn" id="settingsBtn" aria-label="Einstellungen">⚙️</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <nav class="ops" aria-label="Rechenart wählen">
+      <div class="op-chips" id="opChips"></div>
+      <div class="strat-chips" id="stratChips"></div>
+    </nav>
+
+    <section class="stage">
+      <aside class="buddy" id="buddy">
+        <div class="bubble" id="bubble" aria-live="polite">
+          <span id="bubbleText">Hallo!</span>
+          <button class="speak-btn" id="speakBtn" aria-label="Vorlesen">🔊</button>
+        </div>
+        <button class="buddy-figure" id="buddyFigure" aria-label="Begleiter wechseln"></button>
+      </aside>
+
+      <article class="card task-card" id="taskCard">
+        <div class="task-head">
+          <span class="strategy-badge" id="strategyBadge"></span>
+          <h1 class="equation" id="equation"></h1>
+        </div>
+        <div class="rows" id="rows"></div>
+        <div class="viz" id="viz"></div>
+        <div class="actions">
+          <button class="btn btn-ghost" id="hintBtn">💡 Tipp</button>
+          <button class="btn btn-primary" id="checkBtn">Prüfen ✔</button>
+          <button class="btn btn-ghost" id="newBtn">🔄 Neue Aufgabe</button>
+        </div>
+      </article>
+    </section>
+
+    <div class="numpad" id="numpad" aria-label="Zahlenfeld"></div>
+  </main>
+
+  <!-- Begrüßung / Begleiter wählen -->
+  <dialog class="sheet" id="welcomeDlg">
+    <form method="dialog" class="sheet-inner" id="welcomeForm">
+      <h2>Willkommen auf der Rechenranch! 🌈</h2>
+      <label class="name-field">Wie heißt du?
+        <input type="text" id="nameInput" maxlength="20" autocomplete="off" placeholder="Dein Name">
+      </label>
+      <p class="sheet-sub">Wähle deinen Begleiter:</p>
+      <div class="buddy-grid" id="buddyGrid"></div>
+      <button class="btn btn-primary btn-big" value="ok">Los geht's! 🐎</button>
+    </form>
+  </dialog>
+
+  <!-- Einstellungen -->
+  <dialog class="sheet" id="settingsDlg">
+    <form method="dialog" class="sheet-inner">
+      <h2>Einstellungen</h2>
+      <fieldset class="setting">
+        <legend>Zehnerübergang (bei Plus und Minus)</legend>
+        <div class="seg" data-setting="crossing">
+          <button type="button" data-value="ohne">ohne</button>
+          <button type="button" data-value="egal">gemischt</button>
+          <button type="button" data-value="mit">mit</button>
+        </div>
+      </fieldset>
+      <label class="toggle"><input type="checkbox" data-setting="profi">
+        <span><b>Profi-Modus</b><small>Die Zerlegung trägst du selbst ein.</small></span></label>
+      <label class="toggle"><input type="checkbox" data-setting="rest">
+        <span><b>Geteilt mit Rest</b><small>z. B. 87 : 6 = 14 Rest 3</small></span></label>
+      <label class="toggle"><input type="checkbox" data-setting="sound">
+        <span><b>Töne</b><small>Klänge und Hufgetrappel</small></span></label>
+      <fieldset class="setting">
+        <legend>Zahlenfeld zum Tippen</legend>
+        <div class="seg" data-setting="numpad">
+          <button type="button" data-value="auto">automatisch</button>
+          <button type="button" data-value="on">immer</button>
+          <button type="button" data-value="off">aus</button>
+        </div>
+      </fieldset>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-ghost" id="changeBuddyBtn">🦄 Begleiter &amp; Name</button>
+        <button type="button" class="btn btn-ghost btn-danger" id="resetBtn">Fortschritt löschen</button>
+      </div>
+      <button class="btn btn-primary btn-big" value="ok">Fertig</button>
+    </form>
+  </dialog>
+
+  <!-- Neuer Begleiter freigeschaltet -->
+  <dialog class="sheet unlock" id="unlockDlg">
+    <form method="dialog" class="sheet-inner">
+      <h2>Neu freigeschaltet! 🎉</h2>
+      <div class="unlock-figure" id="unlockFigure"></div>
+      <p class="sheet-sub" id="unlockText"></p>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-primary btn-big" id="unlockTake">Mitnehmen! 💖</button>
+        <button class="btn btn-ghost" value="later">Später</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/tasks.js"></script>
+  <script src="js/check.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/companion.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/viz.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

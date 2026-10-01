@@ -1,0 +1,15 @@
+{
+  "name": "einhorn-rechenranch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Halbschriftlich rechnen üben (Klasse 3, Zahlenraum bis 100) – statische Web-App für GitHub Pages",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "start": "npx --yes http-server -c-1 -p 8080 .",
+    "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.e2e.js\""
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

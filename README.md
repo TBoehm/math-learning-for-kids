@@ -1,6 +1,58 @@
 # Einhorn-Rechenranch 🦄🐴
 
-Lern-App für Kinder der 3. Klasse: Plus, Minus, Mal und Geteilt im Zahlenraum bis 100 –
-gerechnet wird im **halbschriftlichen Verfahren**. Gehostet über GitHub Pages.
+Lern-App für Kinder der **3. Klasse**: Plus, Minus, Mal und Geteilt im **Zahlenraum bis 100** –
+gerechnet wird im **halbschriftlichen Verfahren**, Schritt für Schritt, mit Einhörnern und Pferden als Begleiter.
 
-*(In Arbeit.)*
+**Live:** https://tboehm.github.io/math-learning-for-kids/
+
+## Rechenwege
+
+| Rechenart | Rechenwege | Anschauung |
+|---|---|---|
+| **+** Plus | Stellenweise (Z+Z, E+E) · Schrittweise (erst Zehner, dann Einer) · Hilfsaufgabe (47 + 39 → 47 + 40 − 1) | Rechenstrich |
+| **−** Minus | Schrittweise · Ergänzen (37 → 40 → 80 → 82) · Hilfsaufgabe (82 − 39 → 82 − 40 + 1) | Rechenstrich |
+| **·** Mal | Zerlegen (4 · 23 = 4 · 20 + 4 · 3) · Kernaufgaben (7 · 8 = 5 · 8 + 2 · 8, 9 · 6 = 10 · 6 − 1 · 6) | Malkreuz, Punktefeld |
+| **:** Geteilt | Zerlegen (84 : 6 = 60 : 6 + 24 : 6), optional mit Rest | Zerlegungsbaum |
+
+Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; jede Zeile wird sofort geprüft.
+
+- **Hilfe in Stufen:** 1. Fehler → Ermutigung, 2. Fehler → Tipp zum Rechenschritt, 3. Fehler → Tipp + Lösung.
+- **Profi-Modus:** Die Zerlegung trägt das Kind selbst ein (beim Teilen ist jede gültige Zerlegung erlaubt).
+- **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Geteilt mit Rest, Töne, Zahlenfeld.
+- **Belohnungen:** Sterne, Serie ohne Fehler, Galopp-Parade nach 5 fehlerfreien Aufgaben in Folge,
+  neue Begleiter ab 10, 25, 50 und 100 Sternen (Pony, Sternen-Einhorn, Pegasus, Regenbogen-Flügeleinhorn).
+- **Responsiv:** Handy, Tablet und Desktop; auf Touch-Geräten gibt es ein großes Zahlenfeld.
+- **Datenschutz:** keine externen Server, keine Cookies, keine Tracker. Schrift (Fredoka, OFL) liegt im Projekt,
+  Fortschritt nur im `localStorage` des Geräts.
+
+## Entwicklung
+
+Reines HTML/CSS/JavaScript ohne Build-Schritt – `index.html` funktioniert sogar direkt per Doppelklick.
+
+```bash
+npm start            # lokaler Server auf http://localhost:8080
+npm test             # Unit-Tests (Node, ohne Abhängigkeiten)
+npm ci && npx playwright install chromium
+npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
+```
+
+| Datei | Inhalt |
+|---|---|
+| `js/tasks.js` | Aufgaben-Generator für alle Rechenwege |
+| `js/check.js` | Prüf-Logik: Eingaben lesen, Zeilen bewerten, Hilfe-Stufen, Lösungstext |
+| `js/progress.js` | Sterne, Serien, Parade, Freischaltungen |
+| `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |
+| `js/companion.js` | Begleiter als SVG |
+| `js/sound.js` | Klänge per Web-Audio (keine Sounddateien) |
+| `js/app.js` | Oberfläche und Ablauf |
+
+Die Prüf-Logik (`check.js`, `progress.js`) ist testgetrieben entwickelt und ohne DOM testbar.
+`tests/tasks.test.js` erzeugt zehntausende Aufgaben und prüft, dass jede Zeile rechnerisch stimmt,
+alles im Zahlenraum bis 100 bleibt und falsche Antworten abgelehnt werden.
+
+## Veröffentlichung
+
+GitHub Pages ist auf **Deploy from a branch → `main` / root** eingestellt: jeder Push auf `main` geht automatisch live.
+Der Workflow `.github/workflows/ci.yml` führt bei jedem Push und Pull Request Unit- und Browser-Tests aus.
+Damit nur Grünes live geht: in *Settings → Branches* eine Regel für `main` mit den Pflicht-Checks
+„Unit-Tests“ und „Browser-Tests (Ende-zu-Ende)“ anlegen und Änderungen per Pull Request mergen.
