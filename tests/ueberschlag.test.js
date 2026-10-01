@@ -94,6 +94,15 @@ describe('Genau rechnen und vergleichen', () => {
     solve(t);
   });
 
+  test('fremdes Ergebnis: klar, dass ein anderes Kind gerechnet hat und was zu prüfen ist', () => {
+    const t = UE.build(328, '+', 249, { max: 1000, rnd: seeded(6), variant: 'fremd', other: 777 });
+    assert.ok(t.kid);
+    assert.equal(t.rows[1].label, t.kid + ' hat 328 + 249 = 777 gerechnet. Passt das zum Überschlag?');
+    // in der Zeile nur noch der Vergleich: 777 und Ü 580 – ja/nein
+    assert.deepEqual(t.rows[1].tokens.slice(0, 3).map((x) => x.t === 'ref' ? '<' + x.id + '>' : x.v), [777, 'und Ü', '<rs>']);
+    assert.match(t.intro, new RegExp(t.kid));
+  });
+
   test('fremdes Ergebnis: das richtige -> passt', () => {
     const t = UE.build(328, '+', 249, { max: 1000, rnd: seeded(7), variant: 'fremd', other: 577 });
     const c = fields(t.rows[1])[0];
@@ -112,6 +121,8 @@ describe('Zufällige Überschlag-Aufgaben', () => {
           assert.equal(t.op, op);
           assert.ok(t.answer >= 0 && t.answer <= max, op + ' ' + t.a + ' ' + t.b);
           if (op !== '·') assert.ok(t.a % 10 && t.b % 10, 'Zahlen sind nicht schon rund');
+          // Mal: keine Aufgabe, die man schneller genau weiß (7 · 11): die große Zahl ab 13
+          if (op === '·') assert.ok(t.b >= 13, t.a + ' · ' + t.b);
           if (max === 1000 && op !== '·') assert.ok(t.a >= 100 && t.b >= 100);
           solve(t);
           // auch mit Hunderter-Überschlag (wo es den gibt) lösbar

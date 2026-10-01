@@ -111,7 +111,7 @@
     };
 
     var variant = opt.variant || (rnd() < 0.5 ? 'selbst' : 'fremd');
-    var rows, other = null;
+    var rows, other = null, name = null;
     // die Zeile vor der Ja/Nein-Frage: der Begleiter stellt die Frage
     var ask = function (r, q) { return Object.assign({}, r, { advice: function () { return 'Richtig! ' + q; } }); };
     if (variant === 'selbst') {
@@ -124,10 +124,11 @@
     } else {
       other = opt.other !== undefined ? opt.other : pickOther(a, op, b, max, rnd);
       var ok = other === exact || !clearlyOff(other, a, op, b, max);
-      var name = NAMES[Math.floor(rnd() * NAMES.length)];
+      name = NAMES[Math.floor(rnd() * NAMES.length)];
       rows = [ask(ueRow, 'Passt das Ergebnis von ' + name + ' zum Überschlag?'), {
-        label: 'Passt das zum Überschlag?',
-        tokens: [T(name + ':'), N(a), T(op), N(b), T('='), N(other), choice('passt', ok ? 0 : 1, OPTIONS)],
+        // klar sagen, wer gerechnet hat; in der Zeile steht nur der Vergleich (wie bei "Passt dein Ergebnis …")
+        label: name + ' hat ' + a + ' ' + op + ' ' + b + ' = ' + other + ' gerechnet. Passt das zum Überschlag?',
+        tokens: [N(other), T('und Ü'), R('rs'), choice('passt', ok ? 0 : 1, OPTIONS)],
         hint: 'Vergleiche ' + other + ' mit deinem Überschlag. Liegt es nah dran oder weit weg?',
         advice: function () {
           return ok ? 'Genau! ' + other + ' liegt nah beim Überschlag. Rechne nach, ob es auch genau stimmt.'
@@ -136,10 +137,11 @@
       }, exactRow];
     }
     return {
-      op: op, strategy: 'ueberschlag', a: a, b: b, answer: exact, variant: variant, other: other, rows: rows,
+      op: op, strategy: 'ueberschlag', a: a, b: b, answer: exact, variant: variant, other: other, kid: name, rows: rows,
       // layout 'ueberschlag' ohne eigene Darstellung: nur die Klasse layout-ueberschlag an #rows (css/formats.css)
       layout: 'ueberschlag',
-      intro: 'überschlage zuerst: Runde die Zahlen und rechne grob. Dann rechne genau! 🎯'
+      intro: name ? name + ' hat ' + a + ' ' + op + ' ' + b + ' gerechnet. Überschlage zuerst und prüfe, ob das Ergebnis passen kann! 🎯'
+        : 'überschlage zuerst: Runde die Zahlen und rechne grob. Dann rechne genau! 🎯'
     };
   }
 
@@ -149,7 +151,8 @@
       var a, b;
       if (op === '·') {
         a = rndInt(rnd, 2, 9);
-        b = rndInt(rnd, 11, Math.floor(max / a));
+        // die große Zahl ab 13: 7 · 11 weiß man schneller genau, als man es überschlägt
+        b = rndInt(rnd, 13, Math.floor(max / a));
         if (b % 10 === 0 || a * b > max) continue;
         if (units(a, op, b, max).some(function (u) { return estimate(a, op, b, u) > max; })) continue;
         return [a, b];
