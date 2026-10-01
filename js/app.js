@@ -29,56 +29,6 @@
     $('bubbleText').textContent = text;
     b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
   }
-  // ---------- Vorlesen ----------
-  function systemVoices() {
-    return 'speechSynthesis' in window ? window.speechSynthesis.getVoices() : [];
-  }
-  function speakText(text) {
-    if (!('speechSynthesis' in window)) return;
-    var v = RR.Voice.pick(systemVoices(), state.settings.voice);
-    var p = RR.Voice.prosody(v);
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(text);
-    if (v) u.voice = v;
-    u.lang = v ? v.lang : 'de-DE';
-    u.rate = p.rate; u.pitch = p.pitch;
-    window.speechSynthesis.speak(u);
-  }
-  function speak() { speakText(RR.Speech.toSpeech($('bubbleText').textContent)); }
-
-  // Auswahl der Stimme in den Einstellungen
-  function fillVoiceSelect() {
-    var sel = $('voiceSelect');
-    if (!sel) return;
-    var list = RR.Voice.germanVoices(systemVoices());
-    var best = list[0];
-    sel.innerHTML = '';
-    var auto = document.createElement('option');
-    auto.value = '';
-    auto.textContent = 'Automatisch' + (best ? ' – ' + RR.Voice.label(best) : '');
-    sel.appendChild(auto);
-    list.forEach(function (v) {
-      var o = document.createElement('option');
-      o.value = v.name;
-      o.textContent = RR.Voice.label(v);
-      sel.appendChild(o);
-    });
-    sel.value = list.some(function (v) { return v.name === state.settings.voice; }) ? state.settings.voice : '';
-    $('voiceNote').textContent = !('speechSynthesis' in window) ? 'Vorlesen geht in diesem Browser leider nicht.'
-      : !list.length ? 'Auf diesem Gerät ist noch keine deutsche Stimme installiert.'
-      : RR.Voice.prosody(best).rate === 1 ? '' : 'Tipp: In Microsoft Edge oder auf dem iPad gibt es noch schönere Stimmen.';
-  }
-  function initVoicePicker() {
-    if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', fillVoiceSelect);
-    $('voiceSelect').addEventListener('change', function () {
-      state.settings.voice = $('voiceSelect').value;
-      save();
-    });
-    $('voiceTest').addEventListener('click', function () {
-      speakText('Hallo! Ich bin ' + companionName() + '. Wie viel ist 47 plus 38? Rechne erst 47 plus 30.');
-    });
-    fillVoiceSelect();
-  }
 
   // ---------- Begleiter ----------
   function companionName() { return Companion.byKey(state.companion).name; }
@@ -516,7 +466,6 @@
       Sound.tap();
       before = Settings.taskKey(state.settings);
       syncSettingsUI();
-      fillVoiceSelect();
       $('settingsDlg').showModal();
     });
     $('settingsDlg').querySelectorAll('.seg button').forEach(function (b) {
@@ -584,8 +533,6 @@
     $('checkBtn').addEventListener('click', check);
     $('hintBtn').addEventListener('click', hint);
     $('newBtn').addEventListener('click', function () { Sound.tap(); newTask(); });
-    $('speakBtn').addEventListener('click', speak);
-    initVoicePicker();
     $('buddyFigure').addEventListener('click', function () {
       Sound.hop(); react('happy', 1000); say(pick(TXT.poke));
     });

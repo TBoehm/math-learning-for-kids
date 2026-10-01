@@ -8,7 +8,7 @@ Veröffentlicht über GitHub Pages ("Deploy from a branch: main"): jeder Push au
 - **Testgetrieben (TDD):** erst einen fehlschlagenden Test schreiben, dann implementieren.
 - **Unit vor E2E:** Alles, was sich als Unit-Test prüfen lässt, wird als Unit-Test geschrieben –
   nicht als E2E-Test. Logik gehört deshalb in reine Module ohne DOM (`js/tasks.js`, `js/check.js`,
-  `js/progress.js`, `js/speech.js`, …), die per `module.exports` in Node testbar sind.
+  `js/progress.js`, `js/settings.js`, `js/ui-logic.js`, …), die per `module.exports` in Node testbar sind.
   Steckt testbare Logik in `js/app.js` oder `js/viz.js`, wird sie zuerst in ein reines Modul ausgelagert.
 - **E2E nur für das, was nur im Browser geht:** Verdrahtung von DOM und Ereignissen, Fokus,
   Layout/Responsivität, Dialoge, dass keine JS-Fehler auftreten. Pro Thema ein schlanker Test.

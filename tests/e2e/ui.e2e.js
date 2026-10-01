@@ -235,12 +235,7 @@ describe('Fokus', () => {
 describe('Dialoge auf kleinen Bildschirmen', () => {
   for (const [w, h] of [[320, 640], [390, 844]]) {
     test(`Einstellungen ${w}×${h}: nichts ragt über den Rand`, async () => {
-      // realistische Stimmenliste mit langen Namen (Headless-Chromium hat keine Stimmen)
-      const init = () => {
-        const names = ['Microsoft Katja Online (Natural) - German (Germany)', 'Microsoft Hedda - German (Germany)', 'Google Deutsch'];
-        speechSynthesis.getVoices = () => names.map((name) => ({ name, lang: 'de-DE', voiceURI: name, localService: false }));
-      };
-      const { page, ctx } = await openPage({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true, init });
+      const { page, ctx } = await openPage({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true });
       await page.click('#settingsBtn');
       await page.locator('#settingsDlg[open]').waitFor();
       const over = await page.evaluate(() => {
