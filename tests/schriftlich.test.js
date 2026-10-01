@@ -660,6 +660,13 @@ describe('Erzeugen: Zahlenraum, Stufen, Übergänge', () => {
       }
     });
   }
+  test('Übergang heißt: ein Übertrag steht im Raster (600 + 400 zählt nicht – die 1000 schreibt man einfach hin)', () => {
+    assert.equal(S.hasCarry([600, 400]), false);
+    assert.equal(S.hasCarry([560, 440]), true);
+    assert.equal(S.hasCarry([625, 375]), true);
+    assert.equal(S.hasCarry([47, 38]), true);
+    assert.equal(S.hasCarry([123, 456]), false);
+  });
   test('Minus: manchmal eine Null in der Mitte', () => {
     let zero = 0;
     for (let i = 0; i < 400; i++) {

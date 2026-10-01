@@ -206,9 +206,14 @@
     d.className = 'row future';
     d.dataset.i = i;
     var labels = UI.cellLabels(row), n = 0;
+    var html = row.tokens.map(function (tok) {
+      return tokenHtml(tok, tok.t === 'in' || tok.t === 'choice' ? labels[n++] : '');
+    });
+    // Malaufgaben bleiben beim Umbruch zusammen (UI.eqGroups)
     d.innerHTML = '<span class="row-label">' + row.label + '</span><div class="eq">' +
-      row.tokens.map(function (tok) {
-        return tokenHtml(tok, tok.t === 'in' || tok.t === 'choice' ? labels[n++] : '');
+      UI.eqGroups(row.tokens).map(function (g) {
+        var inner = g.map(function (i) { return html[i]; }).join('');
+        return g.length > 1 ? '<span class="eq-term">' + inner + '</span>' : inner;
       }).join('') + '</div>';
     return d;
   }

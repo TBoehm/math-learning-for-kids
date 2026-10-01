@@ -323,3 +323,73 @@ describe('Texte', () => {
     assert.equal(UI.afterCorrect(task, { res: 5, probe: 1 }, 1), 'finish');
   });
 });
+
+// Schreibweise wie im Heft: Die Zerlegung steht in der Malaufgabe (8 · 7 = 10 · 7 − 2 · 7),
+// nicht als eigene Zeile nur mit der Zahl (8 = 10 − 2).
+describe('Mal: die Zerlegung steht in der Malaufgabe', () => {
+  const text = (row, vals) => row.tokens.map((x) => (x.t === 'txt' || x.t === 'num' ? x.v : vals ? vals[x.id] : '[' + x.answer + ']')).join(' ');
+  const find = (key, level, max, want) => {
+    for (let i = 0; i < 20000; i++) {
+      const t = gen('·', key, level, max);
+      if (want(t)) return t;
+    }
+    throw new Error('nicht gefunden: ' + key);
+  };
+
+  for (const key of ['zerlegen', 'kernaufgaben', 'hilfsaufgabe']) {
+    for (const level of ['hilfe', 'zerlegen']) {
+      test(`${key}, ${level}: erste Zeile ist a · b = … · … ± … · …, keine Zeile nur mit einer Zahl links`, () => {
+        for (let k = 0; k < 300; k++) {
+          const t = gen('·', key, level, k % 2 ? 100 : 1000);
+          const row0 = t.rows[0];
+          const left = row0.tokens.slice(0, 4).map((x) => x.v);
+          assert.deepEqual(left, [t.a, '·', t.b, '='], text(row0));
+          const ops = opsOf(row0).filter((o) => o !== '=');
+          assert.equal(ops.filter((o) => o === '·').length, 3, text(row0));
+          assert.equal(ops.filter((o) => o === '+' || o === '−').length, 1, text(row0));
+          // jeder Teil: der bleibende Faktor mal ein Stück vom anderen
+          const played = solveChecked(t);
+          t.rows.concat(played.rows).forEach((r) => {
+            const eq = r.tokens.findIndex((x) => x.v === '=');
+            assert.ok(eq !== 1, 'Zeile nur mit einer Zahl links: ' + text(r));
+          });
+          if (level === 'zerlegen') assert.equal(inputs(row0).length, 2, 'die zwei Teile trägt das Kind ein: ' + text(row0));
+          else assert.equal(inputs(row0).length, 0);
+        }
+      });
+    }
+  }
+
+  test('Beispiele: 8 · 7 = 10 · 7 − 2 · 7, 6 · 7 = 5 · 7 + 1 · 7', () => {
+    let t = find('kernaufgaben', 'hilfe', 100, (x) => x.a === 8 && x.b === 7);
+    assert.equal(text(t.rows[0]), '8 · 7 = 10 · 7 − 2 · 7');
+    assert.equal(t.rows[0].label, 'Zerlegen');
+    t = find('kernaufgaben', 'hilfe', 100, (x) => x.a === 6 && x.b === 7);
+    assert.equal(text(t.rows[0]), '6 · 7 = 5 · 7 + 1 · 7');
+    t = find('kernaufgaben', 'zerlegen', 100, (x) => x.a === 9 && x.b === 4);
+    assert.equal(text(t.rows[0]), '9 · 4 = [10] · 4 − [1] · 4');
+  });
+
+  test('Beispiele Zerlegen: 4 · 23 = 4 · 20 + 4 · 3 und 64 · 3 = 60 · 3 + 4 · 3', () => {
+    let t = find('zerlegen', 'hilfe', 100, (x) => x.a === 4 && x.b === 23);
+    assert.equal(text(t.rows[0]), '4 · 23 = 4 · 20 + 4 · 3');
+    t = find('zerlegen', 'hilfe', 1000, (x) => x.a === 64 && x.b === 3);
+    assert.equal(text(t.rows[0]), '64 · 3 = 60 · 3 + 4 · 3');
+    t = find('zerlegen', 'zerlegen', 100, (x) => x.a === 4 && x.b === 23);
+    assert.equal(text(t.rows[0]), '4 · 23 = 4 · [20] + 4 · [3]');
+    // die Zerlegung ist frei: 4 · 23 = 4 · 13 + 4 · 10 geht auch
+    const r = play(fresh(t), (row, i) => (i === 0 ? [13, 10] : null));
+    assert.ok(r.ok);
+    assert.equal(r.vals.res, 92);
+  });
+
+  test('Beispiele Hilfsaufgabe: 6 · 39 = 6 · 40 − 6 · 1 und 19 · 4 = 20 · 4 − 1 · 4', () => {
+    let t = find('hilfsaufgabe', 'hilfe', 1000, (x) => x.a === 6 && x.b === 39);
+    assert.equal(text(t.rows[0]), '6 · 39 = 6 · 40 − 6 · 1');
+    assert.equal(t.rows[0].label, 'Hilfszahl');
+    t = find('hilfsaufgabe', 'hilfe', 100, (x) => x.a === 19 && x.b === 4);
+    assert.equal(text(t.rows[0]), '19 · 4 = 20 · 4 − 1 · 4');
+    t = find('hilfsaufgabe', 'zerlegen', 100, (x) => x.a === 3 && x.b === 28);
+    assert.equal(text(t.rows[0]), '3 · 28 = 3 · [30] − 3 · [2]');
+  });
+});

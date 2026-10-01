@@ -169,6 +169,8 @@ body.has-numpad .row { scroll-margin-bottom: 170px; }
 .row-label { font-size: .85rem; font-weight: 600; color: var(--ink-soft); }
 .row.done .row-label::after { content: ' ✓'; color: #1aa56b; }
 .eq { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: clamp(1.55rem, 6.5vw, 2.1rem); font-weight: 600; }
+/* eine Malaufgabe (5 · 200) wird nicht auseinandergerissen */
+.eq-term { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 .tok-op { color: var(--purple); font-weight: 700; min-width: .5em; text-align: center; }
 .tok-ref { min-width: 1.4em; text-align: center; }
 .cell { width: 2.7em; height: 1.6em; font: inherit; font-weight: 700; text-align: center; color: var(--ink);

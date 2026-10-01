@@ -42,10 +42,15 @@
   }
   function text(items) { return items.map(function (x) { return x.v; }).join(' '); }
 
+  /** Wert einer Rechenkette, Punkt vor Strich: 10 · 7 − 2 · 7 = 56 */
   function chain(items) {
-    var v = items[0].v;
-    for (var k = 1; k + 1 < items.length; k += 2) v = OPS[items[k].v](v, items[k + 1].v);
-    return v;
+    var terms = [items[0].v], signs = [];
+    for (var k = 1; k + 1 < items.length; k += 2) {
+      var op = items[k].v, n = items[k + 1].v;
+      if (op === '·' || op === ':') terms[terms.length - 1] = OPS[op](terms[terms.length - 1], n);
+      else { signs.push(op); terms.push(n); }
+    }
+    return terms.reduce(function (v, t, i) { return i ? OPS[signs[i - 1]](v, t) : t; });
   }
   function split(items) {
     var e = items.map(function (x) { return x.v; }).indexOf('=');

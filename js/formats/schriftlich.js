@@ -374,6 +374,12 @@
   }
 
   // ---------- Zufällige Aufgaben ----------
+  /** Gibt es einen Übertrag im Raster? Der Übertrag aus der höchsten Stelle zählt nicht (600 + 400 = 1000). */
+  function hasCarry(terms) {
+    var cols = addPlan(terms).cols;
+    return cols.slice(0, -1).some(function (c) { return c.carryOut > 0; });
+  }
+
   function genAdd(opt) {
     var three = Math.random() < 0.25, big = opt.max === 1000;
     return attempt(function () {
@@ -385,8 +391,7 @@
         terms = three ? [rnd(10, 49), rnd(10, 39), rnd(10, 29)] : [rnd(10, 89), rnd(10, 89)];
       }
       if (sum(terms) > opt.max) return null;
-      var carries = addPlan(terms).cols.some(function (c) { return c.carryOut > 0; });
-      return crossingOk(carries, opt.crossing) ? terms : null;
+      return crossingOk(hasCarry(terms), opt.crossing) ? terms : null;
     });
   }
 
@@ -435,7 +440,7 @@
     gen: function (opt) { return build('erg', genSub(opt), opt); }
   });
 
-  var api = { addPlan: addPlan, subPlan: subPlan, ergPlan: ergPlan, roundTo: roundTo, build: build, PLACE: PLACE };
+  var api = { addPlan: addPlan, hasCarry: hasCarry, subPlan: subPlan, ergPlan: ergPlan, roundTo: roundTo, build: build, PLACE: PLACE };
   if (node) module.exports = api;
   else root.RR = Object.assign(root.RR || {}, { Schriftlich: api });
 })(typeof window !== 'undefined' ? window : this);

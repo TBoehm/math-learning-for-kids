@@ -57,6 +57,13 @@ describe('Rechnung als Zeilen', () => {
     assert.deepEqual(lines.map(FE.text), ['38 = 30 + 8', '47 + 30 = 77', '77 + 8 = 85']);
     assert.ok(lines.every(FE.lineOk));
   });
+  test('Punkt vor Strich: 8 · 7 = 10 · 7 − 2 · 7 stimmt', () => {
+    const line = (xs) => xs.map((v) => (typeof v === 'number' ? { v, num: true } : { v }));
+    assert.ok(FE.lineOk(line([8, '·', 7, '=', 10, '·', 7, '−', 2, '·', 7])));
+    assert.ok(FE.lineOk(line([4, '·', 23, '=', 4, '·', 20, '+', 4, '·', 3])));
+    assert.equal(FE.lineOk(line([8, '·', 7, '=', 10, '·', 7, '−', 3, '·', 7])), false);
+  });
+
   test('mit Rest', () => {
     const lines = FE.lines(geteilt());
     assert.deepEqual(lines.map(FE.text), ['87 = 60 + 27', '60 : 6 = 10', '27 : 6 = 4 R 3', '10 + 4 = 14 R 3']);

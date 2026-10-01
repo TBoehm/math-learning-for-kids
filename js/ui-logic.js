@@ -102,6 +102,20 @@
     return l || row.label || '';
   }
 
+  /**
+   * Gruppen für den Zeilenumbruch: was mit · oder : (und R beim Rest) verbunden ist, bleibt zusammen
+   * (5 · 198 = 5 · 200 − 5 · 2 bricht nur bei =, + oder − um). -> Listen von Token-Nummern
+   */
+  function eqGroups(tokens) {
+    var glue = function (tok) { return tok && tok.t === 'txt' && (tok.v === '·' || tok.v === ':' || tok.v === 'R'); };
+    var groups = [];
+    tokens.forEach(function (tok, i) {
+      if (i > 0 && (glue(tok) || glue(tokens[i - 1]))) groups[groups.length - 1].push(i);
+      else groups.push([i]);
+    });
+    return groups;
+  }
+
   // ---------- Texte zur Aufgabe ----------
   /** Namen der Eingabefelder einer Zeile, z. B. "Zehner: 1. Zahl". */
   function cellLabels(row) {
@@ -174,7 +188,7 @@
     afterCorrect: afterCorrect, revealDelta: revealDelta,
     TEXTS: TEXTS, pick: pick, sanitize: sanitize, applyKey: applyKey, pickTarget: pickTarget, inputMode: inputMode,
     fieldEffect: fieldEffect, outcome: outcome, wrongText: wrongText, rowDoneText: rowDoneText, doneLabel: doneLabel,
-    cellLabels: cellLabels, badgeText: badgeText, introText: introText, welcomeText: welcomeText, cleanName: cleanName
+    cellLabels: cellLabels, eqGroups: eqGroups, badgeText: badgeText, introText: introText, welcomeText: welcomeText, cleanName: cleanName
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RR = Object.assign(root.RR || {}, { UI: api });

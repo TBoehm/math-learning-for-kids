@@ -184,6 +184,18 @@ describe('Namen der Eingabefelder (für Screenreader)', () => {
   });
 });
 
+describe('Umbruch langer Zeilen', () => {
+  const T = (v) => ({ t: 'txt', v }), N = (v) => ({ t: 'num', v }), I = (id) => ({ t: 'in', id });
+  test('eine Malaufgabe bleibt zusammen: 5 · 198 = 5 · 200 − 5 · 2', () => {
+    const toks = [N(5), T('·'), N(198), T('='), N(5), T('·'), I('G'), T('−'), N(5), T('·'), I('d')];
+    assert.deepEqual(UI.eqGroups(toks), [[0, 1, 2], [3], [4, 5, 6], [7], [8, 9, 10]]);
+  });
+  test('Plus und Minus trennen, Rest bleibt beim Ergebnis', () => {
+    assert.deepEqual(UI.eqGroups([N(47), T('+'), N(30), T('='), I('s1')]), [[0], [1], [2], [3], [4]]);
+    assert.deepEqual(UI.eqGroups([N(27), T(':'), N(6), T('='), I('q'), T('R'), I('r')]), [[0, 1, 2], [3], [4, 5, 6]]);
+  });
+});
+
 describe('Texte zur Aufgabe', () => {
   test('Schild: Rechenweg und Stufe', () => {
     assert.equal(UI.badgeText(Tasks.generate({ op: '+', strategy: 'stellenweise', level: 'selbst' })), 'Stellenweise · Alles selbst');

@@ -819,23 +819,22 @@
       return task;
     }
     var ids = ['m1', 'm2'];
-    var splitRow;
-    if (p) {
+    // Schreibweise wie im Heft: die Zerlegung steht in der Malaufgabe (4 · 23 = 4 · 20 + 4 · 3)
+    var prod = function (x) { return bigFirst ? [x, T('·'), N(s)] : [N(s), T('·'), x]; };
+    var partToks = p
       // Zerlegung frei: zwei Teile, die zusammen die Zahl ergeben
-      splitRow = row([N(big), T('='), IC('m1', parts[0], function (v) { return v > 0 && v < big; }),
-        T('+'), IE('m2', parts[1], function (vals) { return big - vals.m1; }, ['m1'])], {
-        label: 'Zerlegen',
-        hint: 'Zerlege ' + big + ' in ' + andList(parts.map(placeName)) + '. Die Reihenfolge darfst du selbst wählen.',
-        advice: function (vals) {
-          if (placeOf(vals.m1) && placeOf(vals.m2)) return null;
-          return 'Stimmt! Tipp fürs nächste Mal: ' + parts.join(' + ') + ' ist leichter – ' + andList(parts.map(placeName)) + '. 💡';
-        }
-      });
-    } else {
-      splitRow = row([N(big), T('='), N(parts[0]), T('+'), N(parts[1])], {
-        label: 'Zerlegen', hint: 'Zerlege ' + big + ' in ' + andList(parts.map(placeName)) + '.'
-      });
-    }
+      ? [IC('m1', parts[0], function (v) { return v > 0 && v < big; }),
+        IE('m2', parts[1], function (vals) { return big - vals.m1; }, ['m1'])]
+      : [N(parts[0]), N(parts[1])];
+    var splitRow = row([N(a), T('·'), N(b), T('=')].concat(prod(partToks[0]), [T('+')], prod(partToks[1])), {
+      label: 'Zerlegen',
+      hint: 'Zerlege ' + big + ' in ' + andList(parts.map(placeName)) + ': ' + times(s, big, bigFirst) + ' = ' +
+        times(s, parts[0], bigFirst) + ' + ' + times(s, parts[1], bigFirst) + '.' + (p ? ' Die Reihenfolge darfst du selbst wählen.' : ''),
+      advice: p ? function (vals) {
+        if (placeOf(vals.m1) && placeOf(vals.m2)) return null;
+        return 'Stimmt! Tipp fürs nächste Mal: ' + parts.join(' + ') + ' ist leichter – ' + andList(parts.map(placeName)) + '. 💡';
+      } : null
+    });
     var rows = [splitRow];
     parts.forEach(function (x, i) {
       var place = placeOf(x), fac = RP(p, ids[i], x);
@@ -977,9 +976,11 @@
     var k1Of = function (vals) { return p ? vals.k1 : k1; };
     var k2Of = function (vals) { return p ? vals.k2 : k2; };
     task.rows = [
-      row([N(a), T('='), splitToks[0], T(op), splitToks[1]], {
+      // Schreibweise wie im Heft: 8 · 7 = 10 · 7 − 2 · 7
+      row([N(a), T('·'), N(b), T('='), splitToks[0], T('·'), N(b), T(op), splitToks[1], T('·'), N(b)], {
         label: 'Zerlegen',
-        hint: minus ? a + ' ist fast 10. ' + a + ' = 10 − ' + k2 + '.' : 'Nimm die Kernaufgabe mit 5: ' + a + ' = 5 + ' + k2 + '.'
+        hint: minus ? a + ' ist fast 10. Also ist ' + a + ' · ' + b + ' = 10 · ' + b + ' − ' + k2 + ' · ' + b + '.'
+          : 'Nimm die Kernaufgabe mit 5: ' + a + ' · ' + b + ' = 5 · ' + b + ' + ' + k2 + ' · ' + b + '.'
       }),
       row([RP(p, 'k1', k1), T('·'), N(b), T('='), IE('p1', k1 * b, function (vals) { return k1Of(vals) * b; })], {
         label: 'Kernaufgabe',
@@ -1066,10 +1067,12 @@
       return task;
     }
     var gTok = RP(p, 'G', G), zu = d * kept;
+    var fFirstProd = function (x) { return a === f ? [x, T('·'), N(kept)] : [N(kept), T('·'), x]; };
     var rows = [
-      row([N(f), T('='), p ? IC('G', G, function (v) { return v > f && isGlatt(v, f, max); }) : N(G), T('−'),
-        p ? IE('d', d, function (vals) { return vals.G - f; }, ['G']) : N(d)], {
-        label: 'Hilfszahl', hint: f + ' ist fast ' + G + '. Wie viel fehlt bis ' + G + '?'
+      // Schreibweise wie im Heft: 6 · 39 = 6 · 40 − 6 · 1
+      row([N(a), T('·'), N(b), T('=')].concat(fFirstProd(p ? IC('G', G, function (v) { return v > f && isGlatt(v, f, max); }) : N(G)),
+        [T('−')], fFirstProd(p ? IE('d', d, function (vals) { return vals.G - f; }, ['G']) : N(d))), {
+        label: 'Hilfszahl', hint: f + ' ist fast ' + G + '. Wie viel fehlt bis ' + G + '? Rechne mit ' + G + ' und nimm das Zuviel wieder weg.'
       }),
       row((a === f ? [gTok, T('·'), N(kept)] : [N(kept), T('·'), gTok]).concat([T('='), I('s1', G * kept)]), {
         label: 'Hilfsaufgabe', hint: 'Rechne erst mit der glatten Zahl: ' + times(kept, G, a === f) + '.'
