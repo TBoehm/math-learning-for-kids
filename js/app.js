@@ -155,7 +155,9 @@
     $('strategyBadge').textContent = UI.badgeText(t);
     $('strategyBadge').title = t.strategyDesc;
     var rest = t.op === ':' && t.rest ? '<span class="final-rest" hidden> R ' + t.rest + '</span>' : '';
-    $('equation').innerHTML = '<span>' + Tasks.taskText(t) + ' = </span><span class="final" id="final">?</span>' + rest;
+    // Knobel-Aufgaben ohne einzelne Rechnung (z. B. Zahlenmauer) zeigen nur ihren Titel
+    $('equation').innerHTML = t.title ? '<span>' + t.title + '</span>'
+      : '<span>' + Tasks.taskText(t) + ' = </span><span class="final" id="final">?</span>' + rest;
     var rows = $('rows');
     rows.innerHTML = '';
     rows.className = 'rows' + (t.layout ? ' layout-' + t.layout : '');
@@ -350,8 +352,7 @@
     cur.done = true;
     var t = cur.task;
     var fin = $('final');
-    fin.textContent = t.answer;
-    fin.classList.add('solved');
+    if (fin) { fin.textContent = t.answer; fin.classList.add('solved'); } else fin = $('equation');
     var restEl = document.querySelector('.final-rest');
     if (restEl) restEl.hidden = false;
     $('taskCard').classList.add('solved');

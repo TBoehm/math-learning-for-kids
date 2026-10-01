@@ -89,7 +89,10 @@
       if (f.status === 'correct') { known[tok.id] = f.value; return; }
       // Hängt das Feld von einem falschen Feld ab, nehmen wir die Musterlösung.
       var exp = ok ? expectedOf(tok, known) : tok.answer;
-      if (!tok.silent && !(typeof tok.blank === 'number' && exp === tok.blank)) parts.push(String(exp));
+      // Auswahlfeld: die Antwort selbst nennen, nicht ihre Nummer; stille/leer erlaubte Felder auslassen
+      if (!tok.silent && !(typeof tok.blank === 'number' && exp === tok.blank)) {
+        parts.push(String(tok.t === 'choice' ? tok.options[exp] : exp));
+      }
       known[tok.id] = exp;
       ok = false;
     });

@@ -364,3 +364,93 @@ describe('Welten', () => {
     await ctx.close();
   });
 });
+
+describe('Knobeln im Browser', () => {
+  // aktive Zeile mit den Musterlösungen füllen: Felder eintippen, Auswahl-Knöpfe antippen
+  async function solveKnobel(page) {
+    for (let guard = 0; guard < 20; guard++) {
+      await waitForInputRow(page);
+      const state = await page.evaluate(() => {
+        const c = window.RR.app.current;
+        if (c.done) return null;
+        return { row: c.row, fields: c.task.rows[c.row].tokens.filter((t) => t.t === 'in' || t.t === 'choice').map((t) => ({ t: t.t, id: t.id, answer: t.answer })) };
+      });
+      if (!state) return;
+      const rowEl = page.locator('#rows .row[data-i="' + state.row + '"]');
+      const cells = state.fields.filter((f) => f.t === 'in');
+      for (const f of cells) await rowEl.locator('.cell[data-id="' + f.id + '"]').fill(String(f.answer));
+      for (const f of state.fields.filter((x) => x.t === 'choice')) await rowEl.locator('.choice-btn[data-k="' + f.answer + '"]').click();
+      if (cells.length) await rowEl.locator('.cell[data-id="' + cells[cells.length - 1].id + '"]').press('Enter');
+      await page.waitForFunction((r) => window.RR.app.current.row > r || window.RR.app.current.done, state.row);
+    }
+    throw new Error('Knobel-Aufgabe nicht gelöst');
+  }
+
+  test('jede Knobel-Aufgabe lässt sich über die Oberfläche lösen (Felder, Auswahl-Knöpfe, angehängte Zeilen)', async () => {
+    const { page, ctx, errors } = await openPage();
+    const combos = [['+', 'zahlenmauer'], ['−', 'zahlenmauer'], ['+', 'fehler'], [':', 'fehler'], ['+', 'welcherweg'],
+      ['−', 'welcherweg'], ['+', 'ueberschlag'], ['·', 'ueberschlag']];
+    for (const [op, strategy] of combos) {
+      await setSettings(page, { op, strategy, level: 'selbst' });
+      await solveKnobel(page);
+      await assert.doesNotReject(page.locator('#checkBtn', { hasText: 'Weiter' }).waitFor());
+      if (strategy === 'zahlenmauer') assert.equal(await page.locator('#equation').textContent(), 'Zahlenmauer');
+      else assert.equal(await page.locator('#final').textContent(), String(await page.evaluate(() => window.RR.app.current.task.answer)));
+    }
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('Fehler finden: falsche Zeile antippen zählt als Fehler, die richtige wird durchgestrichen', async () => {
+    const { page, ctx } = await openPage();
+    await setSettings(page, { op: '+', strategy: 'fehler' });
+    await waitForInputRow(page);
+    const k = await page.evaluate(() => window.RR.app.current.task.rows[0].tokens[0].answer);
+    await page.locator('.row.active .choice-btn:not([data-k="' + k + '"])').first().click();
+    await page.waitForFunction(() => window.RR.app.current.mistakes === 1 && window.RR.app.current.row === 0);
+    await page.locator('.row.active .choice-btn[data-k="' + k + '"]').click();
+    await page.waitForFunction(() => window.RR.app.current.row === 1);
+    const deco = await page.locator('.choice.ok .choice-btn.picked').evaluate((b) => getComputedStyle(b).textDecorationLine);
+    assert.match(deco, /line-through/);
+    await ctx.close();
+  });
+
+  for (const [w, h] of [[320, 640], [390, 844], [1280, 900]]) {
+    test(`Knobeln ${w}×${h}: Zahlenmauer als Pyramide (Spitze oben, mittig), nichts ragt über den Rand`, async () => {
+      const { page, ctx, errors } = await openPage({ viewport: { width: w, height: h } });
+      await setSettings(page, { op: '+', strategy: 'zahlenmauer', level: 'selbst', range: 1000 });
+      await waitForInputRow(page);
+      const levels = await page.evaluate(() => [...document.querySelectorAll('.wall-level')].map((l) => {
+        const bricks = [...l.querySelectorAll('.brick')].map((b) => b.getBoundingClientRect());
+        return { n: bricks.length, top: bricks[0].top, left: bricks[0].left, right: bricks[bricks.length - 1].right, width: bricks[0].width };
+      }));
+      assert.deepEqual(levels.map((l) => l.n), [1, 2, 3, 4], 'Spitze oben, unten vier Steine');
+      for (let i = 1; i < levels.length; i++) {
+        assert.ok(levels[i].top > levels[i - 1].top, 'Reihen von oben nach unten');
+        // mittig: Mitte jeder Reihe gleich, Steine um eine halbe Breite versetzt
+        assert.ok(Math.abs((levels[i].left + levels[i].right) - (levels[0].left + levels[0].right)) < 2);
+        assert.ok(Math.abs(levels[i - 1].left - levels[i].left - levels[i].width / 2) < 6);
+      }
+      assert.ok(levels[3].width >= 44, 'Steine groß genug zum Tippen: ' + levels[3].width);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(overflow <= 0, 'horizontaler Überlauf: ' + overflow + 'px');
+      // die aktive Reihe hat drei Felder; die noch kommenden Steine sind schon zu sehen
+      assert.equal(await page.locator('.row.active .cell').count(), 3);
+      assert.equal(await page.locator('.row.future .cell').first().isVisible(), true);
+      // auch die Auswahl-Knöpfe der anderen Knobeleien bleiben in der Karte
+      for (const [op, strategy] of [['+', 'welcherweg'], ['−', 'welcherweg'], ['·', 'fehler'], ['+', 'ueberschlag']]) {
+        await setSettings(page, { op, strategy });
+        await waitForInputRow(page);
+        const out = await page.evaluate(() => {
+          const card = document.getElementById('taskCard').getBoundingClientRect();
+          return [...document.querySelectorAll('#rows .row:not(.future), .choice-btn')]
+            .filter((e) => e.getBoundingClientRect().right > Math.min(card.right, window.innerWidth) + 1)
+            .map((e) => e.textContent.trim().slice(0, 20));
+        });
+        assert.deepEqual(out, [], strategy + ': ragt über den Rand');
+      }
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    });
+  }
+});

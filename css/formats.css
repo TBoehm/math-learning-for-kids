@@ -1,0 +1,59 @@
+/* Knobel-Aufgaben: eigene Darstellungen (Zahlenmauer, Fehler finden, Welcher Weg?).
+   Alles ist auf die Klasse .layout-… von #rows beschränkt; css/style.css bleibt unverändert. */
+
+/* ============ Zahlenmauer ============ */
+.layout-wall { gap: 6px; }
+.wall { --gap: 6px; --n: 4; display: grid; gap: var(--gap); width: 100%; max-width: calc(var(--n) * 6.4rem);
+  margin: 4px auto 0; font-size: clamp(1.15rem, 5.2vw, 1.6rem); font-weight: 700; }
+.layout-wall .wall-level { display: flex; justify-content: center; gap: var(--gap); }
+/* Zeilen der Mauer: keine Kästen wie bei den Rechenschritten, auch die kommenden Steine sind zu sehen */
+.layout-wall .row, .layout-wall .row.active, .layout-wall .row.done { padding: 0; border: 0; border-radius: 0;
+  background: none; animation: none; }
+.layout-wall .wall-level.row, .layout-wall .wall-level.row.future { display: flex; }
+.layout-wall .brick.row, .layout-wall .brick.row.future { display: flex; }
+.brick { width: calc((100% - (var(--n) - 1) * var(--gap)) / var(--n)); height: 2.1em; flex: none;
+  display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+.brick.given { background: linear-gradient(180deg, #ffe6f3, #ffd3ea); border: 3px solid #fff;
+  box-shadow: 0 4px 0 #f2b3d6, 0 6px 12px rgba(200, 80, 150, .15); color: var(--ink); }
+.layout-wall .brick .cell { width: 100%; height: 100%; font-size: inherit; border-radius: 12px; padding: 0; }
+/* noch nicht dran: blass und nicht antippbar */
+.layout-wall .row.future .cell { background: #f6f1ff; border-color: #ddd0f7; pointer-events: none; }
+/* jetzt dran: warm hervorgehoben */
+.layout-wall .row.active .cell:not(.ok):not(.bad) { background: #fff8db; border-color: #f2c94c; }
+.layout-wall .row.active .cell.current:not(.ok):not(.bad),
+.layout-wall .row.active .cell:focus:not(.ok):not(.bad) { border-color: var(--pink); }
+.layout-wall .cell.ok { box-shadow: 0 4px 0 #9fe3c2; }
+.wall-rule { margin: 6px 0 0; text-align: center; font-size: .9rem; color: var(--ink-soft); }
+
+/* ============ Fehler finden ============ */
+.layout-fehler .row { grid-template-columns: 1fr; }
+.layout-fehler .choice { flex: 1 1 100%; min-width: 0; display: grid; gap: 6px; padding: 0; counter-reset: zeile; max-width: 15em; }
+.layout-fehler .choice-btn { position: relative; text-align: left; font-size: .9em; font-weight: 600; min-height: 1.9em;
+  padding: .15em 1.6em .15em 1.75em; border: 2px solid #e2d8f5; border-radius: 12px; color: var(--ink); cursor: pointer;
+  /* Karopapier wie im Heft */
+  background-color: #fff;
+  background-image: linear-gradient(#eef1fb 1px, transparent 1px), linear-gradient(90deg, #eef1fb 1px, transparent 1px);
+  background-size: .5em .5em; }
+/* Zeilennummer und Kreuz liegen außerhalb des Textflusses, damit das Durchstreichen sie nicht trifft */
+.layout-fehler .choice-btn::before { counter-increment: zeile; content: counter(zeile); position: absolute; left: .35em; top: 50%;
+  transform: translateY(-50%); display: grid; place-items: center; width: 1.45em; height: 1.45em; border-radius: 50%;
+  background: #efe6ff; color: var(--purple); font-size: .62em; font-weight: 700; }
+.layout-fehler .choice-btn:hover { border-color: #b996ff; }
+.layout-fehler .choice-btn.picked { border-color: var(--pink); }
+/* richtig gefunden: die falsche Zeile wird rot durchgestrichen */
+.layout-fehler .choice.ok .choice-btn.picked { border-color: var(--orange); background: #fff0e2; color: #b4532a;
+  text-decoration: line-through 3px rgba(255, 90, 60, .75); }
+.layout-fehler .choice.ok .choice-btn.picked::after { content: '✗'; position: absolute; right: .45em; top: 50%;
+  transform: translateY(-50%); color: #ff6b4a; }
+.layout-fehler .choice.bad .choice-btn.picked { border-color: var(--orange); background: #fff0e2; }
+.layout-fehler .row.done .choice-btn:not(.picked) { opacity: .75; }
+
+/* ============ Welcher Weg? ============ */
+/* Handy: zwei Spalten, ab Tablet alle Wege nebeneinander (min-width: 0, damit nichts über den Rand ragt) */
+.layout-weg .choice { flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.layout-weg .choice-btn { font-size: .62em; min-height: 2.6em; padding: .3em .7em; cursor: pointer; }
+.layout-weg .choice-btn:hover { border-color: var(--purple); }
+.layout-weg .row:first-child { grid-template-columns: 1fr; }
+@media (min-width: 700px) {
+  .layout-weg .choice { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); max-width: 30em; }
+}

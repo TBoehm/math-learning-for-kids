@@ -39,6 +39,23 @@ Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; je
 - **Datenschutz:** keine externen Server, keine Cookies, keine Tracker. Schrift (Fredoka, OFL) liegt im Projekt,
   Fortschritt nur im `localStorage` des Geräts.
 
+## Knobeln
+
+Unter den Rechenwegen gibt es die Gruppe **Knobeln** (nicht in „Alle Wege“ und „Gemischt“). Alle Knobel-Aufgaben
+halten sich an den eingestellten Zahlenraum (bis 100 oder bis 1000).
+
+| Knobelei | Rechenarten | So geht's |
+|---|---|---|
+| **Zahlenmauer** | + (Plusmauer), − (Minusmauer) | Jeder Stein ist die Summe der zwei Steine darunter. Plusmauer: untere Reihe gegeben, Reihe für Reihe nach oben. Minusmauer: Spitze und einige Steine gegeben, die fehlenden Steine Schritt für Schritt finden – mal plus, mal minus. *Mit Hilfe:* 3 Reihen, sonst 4. |
+| **Fehler finden** | + − · : | Eine fertige Rechnung aus einem echten Rechenweg, in genau einer Zeile steckt ein typischer Fehler (Zehnerübergang vergessen, verzählt, Einer vergessen, Null vergessen, Einmaleins-Fehler, falsches Rechenzeichen beim Ausgleichen). Falsche Zeile antippen, verbessern, richtiges Ergebnis. |
+| **Welcher Weg?** | + − | Welcher Rechenweg ist hier besonders geschickt? (328 + 99 → Hilfsaufgabe, 702 − 698 → Ergänzen, 346 + 228 → Schrittweise …) Alle sinnvollen Wege zählen; danach wird mit dem gewählten Weg gerechnet. „Vereinfachen“ wird angeboten, sobald es diesen Rechenweg gibt. |
+| **Überschlagen** | + − · | Ü: beide Zahlen auf Zehner (bis 1000 auch beide auf Hunderter) runden und grob rechnen, dann genau rechnen und vergleichen: „Passt dein Ergebnis zum Überschlag?“ – oder: Passt das Ergebnis eines anderen Kindes? |
+
+Jede Knobelei ist ein eigenes Modul in `js/formats/` und meldet sich mit `Tasks.register(op, def)` an
+(Gruppe `knobeln`); die Zahlenmauer wird von `js/layouts/wall.js` als Pyramide gezeichnet,
+eigene Gestaltung steht in `css/formats.css`. Unit-Tests: `tests/zahlenmauer.test.js`, `tests/fehler.test.js`,
+`tests/welcherweg.test.js`, `tests/ueberschlag.test.js`.
+
 ## Entwicklung
 
 Reines HTML/CSS/JavaScript ohne Build-Schritt – `index.html` funktioniert sogar direkt per Doppelklick.
@@ -53,6 +70,8 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 | Datei | Inhalt |
 |---|---|
 | `js/tasks.js` | Aufgaben-Generator für alle Rechenwege |
+| `js/formats/*.js` | Knobel-Aufgaben: Zahlenmauer, Fehler finden, Welcher Weg?, Überschlagen |
+| `js/layouts/wall.js` | Darstellung der Zahlenmauer als Pyramide |
 | `js/check.js` | Prüf-Logik: Eingaben lesen, Zeilen bewerten, Hilfe-Stufen, Lösungstext |
 | `js/progress.js` | Sterne, Serien, Parade, Freischaltungen |
 | `js/settings.js` | Einstellungen: Standardwerte, alte Speicherstände anpassen, Laden/Speichern, Auswahl der Rechenwege |
