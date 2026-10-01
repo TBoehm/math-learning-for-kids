@@ -1,115 +1,121 @@
-# Einhorn-Rechenranch 🦄🐴 & Turbo-Rechenwerkstatt 🏎️🚜
+# 🦄 Einhorn-Rechenranch
 
-Lern-App für Kinder der **3. Klasse**: Plus, Minus, Mal und Geteilt im **Zahlenraum bis 1000** (zur Wiederholung auch bis 100) –
-gerechnet wird im **halbschriftlichen Verfahren**, Schritt für Schritt, mit Einhörnern und Pferden oder Baustellen- und Rennfahrzeugen als Begleiter.
+**Halbschriftlich und schriftlich rechnen üben: 3. Klasse, Zahlenraum bis 1000, mit Einhörnern oder Baggern.**
 
-**Live:** https://tboehm.github.io/math-learning-for-kids/
+### [▶ App öffnen: tboehm.github.io/math-learning-for-kids](https://tboehm.github.io/math-learning-for-kids/)
 
-## Rechenwege
+Kostenlos · ohne Anmeldung · ohne Tracking · läuft im Browser auf Handy, Tablet und PC
+
+<p>
+  <img src="docs/screenshot-ranch.jpg" alt="Einhorn-Ranch am Laptop: 610 + 350 schrittweise gerechnet, mit Rechenstrich und Einhorn" width="68%">
+  <img src="docs/screenshot-werkstatt.jpg" alt="Turbo-Rechenwerkstatt auf dem Handy: schriftlich subtrahieren mit Überschlag und Rechenraster" width="27%">
+</p>
+
+## Worum es geht
+
+Entstanden ist die App am Küchentisch: Am nächsten Tag stand eine Mathearbeit an, Lust auf Üben gab es null, und die
+üblichen Lern-Apps waren „öde“. Der Wunsch der Tochter: *„Es muss was mit Einhörnern sein.“*
+
+Herausgekommen ist eine App, die genau die Rechenwege übt, die in der 3. Klasse dran sind – **Zeile für Zeile wie
+im Heft**. Das Kind schreibt seine Zwischenschritte selbst, jede Zeile wird sofort geprüft, und ein Begleiter
+hilft in Stufen weiter. Dabei zählt **jeder richtige Weg**, nicht nur die Musterlösung: Wer erst die Einer rechnet
+oder in drei statt zwei Sprüngen ans Ziel kommt, bekommt trotzdem seinen Stern.
+
+## Was die App kann
+
+- **Plus, Minus, Mal, Geteilt** im Zahlenraum bis 1000 – oder bis 100 zur Wiederholung, umschaltbar direkt über der Aufgabe.
+- **Halbschriftliche Rechenwege:** Stellenweise, Schrittweise, Hilfsaufgabe, Vereinfachen, Ergänzen, Zerlegen,
+  Kernaufgaben – mit Rechenstrich, Malkreuz, Punktefeld und Zerlegungsbaum zum Anschauen.
+- **Schriftlich addieren und subtrahieren** (Abziehen mit Umwechseln oder Ergänzen) im Rechenraster auf Karopapier,
+  mit Überschlag, Vergleich und Probe.
+- **Knobeln:** Zahlenmauern, Fehler finden, „Welcher Weg ist geschickt?“ und Überschlagen.
+- **Drei Hilfe-Stufen:** *Mit Hilfe* (Schritte vorgegeben), *Zerlegung selbst* und *Alles selbst* – so wie in der Arbeit.
+- **Hilfe, die nicht schimpft:** erst Ermutigung, dann ein Tipp, beim dritten Versuch die Lösung.
+- **Zwei Welten:** die Einhorn-Ranch 🦄 und die Turbo-Rechenwerkstatt 🏎️ mit Baggern, Rennautos und Feuerwehr.
+- **Belohnungen:** Sterne, Serien, eine Galopp-Parade und neue Begleiter zum Freischalten.
+- **Für jedes Gerät:** Auf Tablets und Handys gibt es ein großes Zahlenfeld, die Tastatur bleibt zu.
+
+## So geht's los
+
+1. [App öffnen](https://tboehm.github.io/math-learning-for-kids/), Namen eingeben, Welt und Begleiter wählen.
+2. Oben die **Rechenart** antippen, darunter im Menü den **Rechenweg** und daneben den **Zahlenraum** wählen.
+3. Über ⚙️ lassen sich **Hilfe-Stufe**, Zehnerübergang (ohne / gemischt / mit), Geteilt mit Rest, Töne und Zahlenfeld einstellen.
+
+**Tipp für Eltern:** Neue Rechenwege mit *Mit Hilfe* beginnen, dann *Zerlegung selbst*, Ziel ist *Alles selbst*.
+Auf dem Tablet lässt sich die Seite über „Zum Home-Bildschirm“ wie eine App ablegen.
+
+<details>
+<summary><b>Alle Rechenwege und Knobeleien im Detail</b></summary>
 
 | Rechenart | Rechenwege | Anschauung |
 |---|---|---|
-| **+** Plus | Stellenweise (H+H, Z+Z, E+E – Reihenfolge frei) · Schrittweise (346 + 200 + 20 + 8, eigene Schritte erlaubt) · Hilfsaufgabe (59 + 19 → 60 + 19 − 1 oder 59 + 20 − 1) · Vereinfachen (239 + 41 = 240 + 40) | Rechenstrich |
-| **−** Minus | Schrittweise · Ergänzen, wenn die Zahlen nah beieinander liegen (590 → 600 → 900 → 930, Probe mit der Umkehraufgabe) · Hilfsaufgabe (82 − 39 → 82 − 40 + 1 oder 80 − 39 + 2) · Vereinfachen (73 − 29 = 74 − 30) | Rechenstrich |
-| **·** Mal | Zerlegen (4 · 23 = 4 · 20 + 4 · 3, auch 7 · 48 = 5 · 48 + 2 · 48) · Kernaufgaben mit 1 ·, 2 ·, 5 ·, 10 · (7 · 8 = 5 · 8 + 2 · 8, 8 · 6 = 10 · 6 − 2 · 6) · Hilfsaufgabe (9 · 15 = 10 · 15 − 15, 6 · 39 = 6 · 40 − 6) | Malkreuz, Punktefeld |
-| **:** Geteilt | Zerlegen in leichte Teile (852 : 4 = 800 : 4 + 40 : 4 + 12 : 4), Ergebniszeile `852 : 4 = 213`, Probe `213 · 4 = 852`, optional mit Rest | Zerlegungsbaum |
-| **Schriftlich** | Addieren (auch mit drei Zahlen, Übertrag bis 1000) · Subtrahieren durch Abziehen mit Entbündeln (503 − 278: aus 5 wird 4, aus 0 wird 9, aus 3 wird 13; auch 1000 − 374) · Subtrahieren durch Ergänzen mit Übertrag · Vergleich mit dem Überschlag, bei Minus Probe | Rechenraster auf Karopapier |
-
-**Schriftlich rechnen:** erst ein Überschlag (Ü: 440 + 250 = 690), dann Spalte für Spalte von rechts nach links –
-Einer, Zehner, Hunderter. Die ganze Rechnung steht im Raster (H | Z | E), die aktive Spalte leuchtet.
-*Mit Hilfe* stehen Überträge und umgewechselte Zahlen schon da, bei *Zerlegung selbst* gibt es Felder nur dort,
-wo etwas hingehört, bei *Alles selbst* überall – das Kind entscheidet selbst, wo es überträgt oder umwechselt
-(leer lassen heißt „nichts“). Danach, unter dem Raster: **Vergleich** – passt das Ergebnis zum Überschlag?
-Bei Minus noch die **Probe** mit der Umkehraufgabe (574 + 278 = 852, die Reihenfolge der Zahlen ist egal).
-Bis 1000 kommt beim Minus ab und zu 1000 − x vor: Umwechseln über mehrere Nullen (aus 1 wird 0, aus 0 wird 9, …).
-Im Zahlenraum bis 100 wird zweistellig gerechnet.
-
-Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; jede Zeile wird sofort geprüft.
-
-- **Hilfe in Stufen:** 1. Fehler → Ermutigung, 2. Fehler → Tipp zum Rechenschritt, 3. Fehler → Tipp + Lösung.
-- **Wie viel Hilfe?** – drei Stufen:
-  - *Mit Hilfe:* Zerlegung und Zwischenschritte sind vorgegeben, nur die Ergebnisse werden eingetragen.
-  - *Zerlegung selbst:* Das Kind zerlegt selbst (z. B. 38 = 30 + 8), die Schritte sind vorgegeben.
-  - *Alles selbst* (Standard): Das Kind erkennt und schreibt jeden Zwischenschritt komplett selbst,
-    wie im Heft: `47 + 30 = 77`, `77 + 8 = 85`. Jeder richtige Schritt, der zum Rechenweg passt, wird
-    angenommen (welche Zahl gerundet wird, welche Stelle zuerst kommt, wie viele Schritte, Sprünge oder
-    Teile); jeder weitere Schritt wird gegen die Zahlen geprüft, die das Kind tatsächlich eingetragen hat,
-    und die Rechnung wächst mit. Umständliche Wege werden angenommen, der Begleiter zeigt dann einen leichteren.
-    Wo die Reihenfolge frei ist (Stellenweise), heißt die Zeile erst „Eine Stelle“ und nach dem Rechnen
-    so wie die Stelle, die das Kind gewählt hat (z. B. „Zehner“).
-- **Über der Aufgabe:** Rechenart, ein aufklappbares Menü mit allen Rechenwegen (gruppiert in Rechenwege, Knobeln,
-  Schriftlich) und der Schalter für den Zahlenraum bis 100 (Wiederholung) / bis 1000 (Stoff der 3. Klasse).
-- **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Hilfe-Stufe, Geteilt mit Rest, Töne, Zahlenfeld.
-- **Zwei Welten:** Einhorn-Ranch und Turbo-Rechenwerkstatt (Fahrzeuge), umschaltbar mit dem Knopf in der Kopfzeile (zeigt die Hauptfigur der anderen Welt mit ⇄).
-  Jede Welt bringt ihre eigenen Texte, Knöpfe, Klänge und ihr Tab-Symbol mit.
-- **Belohnungen:** Sterne, Serie ohne Fehler, Galopp-Parade nach 5 fehlerfreien Aufgaben in Folge,
-  neue Begleiter ab 10, 25, 50 und 100 Sternen (Ranch: Pony, Sternen-Einhorn, Pegasus, Regenbogen-Flügeleinhorn;
-  Werkstatt: Feuerwehrauto, Kipplaster, Monstertruck, Helden-Auto).
-- **Responsiv:** Handy, Tablet und Desktop; auf Touch-Geräten gibt es ein großes Zahlenfeld (Tablet hochkant: unten,
-  Tablet quer: links unter dem Begleiter).
-- **Für Eltern:** Ein kleiner Chip am rechten Rand verweist auf den Workshop „Agentic Engineering for Teams“
-  (Bild liegt lokal in `img/`, es wird nichts von fremden Servern geladen).
-- **Datenschutz:** keine externen Server, keine Cookies, keine Tracker. Schrift (Fredoka, OFL) liegt im Projekt,
-  Fortschritt nur im `localStorage` des Geräts.
-
-## Knobeln
-
-Unter den Rechenwegen gibt es die Gruppe **Knobeln** (nicht in „Alle Wege“ und „Gemischt“). Alle Knobel-Aufgaben
-halten sich an den eingestellten Zahlenraum (bis 100 oder bis 1000).
+| **+** Plus | Stellenweise (H+H, Z+Z, E+E – Reihenfolge frei) · Schrittweise (346 + 200 + 20 + 8) · Hilfsaufgabe (59 + 19 → 60 + 19 − 1) · Vereinfachen (239 + 41 = 240 + 40) | Rechenstrich |
+| **−** Minus | Schrittweise · Ergänzen bei nahen Zahlen (590 → 600 → 900 → 930) · Hilfsaufgabe (82 − 39 → 82 − 40 + 1) · Vereinfachen (73 − 29 = 74 − 30) | Rechenstrich |
+| **·** Mal | Zerlegen (4 · 23 = 4 · 20 + 4 · 3) · Kernaufgaben mit 1 ·, 2 ·, 5 ·, 10 · (7 · 8 = 5 · 8 + 2 · 8) · Hilfsaufgabe (9 · 15 = 10 · 15 − 15) | Malkreuz, Punktefeld |
+| **:** Geteilt | Zerlegen in leichte Teile (852 : 4 = 800 : 4 + 40 : 4 + 12 : 4), Probe mit der Malaufgabe, optional mit Rest | Zerlegungsbaum |
+| **Schriftlich** | Addieren (auch drei Zahlen) · Subtrahieren durch Abziehen mit Umwechseln (auch 1000 − 374) · Subtrahieren durch Ergänzen · jeweils mit Überschlag, Vergleich und bei Minus Probe | Rechenraster (H \| Z \| E) |
 
 | Knobelei | Rechenarten | So geht's |
 |---|---|---|
-| **Zahlenmauer** | + (Plusmauer), − (Minusmauer) | Jeder Stein ist die Summe der zwei Steine darunter. Plusmauer: untere Reihe gegeben, Reihe für Reihe nach oben. Minusmauer: Spitze und einige Steine gegeben, die fehlenden Steine Schritt für Schritt finden – mal plus, mal minus. *Mit Hilfe:* 3 Reihen, sonst 4. |
-| **Fehler finden** | + − · : | Eine fertige Rechnung aus einem echten Rechenweg, in genau einer Zeile steckt ein typischer Fehler (Zehnerübergang vergessen, verzählt, Einer vergessen, Null vergessen, Einmaleins-Fehler, falsches Rechenzeichen beim Ausgleichen). Falsche Zeile antippen, verbessern, richtiges Ergebnis. |
-| **Welcher Weg?** | + − | Welcher Rechenweg ist hier besonders geschickt? (328 + 99 → Hilfsaufgabe, 702 − 698 → Ergänzen, 346 + 228 → Schrittweise …) Alle sinnvollen Wege zählen; danach wird mit dem gewählten Weg gerechnet – genau so wie beim Rechenweg selbst und passend zur eingestellten Stufe (bei *Alles selbst* mit allen richtigen anderen Schritten, ohne Rechenstrich). Auch „Vereinfachen“ wird angeboten. |
-| **Überschlagen** | + − · | Ü: beide Zahlen auf Zehner (bis 1000 auch beide auf Hunderter) runden und grob rechnen, dann genau rechnen und vergleichen: „Passt dein Ergebnis zum Überschlag?“ – oder: Passt das Ergebnis eines anderen Kindes? |
+| **Zahlenmauer** | + − | Jeder Stein ist die Summe der zwei Steine darunter – nach oben rechnen oder fehlende Steine finden. |
+| **Fehler finden** | + − · : | In einer fertigen Rechnung steckt ein typischer Fehler (Zehnerübergang vergessen, verzählt, Null vergessen …). Finden und verbessern. |
+| **Welcher Weg?** | + − | Welcher Rechenweg ist hier geschickt? (328 + 99 → Hilfsaufgabe, 702 − 698 → Ergänzen) Danach wird mit dem gewählten Weg gerechnet. |
+| **Überschlagen** | + − · | Grob rechnen, genau rechnen, vergleichen: Passt das Ergebnis zum Überschlag? |
 
-Jede Knobelei ist ein eigenes Modul in `js/formats/` und meldet sich mit `Tasks.register(op, def)` an
-(Gruppe `knobeln`); die Zahlenmauer wird von `js/layouts/wall.js` als Pyramide gezeichnet,
-eigene Gestaltung steht in `css/formats.css`. Unit-Tests: `tests/zahlenmauer.test.js`, `tests/fehler.test.js`,
-`tests/welcherweg.test.js`, `tests/ueberschlag.test.js`.
+Jede Aufgabe wird zufällig neu erzeugt, die Knobeleien halten sich an den eingestellten Zahlenraum.
+</details>
 
-## Entwicklung
+## Datenschutz – auch für die Schule
 
-Reines HTML/CSS/JavaScript ohne Build-Schritt – `index.html` funktioniert sogar direkt per Doppelklick.
+- **Keine Anmeldung, keine Cookies, keine Tracker**, keine Analyse- oder Werbedienste.
+- **Nichts von fremden Servern:** Schrift und Bilder liegen im Projekt, Grafiken sind SVG im Code, Klänge entstehen
+  live im Browser.
+- **Fortschritt bleibt auf dem Gerät:** Name, Sterne und Einstellungen stehen nur im `localStorage` des Browsers.
+  Wer die Browserdaten löscht, setzt die App zurück.
+- **Hosting:** Die öffentliche Version liegt auf GitHub Pages; GitHub verarbeitet dabei als Hoster die technisch
+  nötigen Zugriffsdaten. Wer das vermeiden will, kann die App selbst hosten oder ganz offline nutzen (siehe unten).
+- Der einzige Link nach außen ist der kleine Chip „Agentic Engineering for Teams“ am Rand; er lädt nichts nach und
+  öffnet sich nur, wenn man ihn antippt.
 
-```bash
-npm start            # lokaler Server auf http://localhost:8080
-npm test             # Unit-Tests (Node, ohne Abhängigkeiten)
-npm ci && npx playwright install chromium
-npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
-npm run stamp        # nach Änderungen an css/ oder js/: Cache-Sperre (?v=<Hash>) in index.html setzen
-```
+## Selbst hosten oder offline nutzen
 
-| Datei | Inhalt |
-|---|---|
-| `js/tasks.js` | Aufgaben-Generator für alle Rechenwege; `Tasks.build(op, weg, a, b, opt)` baut einen Rechenweg zu festen Zahlen (z. B. für „Welcher Weg?“) |
-| `js/formats/*.js` | Knobel-Aufgaben: Zahlenmauer, Fehler finden, Welcher Weg?, Überschlagen |
-| `js/layouts/wall.js` | Darstellung der Zahlenmauer als Pyramide |
-| `js/check.js` | Prüf-Logik: Eingaben lesen, Zeilen bewerten, Hilfe-Stufen, Lösungstext |
-| `js/progress.js` | Sterne, Serien, Parade, Freischaltungen |
-| `js/settings.js` | Einstellungen: Standardwerte, alte Speicherstände anpassen, Laden/Speichern, Auswahl der Rechenwege |
-| `js/ui-logic.js` | Logik der Oberfläche ohne DOM: Eingaben, Zahlenfeld, Felder nach dem Prüfen, Texte des Begleiters |
-| `js/viz-logic.js` | Inhalte der Anschauungen ohne DOM: Malkreuz, Zerlegungsbaum, Punktefeld, Lage auf dem Rechenstrich |
-| `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |
-| `js/themes.js` | Welten: Texte, Begleiter, Effekte und Klänge je Welt, Weltwechsel |
-| `js/vehicles.js` | Fahrzeug-Begleiter der Werkstatt als SVG (Bagger, Rennauto, Feuerwehr, Kipplaster, Monstertruck, Helden-Auto) |
-| `js/formats/schriftlich.js` | Schriftlich addieren und subtrahieren: Rechnung Stelle für Stelle, Zeilen, Tipps (ohne DOM) |
-| `js/layouts/column.js`, `css/column.css` | Rechenraster (Karopapier) für die schriftlichen Verfahren |
-| `js/companion.js` | Begleiter als SVG |
-| `js/sound.js` | Klänge per Web-Audio (keine Sounddateien) |
-| `js/app.js` | Oberfläche und Ablauf |
+Die App besteht nur aus statischen Dateien, ohne Build-Schritt und ohne Server-Logik.
 
-Die Prüf-Logik (`check.js`, `progress.js`) ist testgetrieben entwickelt und ohne DOM testbar.
-`tests/tasks.test.js` und `tests/rechenwege.test.js` erzeugen zehntausende Aufgaben und prüfen, dass jede Zeile rechnerisch stimmt,
-alles im Zahlenraum bleibt und falsche Antworten abgelehnt werden; `tests/alternativen.test.js` spielt für jeden
-Rechenweg andere richtige Wege durch und prüft, dass sie angenommen werden.
-Auch die Logik der Oberfläche (`settings.js`, `ui-logic.js`, `viz-logic.js`) steckt in reinen Modulen mit Unit-Tests;
-die Browser-Tests (`tests/e2e/`) prüfen nur, was einen echten Browser braucht: Verdrahtung, Fokus, Layout und Dialoge.
+- **Offline:** [Repository als ZIP herunterladen](https://github.com/tboehm/math-learning-for-kids/archive/refs/heads/main.zip),
+  entpacken, `index.html` öffnen.
+- **Eigener Webserver / Schulserver:** den Ordner einfach hochkopieren.
+- **Eigene GitHub-Pages-Version:** Repository forken und unter *Settings → Pages* „Deploy from a branch → `main`“ wählen.
 
-## Veröffentlichung
+Bei einer eigenen Version bitte das Porträtfoto `img/tobias-boehm.jpg` entfernen oder ersetzen (siehe [Lizenz](#lizenz)).
 
-GitHub Pages ist auf **Deploy from a branch → `main` / root** eingestellt: jeder Push auf `main` geht automatisch live.
-Der Workflow `.github/workflows/ci.yml` führt bei jedem Push und Pull Request Unit- und Browser-Tests aus.
-Damit nur Grünes live geht: in *Settings → Branches* eine Regel für `main` mit den Pflicht-Checks
-„Unit-Tests“ und „Browser-Tests (Ende-zu-Ende)“ anlegen und Änderungen per Pull Request mergen.
+## Wie die App entstanden ist
+
+Die erste Version stand nach etwa 30 Minuten – gebaut mit [Claude Code](https://claude.com/claude-code) im Stil des
+*Agentic Engineering*: Der Mensch beschreibt, was Kinder brauchen, und prüft das Ergebnis; ein KI-Agent schreibt Code
+und Tests. Seitdem ist die App Wunsch für Wunsch gewachsen.
+
+Damit dabei verlässliche Software herauskommt, gelten feste Leitplanken (nachzulesen in [`CLAUDE.md`](CLAUDE.md)):
+testgetriebene Entwicklung, jede richtige Alternative muss angenommen werden, und alles Prüfbare wird als schneller
+Unit-Test geprüft. Die Tests erzeugen zehntausende Zufallsaufgaben und kontrollieren jede Zeile; Browser-Tests prüfen
+die Oberfläche auf Handy, Tablet und Desktop. Jeder Push läuft durch die CI, bevor er live geht.
+
+Wie man so etwas im eigenen Team aufsetzt, zeige ich im Workshop
+**[Agentic Engineering for Teams](https://toboehm.de/agentic-engineering)**.
+
+## Mitmachen
+
+Fehler gefunden, Idee für eine Knobelei oder einen Rechenweg? Gern als
+[Issue](https://github.com/tboehm/math-learning-for-kids/issues) melden. Wie das Projekt aufgebaut ist, wie man es
+lokal startet und testet, steht in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Lizenz
+
+Der Code steht unter der [MIT-Lizenz](LICENSE) – nutzen, verändern und weitergeben ausdrücklich erwünscht, auch in
+Schulen. Ausgenommen sind:
+
+- die Schrift **Fredoka** – [SIL Open Font License 1.1](fonts/OFL.txt),
+- das **Porträtfoto** `img/tobias-boehm.jpg` – alle Rechte vorbehalten.
+
+Details zu allen fremden Bestandteilen: [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+
+© 2026 Tobias Boehm

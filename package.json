@@ -2,14 +2,20 @@
   "name": "einhorn-rechenranch",
   "version": "1.0.0",
   "private": true,
-  "description": "Halbschriftlich rechnen üben (Klasse 3, Zahlenraum bis 1000) – statische Web-App für GitHub Pages",
+  "description": "Halbschriftlich und schriftlich rechnen üben (Klasse 3, Zahlenraum bis 1000) – statische Web-App, läuft im Browser",
+  "author": "Tobias Boehm",
+  "homepage": "https://tboehm.github.io/math-learning-for-kids/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tboehm/math-learning-for-kids.git"
+  },
+  "license": "MIT",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
     "start": "npx --yes http-server -c-1 -p 8080 .",
     "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.e2e.js\"",
     "stamp": "node scripts/version-assets.js"
   },
-  "license": "MIT",
   "devDependencies": {
     "playwright": "1.56.1"
   }

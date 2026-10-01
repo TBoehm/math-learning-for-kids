@@ -30,6 +30,11 @@ Veröffentlicht über GitHub Pages ("Deploy from a branch: main"): jeder Push au
   Malpunkt `·`, Geteilt `:`, Rest `R`).
 - Keine externen Server zur Laufzeit ohne guten Grund (Datenschutz an Schulen); Schrift liegt lokal.
 - Responsiv für Handy, Tablet und Desktop.
+- **Dokumentation:** `README.md` richtet sich an Eltern, Lehrkräfte und technisch Interessierte (was die App kann,
+  Datenschutz, selbst hosten); Technisches für Entwickler steht in `CONTRIBUTING.md`. Neue Funktionen in beiden
+  passend nachtragen; Screenshots liegen in `docs/`.
+- **Lizenz:** Code MIT (`LICENSE`). Neue fremde Bestandteile (Schriften, Bilder, Bibliotheken) nur mit
+  verträglicher Lizenz und mit Eintrag in `THIRD-PARTY-NOTICES.md`.
 - **Cache-Sperre:** Nach Änderungen an `css/` oder `js/` `npm run stamp` ausführen (setzt `?v=<Hash>` in
   `index.html`); `tests/assets.test.js` schlägt sonst fehl. So mischen Browser nach einem Update keine alten
   und neuen Dateien.
