@@ -493,13 +493,14 @@ describe('Geteilt: freie Zerlegung in zwei oder mehr Teile, Ergebnis, Probe', ()
     for (const max of RANGES) {
       for (let k = 0; k < RUNS; k++) {
         const t = gen(':', 'zerlegen', 'zerlegen', max, { rest: k % 2 === 0 });
-        const n = inputs(t.rows[0]).length, D = t.a, d = t.b;
+        // je Teil eine Zeile [Teil] : d = [Ergebnis] (R [Rest]) – erst kleine Teile (je ein d), der letzte ist der Rest
+        const n = t.rows.filter((r) => /Teil$/.test(r.label)).length, D = t.a, d = t.b;
         if (t.answer < n + 1) continue;
-        const parts = [];
+        const rows = [];
         let left = D;
-        for (let i = 0; i < n - 1; i++) { parts.push(d); left -= d; }
-        parts.push(left);
-        assert.equal(ok(t, [parts]).vals.res, t.answer);
+        for (let i = 0; i < n - 1; i++) { rows.push([d, 1]); left -= d; }
+        rows.push(t.rest ? [left, Math.floor(left / d), left % d] : [left, left / d]);
+        assert.equal(ok(t, rows).vals.res, t.answer);
       }
     }
   });

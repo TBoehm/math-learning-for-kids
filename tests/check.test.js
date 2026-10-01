@@ -93,20 +93,20 @@ describe('checkRow', () => {
   });
 
   test('Felder dürfen von vorherigen Feldern derselben Zeile abhängen', () => {
-    // Profi-Division 84 : 6 – erste Teilzahl frei wählbar
-    const t = Tasks.generate({ op: ':', profi: true });
-    const D = t.a, d = t.b;
-    const split = t.rows[0];
-    let r = Check.checkRow(split, { p1: String(d * 10), p2: String(D - d * 10) }, {});
-    assert.equal(r.correct, true, 'Zehnfaches des Teilers');
-    r = Check.checkRow(split, { p1: String(d), p2: String(D - d) }, {});
+    // Mal Zerlegen, Zerlegung selbst: 4 · 23 = 4 · [m1] + 4 · [m2] – der erste Teil frei, der zweite ergänzt ihn
+    const t = malSplit();
+    const big = Math.max(t.a, t.b), split = t.rows[0];
+    let r = Check.checkRow(split, { m1: String(big - 1), m2: '1' }, {});
     assert.equal(r.correct, true, 'auch eine ungewöhnliche, aber gültige Zerlegung');
-    r = Check.checkRow(split, { p1: String(d * 10), p2: String(D - d * 10 + 1) }, {});
+    r = Check.checkRow(split, { m1: '1', m2: String(big - 2) }, {});
     assert.deepEqual(r.fields.map((f) => f.status), ['correct', 'wrong'], 'Summe stimmt nicht');
-    r = Check.checkRow(split, { p1: String(d * 10 + 1), p2: String(D - d * 10 - 1) }, {});
-    assert.equal(r.fields[0].status, 'wrong', 'nicht durch den Teiler teilbar');
+    r = Check.checkRow(split, { m1: String(big), m2: '0' }, {});
+    assert.equal(r.fields[0].status, 'wrong', 'die ganze Zahl ist keine Zerlegung');
   });
 });
+
+/** Mal Zerlegen, Zerlegung selbst: erste Zeile a · b = s · [m1] + s · [m2] */
+function malSplit() { return Tasks.generate({ op: '·', strategy: 'zerlegen', level: 'zerlegen', max: 100 }); }
 
 describe('ganze Aufgaben lösen', () => {
   // Löst eine Aufgabe mit den hinterlegten Lösungen – auch Zeilen, die das Kind selbst anhängt (task.nextRow)
@@ -173,32 +173,27 @@ describe('Rückmeldung bei Fehlern', () => {
   });
 
   test('solutionText passt sich an eine freie, gültige Zerlegung an', () => {
-    const t = Tasks.generate({ op: ':', profi: true });
-    const D = t.a, d = t.b;
-    const r = Check.checkRow(t.rows[0], { p1: String(d), p2: '1' }, {});
+    const t = malSplit(), big = Math.max(t.a, t.b);
+    const r = Check.checkRow(t.rows[0], { m1: '1', m2: '1' }, {});
     assert.deepEqual(r.fields.map((f) => f.status), ['correct', 'wrong']);
-    assert.equal(Check.solutionText(t.rows[0], r), String(D - d));
+    assert.equal(Check.solutionText(t.rows[0], r), String(big - 1));
   });
 });
 
 describe('Abhängige Felder (Review-Befunde)', () => {
-  test('Profi-Division 51 : 3 mit "50 + 1": die 1 darf nicht als richtig gelten', () => {
-    let t;
-    do { t = Tasks.generate({ op: ':', profi: true }); } while (t.a < 20 || (Math.floor(t.a / 10) * 10) % t.b === 0);
-    const D = t.a, tensD = Math.floor(D / 10) * 10;
-    const r = Check.checkRow(t.rows[0], { p1: String(tensD), p2: String(D - tensD) }, {});
-    {
-      assert.equal(r.fields[0].status, 'wrong');
-      assert.equal(r.fields[1].status, 'pending', 'hängt von einem falschen Feld ab');
-      assert.equal(r.correct, false);
-    }
+  test('falsches erstes Feld: das abhängige Feld gilt nicht als richtig', () => {
+    const t = malSplit(), big = Math.max(t.a, t.b);
+    const r = Check.checkRow(t.rows[0], { m1: String(big), m2: '0' }, {});
+    assert.equal(r.fields[0].status, 'wrong');
+    assert.equal(r.fields[1].status, 'pending', 'hängt von einem falschen Feld ab');
+    assert.equal(r.correct, false);
   });
 
   test('pending-Felder erscheinen im Lösungstext mit der Musterlösung', () => {
-    const t = Tasks.generate({ op: ':', profi: true });
-    const p1 = t.rows[0].tokens.find((x) => x.id === 'p1');
-    const p2 = t.rows[0].tokens.find((x) => x.id === 'p2');
-    const r = Check.checkRow(t.rows[0], { p1: String(p1.answer + 1), p2: String(t.a - p1.answer - 1) }, {});
-    assert.equal(Check.solutionText(t.rows[0], r), p1.answer + ' und ' + p2.answer);
+    const t = malSplit(), big = Math.max(t.a, t.b);
+    const m1 = t.rows[0].tokens.find((x) => x.id === 'm1');
+    const m2 = t.rows[0].tokens.find((x) => x.id === 'm2');
+    const r = Check.checkRow(t.rows[0], { m1: String(big), m2: '0' }, {});
+    assert.equal(Check.solutionText(t.rows[0], r), m1.answer + ' und ' + m2.answer);
   });
 });

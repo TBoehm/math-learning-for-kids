@@ -186,7 +186,7 @@
     var modes = max === 1000 ? [10, 100] : [10];
     var calc = function (xs) { return kind === 'add' ? sum(xs) : xs[0] - xs[1]; };
     var r10 = terms.map(function (x) { return roundTo(x, 10); });
-    var tokens = [];
+    var tokens = [T('Ü:')]; // wie im Heft: Ü: 440 + 250 = 690
     if (level === 'hilfe') {
       r10.forEach(function (x, i) { if (i) tokens.push(T(op)); tokens.push(N(x)); });
       tokens.push(T('='), I('gs', calc(r10), undefined, 'Überschlag: Ergebnis'));
@@ -312,6 +312,8 @@
         var lead = kindLB === 'L' && c === n - 1 && v === 0;
         var tok = I(kindLB.toLowerCase() + c, v || 0, place, aria, level === 'selbst' || lead ? 0 : undefined);
         if (lead) tok.lead = true; // fürs Raster: die alte Ziffer wird auch durchgestrichen, wenn das Feld leer bleibt
+        // Entbündeln: über die 3 schreibt man 13 – oder nur die gebündelten 10 (beides ist üblich)
+        if (kindLB === 'B' && v >= 10) tok.check = function (x) { return x === v || x === 10; };
         return tok;
       };
       plan.cols.forEach(function (col) {

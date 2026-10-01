@@ -1197,32 +1197,30 @@
     } else {
       splitToks = shown.map(N);
     }
-    var splitRow = row([N(D), T('=')].concat(joined(splitToks, '+')), {
-      label: 'Zerlegen',
-      hint: p ? 'Suche leichte Zahlen aus der ' + d + 'er-Reihe, z. B. ' + shown.slice(0, -1).join(' und ') + '. Dann: Was bleibt übrig?'
-        : 'Wir zerlegen ' + D + ' in leichte Zahlen.'
-    });
-    if (p) {
-      // Richtige, aber umständliche Zerlegung: annehmen und freundlich einen leichteren Weg zeigen
-      splitRow.advice = function (vals) {
-        if (ids.every(function (id) { return easyPart(vals[id], d); })) return null;
-        return 'Stimmt! Tipp fürs nächste Mal: ' + shown.join(' + ') + ' ist leichter, denn ' +
-          shown[0] + ' : ' + d + ' = ' + qParts[0] + ' weißt du sofort. 💡';
-      };
-    }
-    var rows = [splitRow];
+    // wie im Heft: nur die Teilaufgaben untereinander (70 : 7 = 10, 28 : 7 = 4) – keine Zeile "98 = 70 + 28";
+    // bei "Zerlegung selbst" trägt das Kind die Teile in die Teilaufgaben ein
+    var splitHint = p ? 'Nimm eine leichte Zahl aus der ' + d + 'er-Reihe, z. B. ' + shown[0] + '.'
+      : 'Zerlege ' + D + ' in leichte Teile: ' + andList(shown.map(String)) + '.';
+    // Richtige, aber umständliche Zerlegung: annehmen und freundlich einen leichteren Weg zeigen
+    // (nach der letzten Teilaufgabe – dann steht die ganze Zerlegung fest)
+    var advice = function (vals) {
+      if (ids.every(function (id) { return easyPart(vals[id], d); })) return null;
+      return 'Stimmt! Tipp fürs nächste Mal: ' + shown.join(' + ') + ' ist leichter, denn ' +
+        shown[0] + ' : ' + d + ' = ' + qParts[0] + ' weißt du sofort. 💡';
+    };
+    var rows = [];
     shown.forEach(function (x, i) {
       var last = i === nParts - 1, place = placeOf(qParts[i]);
-      var toks = [RP(p, ids[i], x), T(':'), N(d), T('='),
-        IE('q' + (i + 1), Math.floor(x / d), function (vals) { return Math.floor(partOf(vals, i) / d); })];
-      if (last && withRest) toks.push(T('R'), IE('r', r, function (vals) { return partOf(vals, i) % d; }));
-      rows.push(row(toks, {
-        label: (i + 1) + '. Teil',
-        hint: (p ? 'Wie oft passt ' + d + ' in die ' + (i + 1) + '. Zahl?'
-          : 'Denk an das Einmaleins: Wie oft passt ' + d + ' in ' + x + '?' +
-            (place > 1 ? ' (' + qParts[i] / place + ' · ' + d + ' = ' + parts[i] / place + ', also ' + qParts[i] + ' · ' + d + ' = ' + parts[i] + ')' : '')) +
-          (last && withRest ? ' Was übrig bleibt, ist der Rest.' : '')
-      }));
+      var toks = [splitToks[i], T(':'), N(d), T('='),
+        IE('q' + (i + 1), Math.floor(x / d), function (vals) { return Math.floor(partOf(vals, i) / d); }, p ? [ids[i]] : null)];
+      if (last && withRest) toks.push(T('R'), IE('r', r, function (vals) { return partOf(vals, i) % d; }, p ? [ids[i]] : null));
+      var tip = p
+        ? (i === 0 ? splitHint : last ? 'Was ist von ' + D + ' noch übrig? Teile es durch ' + d + '.' : 'Nimm noch eine leichte Zahl aus der ' + d + 'er-Reihe.')
+        : (i === 0 ? splitHint + ' ' : '') + 'Denk an das Einmaleins: Wie oft passt ' + d + ' in ' + x + '?' +
+          (place > 1 ? ' (' + qParts[i] / place + ' · ' + d + ' = ' + parts[i] / place + ', also ' + qParts[i] + ' · ' + d + ' = ' + parts[i] + ')' : '');
+      var r0 = row(toks, { label: (i + 1) + '. Teil', hint: tip + (last && withRest ? ' Was übrig bleibt, ist der Rest.' : '') });
+      if (p && last) r0.advice = advice;
+      rows.push(r0);
     });
     rows.push(resultRow(D, d, q, r));
     rows.push(row([R('res'), T('·'), N(d)].concat(withRest ? [T('+'), R('rf')] : [], [T('='), I('pD', D)]), {

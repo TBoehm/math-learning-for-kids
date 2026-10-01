@@ -333,6 +333,21 @@ describe('Aufgabe aufbauen: Zeilen in der Reihenfolge des Rechnens', () => {
   });
 });
 
+describe('Entbündeln: beide Schreibweisen', () => {
+  // über die 3 schreibt man 13 – oder nur die gebündelten 10 (die 3 bleibt stehen)
+  for (const level of ['zerlegen', 'selbst']) {
+    test(`503 − 278, ${level}: über den Einern 13 oder 10`, () => {
+      const t = S.build('sub', [503, 278], { level, max: 1000 });
+      const b0 = t.rows.flatMap((r) => r.tokens).find((x) => x.id === 'b0');
+      assert.equal(b0.answer, 13);
+      assert.equal(b0.check(13), true);
+      assert.equal(b0.check(10), true);
+      assert.equal(b0.check(12), false);
+      assert.equal(b0.check(3), false);
+    });
+  }
+});
+
 describe('Überschlag', () => {
   test('runden', () => {
     assert.equal(S.roundTo(438, 10), 440);
@@ -368,6 +383,12 @@ describe('Überschlag', () => {
       'Runde auf glatte Zehner: 470 bleibt, 19 wird 20. Rechne dann 470 + 20.');
     assert.equal(S.build('sub', [532, 278], { level: 'hilfe', max: 1000 }).rows[0].hint,
       'Rechne mit den gerundeten Zahlen: 530 − 280.');
+  });
+  test('wie im Heft: die Zeile beginnt mit „Ü:“', () => {
+    for (const level of ['hilfe', 'zerlegen', 'selbst']) {
+      const u = S.build('add', [438, 254], { level, max: 1000 }).rows[0];
+      assert.equal(u.tokens[0].v, 'Ü:', level);
+    }
   });
   test('bis 100: nur auf Zehner runden', () => {
     const u = S.build('add', [47, 38], { level: 'selbst', max: 100 }).rows[0];

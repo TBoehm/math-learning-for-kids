@@ -80,8 +80,9 @@ describe('Felder nach dem Prüfen', () => {
     // Aufgabe gezielt wählen: Zehner des Dividenden nicht durch den Teiler teilbar
     let t;
     do { t = Tasks.generate({ op: ':', level: 'zerlegen' }); } while ((Math.floor(t.a / 10) * 10) % t.b === 0);
-    const row = t.rows[0], [p1, p2] = inputs(row), tens = Math.floor(t.a / 10) * 10;
-    const r = Check.checkRow(row, { [p1.id]: String(tens), [p2.id]: String(t.a - tens) }, {});
+    // erste Teilaufgabe [p1] : d = [q1] – der Teil ist falsch, das Ergebnisfeld bleibt änderbar
+    const row = t.rows[0], [p1, q1] = inputs(row), tens = Math.floor(t.a / 10) * 10;
+    const r = Check.checkRow(row, { [p1.id]: String(tens), [q1.id]: String(Math.floor(tens / t.b)) }, {});
     const fx = r.fields.map((f) => UI.fieldEffect(f.status));
     assert.equal(fx[0].cls, 'bad');
     assert.equal(fx[1].locked, false, 'zweites Feld bleibt änderbar');
@@ -145,11 +146,17 @@ describe('Rückmeldung nach einer richtigen Zeile', () => {
   });
   test('Profi-Division mit "Teiler + Rest": angenommen ohne Fehler, aber mit Rat', () => {
     let t;
-    do { t = Tasks.generate({ op: ':', level: 'zerlegen' }); } while (Tasks.isEasySplit(t.b, t.a - t.b, t.b));
-    const row0 = t.rows[0], [p1, p2] = inputs(row0);
-    const r = Check.checkRow(row0, { [p1.id]: String(t.b), [p2.id]: String(t.a - t.b) }, {});
+    do { t = Tasks.generate({ op: ':', level: 'zerlegen' }); }
+    while (Tasks.isEasySplit(t.b, t.a - t.b, t.b) || t.rows.filter((x) => /Teil$/.test(x.label)).length !== 2);
+    // 1. Teil: [d] : d = [1], 2. Teil: der Rest – richtig, aber umständlich
+    let r = Check.checkRow(t.rows[0], { p1: String(t.b), q1: '1' }, {});
     assert.equal(UI.outcome(r).mistake, false);
-    assert.match(UI.rowDoneText(row0, t.rows[1], r.vals, first), /leichter/);
+    const last = t.rows[1], left = t.a - t.b;
+    const raw = { p2: String(left), q2: String(Math.floor(left / t.b)) };
+    if (t.rest) raw.r = String(left % t.b);
+    r = Check.checkRow(last, raw, r.vals);
+    assert.equal(UI.outcome(r).mistake, false);
+    assert.match(UI.rowDoneText(last, t.rows[2], r.vals, first), /leichter/);
   });
 });
 

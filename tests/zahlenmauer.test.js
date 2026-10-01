@@ -1,4 +1,4 @@
-// Knobeln: Zahlenmauern (js/formats/zahlenmauer.js) – Plusmauern und Minusmauern.
+// Knobeln: Zahlenmauern (js/formats/zahlenmauer.js) – Plusmauern und Zahlenmauern mit Lücken.
 'use strict';
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
@@ -24,7 +24,7 @@ describe('Zahlenmauer: Bausteine', () => {
     assert.deepEqual(ZM.build([1, 2, 3, 4]), [[1, 2, 3, 4], [3, 5, 7], [8, 12], [20]]);
   });
 
-  test('Lösungsweg finden: Minusmauer mit Spitze, Stein in der Mitte und unten links', () => {
+  test('Lösungsweg finden: Zahlenmauer mit Lücken, mit Spitze, Stein in der Mitte und unten links', () => {
     const levels = ZM.build([10, 12, 16]);
     const given = [[true, false, false], [true, false], [true]];
     const steps = ZM.deduce(levels, given);
@@ -89,7 +89,7 @@ describe('Plusmauer (untere Reihe gegeben, nach oben rechnen)', () => {
   }
 });
 
-describe('Minusmauer (Spitze und einige Steine gegeben)', () => {
+describe('Zahlenmauer mit Lücken (Spitze und einige Steine gegeben)', () => {
   test('feste Mauer: jeder Schritt ist eine Minusaufgabe, Hinweise passen', () => {
     const t = ZM.minusTask([10, 12, 16], [[true, false, false], [true, false], [true]]);
     assert.equal(t.rows.length, 3);
@@ -110,7 +110,7 @@ describe('Minusmauer (Spitze und einige Steine gegeben)', () => {
 
   for (const max of [100, 1000]) {
     for (const level of ['hilfe', 'selbst']) {
-      test(`zufällige Minusmauern bis ${max}, Stufe ${level}`, () => {
+      test(`zufällige Zahlenmauern mit Lücken bis ${max}, Stufe ${level}`, () => {
         const rnd = seeded(7 * max + level.length);
         for (let i = 0; i < 300; i++) {
           const t = ZM.minus({ max, level, rnd });
@@ -157,5 +157,14 @@ describe('Zahlenmauer ist angemeldet', () => {
       assert.ok(t.intro && !/undefined/.test(t.intro));
       solve(t);
     }
+  });
+});
+
+describe('Namen', () => {
+  // „Minusmauer“ ist in der Fachdidaktik schon vergeben (Unterschiedsmauern) – unsere Mauer rechnet wie jede Zahlenmauer
+  test('bei Minus: „Zahlenmauer mit Lücken“, nicht „Minusmauer“', () => {
+    const s = Tasks.STRATEGIES['−'].find((x) => x.key === 'zahlenmauer');
+    assert.equal(s.name, 'Zahlenmauer mit Lücken');
+    assert.match(s.desc, /Summe|zusammen/);
   });
 });

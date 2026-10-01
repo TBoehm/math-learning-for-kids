@@ -1,7 +1,7 @@
 /*
  * Knobeln: Zahlenmauern. Jeder Stein ist die Summe der beiden Steine darunter.
  *   Plus:  untere Reihe gegeben, Reihe für Reihe nach oben rechnen (eine Zeile = eine Reihe der Mauer)
- *   Minus: Spitze und einige Steine gegeben ("Minusmauer"), fehlende Steine Schritt für Schritt
+ *   Minus: Spitze und einige Steine gegeben ("Zahlenmauer mit Lücken"), fehlende Steine Schritt für Schritt
  *          finden – mal plus, mal minus (eine Zeile = ein Stein)
  * Gezeichnet wird die Mauer von js/layouts/wall.js (task.layout = 'wall').
  * Reines Modul ohne DOM – getestet in tests/zahlenmauer.test.js.
@@ -99,7 +99,7 @@
     };
   }
 
-  /** Minusmauer: gegebene Steine (given), der Rest wird Schritt für Schritt gefunden. */
+  /** Zahlenmauer mit Lücken: gegebene Steine (given), der Rest wird Schritt für Schritt gefunden. */
   function minusTask(bottom, given) {
     var levels = build(bottom), n = levels.length;
     var steps = deduce(levels, given);
@@ -164,7 +164,7 @@
       }
       if (deduce(levels, given)) return minusTask(bottom, given);
     }
-    throw new Error('Keine lösbare Minusmauer gefunden');
+    throw new Error('Keine lösbare Zahlenmauer mit Lücken gefunden');
   }
 
   Tasks.register('+', {
@@ -172,8 +172,9 @@
     desc: 'Jeder Stein ist die Summe der zwei Steine darunter', gen: plus
   });
   Tasks.register('−', {
-    key: 'zahlenmauer', name: 'Minusmauer', group: 'knobeln',
-    desc: 'Fehlende Steine finden – mit Plus und Minus', gen: minus
+    // nicht „Minusmauer“: so heißen in der Fachdidaktik Mauern mit Unterschieds-Regel
+    key: 'zahlenmauer', name: 'Zahlenmauer mit Lücken', group: 'knobeln',
+    desc: 'Jeder Stein ist die Summe der zwei Steine darunter. Fehlende Steine finden – mit Plus und Minus', gen: minus
   });
 
   var api = { build: build, deduce: deduce, plusTask: plusTask, minusTask: minusTask, plus: plus, minus: minus };

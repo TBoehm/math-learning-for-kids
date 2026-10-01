@@ -74,12 +74,15 @@ test('gemischte Aufgaben', function () {
 });
 
 test('Profi-Division: freie Zerlegung wird akzeptiert', function () {
-var t = Tasks.generate({ op: ':', profi: true });
-var split = t.rows[0].tokens.filter(function (x) { return x.t === 'in'; });
+var t;
+do { t = Tasks.generate({ op: ':', profi: true }); } while (t.rows.filter(function (r) { return /Teil$/.test(r.label); }).length !== 2);
+// die Teile stehen in den Teilaufgaben: [p1] : d = [q1], [p2] : d = [q2]
+var all = [].concat.apply([], t.rows.map(function (r) { return r.tokens; }));
+var p1 = all.filter(function (x) { return x.id === 'p1'; })[0], p2 = all.filter(function (x) { return x.id === 'p2'; })[0];
 var d = t.b;
-assert(split[0].check(d, {}), 'Zerlegung mit kleinster Zahl der Reihe');
-assert(!split[0].check(d + 1, {}) || (d + 1) % d === 0, 'Nicht teilbare Zerlegung abgelehnt');
-assert(split[1].check(t.a - d, { p1: d }));
+assert(p1.check(d, {}), 'Zerlegung mit kleinster Zahl der Reihe');
+assert(!p1.check(d + 1, {}) || (d + 1) % d === 0, 'Nicht teilbare Zerlegung abgelehnt');
+assert(p2.check(t.a - d, { p1: d }));
 });
 
 function hintsOf(t) { return t.rows.map(function (r) { return r.hint; }).join(' | '); }
@@ -143,8 +146,10 @@ test('isEasySplit: beide Teile lassen sich leicht teilen (Zehnerzahl oder Einmal
 test('Profi-Division: Rat nur bei umständlicher Zerlegung, mit einem leichten Vorschlag', function () {
   for (var i = 0; i < 500; i++) {
     var t = Tasks.generate({ op: ':', profi: true, rest: i % 2 === 0 });
-    var row = t.rows[0], D = t.a, d = t.b;
-    var c1 = row.tokens.filter(function (x) { return x.id === 'p1'; })[0].answer;
+    if (t.rows.filter(function (r) { return /Teil$/.test(r.label); }).length !== 2) continue;
+    // der Rat kommt nach der letzten Teilaufgabe – dann steht die ganze Zerlegung fest
+    var row = t.rows[1], D = t.a, d = t.b;
+    var c1 = t.rows[0].tokens.filter(function (x) { return x.id === 'p1'; })[0].answer;
     assert.strictEqual(typeof row.advice, 'function');
     assert.strictEqual(row.advice({ p1: c1, p2: D - c1 }), null, 'Musterzerlegung braucht keinen Rat');
     // d + (D - d): (D - d) : d = Ergebnis − 1 (Rest bleibt). Leicht nur, wenn das

@@ -110,7 +110,7 @@ describe('Zahlenraum bis 1000', () => {
     const ts = Array.from({ length: 600 }, (x, k) => gen(':', 'zerlegen', 'hilfe', 1000, { rest: k % 3 === 0 }));
     assert.ok(ts.some((t) => t.answer >= 100), 'dreistelliges Ergebnis');
     assert.ok(ts.some((t) => t.answer < 100 && t.a > 100), 'zweistelliges Ergebnis, großer Dividend');
-    assert.ok(ts.some((t) => t.rows[0].tokens.filter((x) => x.t === 'num').length === 4), 'drei Teile (852 = 800 + 40 + 12)');
+    assert.ok(ts.some((t) => t.rows.filter((r) => /Teil$/.test(r.label)).length === 3), 'drei Teile (852 : 4 = 800 : 4 + 40 : 4 + 12 : 4)');
     assert.ok(ts.filter((t) => t.a > 100).length > 300);
   });
 
@@ -413,4 +413,33 @@ describe('Plus und Minus: die Teilaufgaben stehen untereinander, keine Zerlegung
       }
     }
   }
+});
+
+describe('Geteilt wie im Heft: Teilaufgaben untereinander, keine Zeile "98 = 70 + 28"', () => {
+  const text = (row) => row.tokens.map((x) => (x.t === 'txt' || x.t === 'num' ? x.v : x.t === 'ref' ? '(' + x.id + ')' : '[' + x.answer + ']')).join(' ');
+  for (const level of ['hilfe', 'zerlegen']) {
+    test(level, () => {
+      for (let k = 0; k < 300; k++) {
+        const t = gen(':', 'zerlegen', level, k % 2 ? 100 : 1000, { rest: k % 3 === 0 });
+        const played = solveChecked(t);
+        played.rows.forEach((r) => {
+          const eq = r.tokens.findIndex((x) => x.v === '=');
+          assert.ok(eq !== 1, Tasks.taskText(t) + ': Zeile nur mit einer Zahl links (' + r.label + ')');
+          assert.notEqual(r.label, 'Zerlegen');
+        });
+      }
+    });
+  }
+  test('98 : 7 = 70 : 7 + 28 : 7 – mit Hilfe und Zerlegung selbst', () => {
+    let t;
+    do { t = gen(':', 'zerlegen', 'hilfe', 100); } while (t.a !== 98 || t.b !== 7);
+    assert.deepEqual(t.rows.map(text), ['70 : 7 = [10]', '28 : 7 = [4]', '98 : 7 = [14]', '(res) · 7 = [98]']);
+    assert.match(t.rows[0].hint, /70 und 28/);
+    do { t = gen(':', 'zerlegen', 'zerlegen', 100); } while (t.a !== 98 || t.b !== 7);
+    assert.deepEqual(t.rows.slice(0, 2).map(text), ['[70] : 7 = [10]', '[28] : 7 = [4]']);
+    // jede Zerlegung mit Zahlen aus der 7er-Reihe: 49 + 49
+    const r = play(fresh(t), (row, i) => (i === 0 ? [49, 7] : i === 1 ? [49, 7] : null));
+    assert.ok(r.ok);
+    assert.equal(r.vals.res, 14);
+  });
 });

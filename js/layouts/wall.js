@@ -1,7 +1,7 @@
 /*
  * Darstellung 'wall': Zahlenmauer als Pyramide (Spitze oben), gelöst wird trotzdem Zeile für Zeile.
  * Eine Zeile der Aufgabe ist entweder eine ganze Reihe der Mauer (Plusmauer) oder ein einzelner Stein
- * (Minusmauer) – das jeweilige Element bekommt .row[data-i] und enthält die Felder (.cell).
+ * (Zahlenmauer mit Lücken) – das jeweilige Element bekommt .row[data-i] und enthält die Felder (.cell).
  * Die Mauer selbst kommt aus js/formats/zahlenmauer.js (task.wall.levels, unten zuerst).
  */
 (function (root) {
