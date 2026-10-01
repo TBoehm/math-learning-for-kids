@@ -80,17 +80,25 @@ const ids = (row) => inputsOf(row).map((t) => t.id);
 const answers = (row) => inputsOf(row).map((t) => t.answer);
 // Musterlösung einer Zeile: Felder, die leer bleiben dürfen, bleiben leer; versteckte Felder sind leer
 const blankOk = (t) => typeof t.blank === 'number' && t.answer === t.blank;
+// Eingabe- und Auswahlfelder (Auswahl: Wert = Nummer der Antwort)
+const fieldsOf = (row) => row.tokens.filter((t) => t.t === 'in' || t.t === 'choice');
 function canonical(row, zeros) {
   const raw = {};
-  inputsOf(row).forEach((t) => { raw[t.id] = t.silent ? '' : blankOk(t) && !zeros ? '' : String(t.answer); });
+  fieldsOf(row).forEach((t) => { raw[t.id] = t.silent ? '' : blankOk(t) && !zeros ? '' : String(t.answer); });
   return raw;
 }
-function solve(task, zeros) {
+// Löst die Aufgabe Zeile für Zeile; prüft dabei den Ablauf wie in der App (UI.afterCorrect).
+// swap: Zahlen der Probe in der anderen Reihenfolge eintragen
+function solve(task, zeros, swap) {
   let vals = {};
   task.rows.forEach((row, i) => {
-    const r = Check.checkRow(row, canonical(row, zeros), vals);
+    const raw = canonical(row, zeros);
+    if (swap && 'px' in raw) [raw.px, raw.py] = [raw.py, raw.px];
+    const r = Check.checkRow(row, raw, vals);
     assert.equal(r.correct, true, Tasks.taskText(task) + ' Zeile ' + i + ' (' + row.label + '): ' + JSON.stringify(r.fields));
     vals = r.vals;
+    assert.equal(UI.afterCorrect(task, vals, i), i === task.rows.length - 1 ? 'finish' : 'next',
+      Tasks.taskText(task) + ' nach Zeile ' + i + ' (' + row.label + ')');
   });
   assert.equal(Check.isSolved(task, vals), true, Tasks.taskText(task) + ' gelöst');
   assert.equal(vals.res, task.answer);
@@ -101,7 +109,7 @@ function rejectsWrong(task) {
   let vals = {};
   task.rows.forEach((row, i) => {
     const raw = canonical(row);
-    inputsOf(row).filter((t) => !t.silent).forEach((t) => {
+    fieldsOf(row).filter((t) => !t.silent).forEach((t) => {
       const wrong = Object.assign({}, raw, { [t.id]: String(t.answer + 1) });
       assert.equal(Check.checkRow(row, wrong, vals).correct, false, Tasks.taskText(task) + ' Zeile ' + i + ' ' + t.id + ' nimmt ' + (t.answer + 1));
       if (blankOk(t)) return;
@@ -191,12 +199,12 @@ describe('Schriftlich subtrahieren: Ergänzen mit Erweitern', () => {
 });
 
 describe('Aufgabe aufbauen: Zeilen in der Reihenfolge des Rechnens', () => {
-  test('Plus, Alles selbst: Überschlag, Einer, Zehner, Hunderter', () => {
+  test('Plus, Alles selbst: Überschlag, Einer, Zehner, Hunderter, Vergleich', () => {
     const t = S.build('add', [438, 254], { level: 'selbst', max: 1000 });
     assert.equal(t.layout, 'column');
     assert.equal(t.answer, 692);
+    assert.deepEqual(t.rows.map((r) => r.label), ['Überschlag', 'Einer', 'Zehner', 'Hunderter', 'Vergleich']);
     assert.equal(Tasks.taskText(t), '438 + 254');
-    assert.deepEqual(t.rows.map((r) => r.label), ['Überschlag', 'Einer', 'Zehner', 'Hunderter']);
     assert.deepEqual(ids(t.rows[1]), ['d0', 'u1']);
     assert.deepEqual(answers(t.rows[1]), [2, 1]);
     assert.deepEqual(ids(t.rows[2]), ['d1', 'u2']);
@@ -210,7 +218,7 @@ describe('Aufgabe aufbauen: Zeilen in der Reihenfolge des Rechnens', () => {
     const t = S.build('add', [438, 254], { level: 'selbst', max: 1000 });
     assert.equal(t.column.ncols, 4);
     assert.deepEqual(t.column.terms, [438, 254]);
-    assert.deepEqual(t.rows.map((r) => r.col), [undefined, 0, 1, 2]);
+    assert.deepEqual(t.rows.map((r) => r.col), [undefined, 0, 1, 2, undefined]);
     assert.deepEqual(t.rows[1].tokens.filter((x) => x.place).map((x) => [x.place.line, x.place.col]), [['res', 0], ['carry', 1]]);
     for (const row of t.rows) {
       for (const tok of row.tokens) {
@@ -257,7 +265,7 @@ describe('Aufgabe aufbauen: Zeilen in der Reihenfolge des Rechnens', () => {
   });
   test('zweistellig (Zahlenraum bis 100): Zehner und Einer', () => {
     const t = S.build('add', [47, 38], { level: 'selbst', max: 100 });
-    assert.deepEqual(t.rows.map((r) => r.label), ['Überschlag', 'Einer', 'Zehner']);
+    assert.deepEqual(t.rows.map((r) => r.label), ['Überschlag', 'Einer', 'Zehner', 'Vergleich']);
     solve(t); rejectsWrong(t);
     const h = S.build('add', [47, 53], { level: 'hilfe', max: 100 });
     assert.deepEqual(answers(step(h, 'Zehner')), [0, 1, 100]);
@@ -266,7 +274,7 @@ describe('Aufgabe aufbauen: Zeilen in der Reihenfolge des Rechnens', () => {
 
   test('Minus mit Entbündeln, Zerlegung selbst: erst umwechseln, dann rechnen', () => {
     const t = S.build('sub', [532, 278], { level: 'zerlegen', max: 1000 });
-    assert.deepEqual(t.rows.map((r) => r.label), ['Überschlag', 'Einer', 'Zehner', 'Hunderter']);
+    assert.deepEqual(t.rows.map((r) => r.label), ['Überschlag', 'Einer', 'Zehner', 'Hunderter', 'Vergleich', 'Probe']);
     assert.deepEqual(ids(t.rows[1]), ['l1', 'b0', 'd0']);
     assert.deepEqual(answers(t.rows[1]), [2, 12, 4]);
     assert.deepEqual(ids(t.rows[2]), ['l2', 'b1', 'd1']);
@@ -414,6 +422,196 @@ describe('Tipps je Spalte', () => {
   });
 });
 
+// Werte nach dem Rechnen in den Spalten (für Vergleich und Probe)
+function valsBefore(task, label) {
+  let vals = {};
+  for (const row of task.rows) {
+    if (row.label === label) break;
+    vals = Check.checkRow(row, canonical(row), vals).vals;
+  }
+  return vals;
+}
+
+describe('Vergleich mit dem Überschlag', () => {
+  for (const [kind, terms] of [['add', [438, 254]], ['sub', [852, 278]], ['erg', [852, 278]]]) {
+    test(`${kind} ${terms.join(', ')}: nach den Spalten eine normale Zeile mit Überschlag, Ergebnis und Auswahl`, () => {
+      for (const level of ['hilfe', 'zerlegen', 'selbst']) {
+        const t = S.build(kind, terms, { level, max: 1000 });
+        const k = t.rows.findIndex((r) => r.label === 'Vergleich');
+        assert.ok(k > 0);
+        const row = t.rows[k];
+        assert.equal(row.col, undefined, 'keine Spalte: normale Rechenzeile');
+        assert.ok(t.rows.slice(1, k).every((r) => r.col !== undefined), 'nach allen Spalten-Schritten');
+        assert.deepEqual(row.tokens.filter((x) => x.t === 'ref').map((x) => x.id), ['gs', 'res']);
+        const choice = row.tokens.filter((x) => x.t === 'choice');
+        assert.equal(choice.length, 1);
+        assert.deepEqual(choice[0].options, ['passt', 'passt nicht']);
+        const vals = valsBefore(t, 'Vergleich');
+        assert.equal(Check.checkRow(row, { [choice[0].id]: '0' }, vals).correct, true, 'passt');
+        assert.equal(Check.checkRow(row, { [choice[0].id]: '1' }, vals).correct, false, 'passt nicht ist falsch');
+        assert.equal(Check.checkRow(row, { [choice[0].id]: '' }, vals).complete, false);
+      }
+    });
+  }
+  test('Tipp: mit Hilfe der Überschlag zum Vergleichen, sonst ohne festen Überschlag', () => {
+    assert.equal(step(S.build('add', [438, 254], { level: 'hilfe', max: 1000 }), 'Vergleich').hint,
+      'Überschlag 690 und Ergebnis 692 liegen nah beieinander – das passt.');
+    // das Kind darf auch auf Hunderter runden (700): der Tipp nennt keinen festen Überschlag
+    const h = step(S.build('add', [438, 254], { level: 'selbst', max: 1000 }), 'Vergleich').hint;
+    assert.match(h, /692/);
+    assert.doesNotMatch(h, /690|700/);
+  });
+  test('Lösungstext nennt die Antwort, nicht ihre Nummer', () => {
+    const t = S.build('add', [438, 254], { level: 'hilfe', max: 1000 });
+    const row = step(t, 'Vergleich');
+    const r = Check.checkRow(row, { cmp: '1' }, valsBefore(t, 'Vergleich'));
+    assert.match(UI.wrongText(row, r, 3), /Die Lösung ist passt\.$/);
+  });
+  test('Ablauf: nach der letzten Spalte geht es weiter, nach dem Vergleich ist Plus fertig', () => {
+    const t = S.build('add', [438, 254], { level: 'selbst', max: 1000 });
+    const vals = valsBefore(t, 'Vergleich');
+    assert.equal(vals.res, 692, 'Ergebnis steht nach den Spalten fest');
+    assert.equal(Check.isSolved(t, vals), false, 'Vergleich fehlt noch');
+    assert.equal(UI.afterCorrect(t, vals, t.rows.length - 2), 'next');
+  });
+});
+
+describe('Probe bei Minus: Umkehraufgabe mit Plus', () => {
+  test('nach dem Vergleich, nur beim Minus', () => {
+    assert.equal(S.build('add', [438, 254], { level: 'selbst', max: 1000 }).rows.some((r) => r.label === 'Probe'), false);
+    for (const kind of ['sub', 'erg']) {
+      const t = S.build(kind, [852, 278], { level: 'selbst', max: 1000 });
+      assert.deepEqual(t.rows.slice(-2).map((r) => r.label), ['Vergleich', 'Probe']);
+      assert.equal(t.rows[t.rows.length - 1].col, undefined);
+    }
+  });
+  test('Mit Hilfe: Zahlen stehen da, nur die Summe eintragen', () => {
+    for (const kind of ['sub', 'erg']) {
+      const t = S.build(kind, [852, 278], { level: 'hilfe', max: 1000 });
+      const p = step(t, 'Probe');
+      assert.deepEqual(p.tokens.filter((x) => x.t === 'num').map((x) => x.v), [574, 278]);
+      assert.deepEqual(ids(p), ['pa']);
+      assert.deepEqual(answers(p), [852]);
+      solve(t); rejectsWrong(t);
+    }
+  });
+  for (const level of ['zerlegen', 'selbst']) {
+    test(`${level}: beide Zahlen selbst schreiben, Reihenfolge egal`, () => {
+      for (const kind of ['sub', 'erg']) {
+        const t = S.build(kind, [852, 278], { level, max: 1000 });
+        const p = step(t, 'Probe');
+        assert.deepEqual(ids(p), ['px', 'py', 'pa']);
+        assert.deepEqual(p.tokens.filter((x) => x.t === 'txt').map((x) => x.v), ['+', '=']);
+        const vals = valsBefore(t, 'Probe');
+        const ok = (px, py, pa) => Check.checkRow(p, { px, py, pa }, vals).correct;
+        assert.equal(ok('574', '278', '852'), true);
+        assert.equal(ok('278', '574', '852'), true, 'andere Reihenfolge');
+        assert.equal(ok('574', '574', '1148'), false, 'zweimal dieselbe Zahl');
+        assert.equal(ok('852', '278', '1130'), false, 'falsche Zahl');
+        assert.equal(ok('574', '278', '842'), false, 'falsche Summe');
+        // Summe hängt von den Zahlen ab: falsche Zahl -> Summe wartet
+        const r = Check.checkRow(p, { px: '575', py: '278', pa: '853' }, vals);
+        assert.deepEqual(r.fields.map((f) => f.status), ['wrong', 'correct', 'pending']);
+        solve(t); solve(t, false, true); rejectsWrong(t);
+      }
+    });
+  }
+  test('Tipp mit der Umkehraufgabe', () => {
+    assert.equal(step(S.build('sub', [852, 278], { level: 'selbst', max: 1000 }), 'Probe').hint,
+      'Probe mit der Umkehraufgabe: 574 + 278 muss wieder 852 ergeben.');
+  });
+  test('Ablauf: nach dem Vergleich weiter, nach der Probe fertig', () => {
+    const t = S.build('sub', [852, 278], { level: 'zerlegen', max: 1000 });
+    const k = t.rows.findIndex((r) => r.label === 'Vergleich');
+    const vals = valsBefore(t, 'Probe');
+    assert.equal(Check.isSolved(t, vals), false);
+    assert.equal(UI.afterCorrect(t, vals, k), 'next');
+    solve(t);
+  });
+});
+
+describe('1000 − x: Umwechseln über mehrere Nullen', () => {
+  test('subPlan 1000 − 374: aus 1 wird 0, aus 0 wird 9, aus 0 wird 9, aus 0 wird 10', () => {
+    const p = S.subPlan(1000, 374);
+    assert.equal(p.n, 4);
+    assert.deepEqual(p.cols[0].changes, [{ col: 3, v: 0, kind: 'L' }, { col: 2, v: 9, kind: 'L' }, { col: 1, v: 9, kind: 'L' }, { col: 0, v: 10, kind: 'B' }]);
+    assert.deepEqual(p.cols[0].from, [1, 0, 0, 0]);
+    assert.deepEqual(p.cols.map((c) => [c.top, c.bottom, c.digit]), [[10, 4, 6], [9, 7, 2], [9, 3, 6], [0, null, 0]]);
+  });
+  test('ergPlan 1000 − 374: Übertrag bis zu den Tausendern', () => {
+    const p = S.ergPlan(1000, 374);
+    assert.deepEqual(p.cols.map((c) => [c.carryIn, c.need, c.target, c.digit, c.carryOut]),
+      [[0, 4, 10, 6, 1], [1, 8, 10, 2, 1], [1, 4, 10, 6, 1], [1, 1, 1, 0, 0]]);
+  });
+  test('Raster mit Tausender-Spalte, vorne bleibt das Feld leer', () => {
+    for (const kind of ['sub', 'erg']) {
+      for (const level of ['hilfe', 'zerlegen', 'selbst']) {
+        const t = S.build(kind, [1000, 374], { level, max: 1000 });
+        assert.equal(t.answer, 626);
+        assert.equal(Tasks.taskText(t), '1000 − 374');
+        assert.equal(t.column.ncols, 4);
+        assert.deepEqual(t.rows.map((r) => r.label), ['Überschlag', 'Einer', 'Zehner', 'Hunderter', 'Tausender', 'Vergleich', 'Probe']);
+        assert.equal(step(t, 'Tausender').tokens.find((x) => x.id === 'd3').blank, 0);
+        for (const row of t.rows) {
+          for (const tok of row.tokens) {
+            if (!tok.place || tok.place.line === 'hidden') continue;
+            assert.ok(t.column.lines.includes(tok.place.line), tok.place.line);
+            assert.ok(tok.place.col < 4);
+          }
+        }
+        solve(t); solve(t, true); solve(t, false, true); rejectsWrong(t);
+      }
+    }
+  });
+  test('Abziehen: die 1 bei den Tausendern wird zur 0 – die darf man auch weglassen', () => {
+    const z = S.build('sub', [1000, 374], { level: 'zerlegen', max: 1000 });
+    assert.deepEqual(ids(step(z, 'Einer')), ['l3', 'l2', 'l1', 'b0', 'd0']);
+    assert.deepEqual(answers(step(z, 'Einer')), [0, 9, 9, 10, 6]);
+    assert.equal(step(z, 'Einer').tokens.find((x) => x.id === 'l3').blank, 0, '0 ganz vorne: darf leer bleiben');
+    assert.deepEqual(z.column.lines, ['head', 'n1', 't0', 't1', 'res']);
+    const h = S.build('sub', [1000, 374], { level: 'hilfe', max: 1000 });
+    assert.deepEqual(step(h, 'Einer').tokens.filter((x) => x.t === 'num').map((x) => [x.v, x.place.line, x.place.col]),
+      [[0, 'n1', 3], [9, 'n1', 2], [9, 'n1', 1], [10, 'n1', 0]]);
+  });
+  test('Tipps', () => {
+    const t = S.build('sub', [1000, 374], { level: 'selbst', max: 1000 });
+    assert.equal(step(t, 'Einer').hint,
+      'Einer: 0 − 4 geht nicht, und bei den Zehnern und Hundertern ist nichts. Wechsle 1 Tausender in 10 Hunderter um, ' +
+      'davon 1 Hunderter in 10 Zehner und davon 1 Zehner in 10 Einer: aus 1 wird 0, aus 0 wird 9, aus 0 wird 9, aus 0 wird 10. ' +
+      '10 − 4 = 6. Schreibe 6.');
+    assert.equal(step(t, 'Zehner').hint, 'Zehner: 9 − 7 = 2. Schreibe 2.');
+    assert.equal(step(t, 'Tausender').hint, 'Tausender: Unten steht nichts, und aus der 1 ist eine 0 geworden. Eine 0 ganz vorne schreibst du nicht hin.');
+    const e = S.build('erg', [1000, 374], { level: 'selbst', max: 1000 });
+    assert.equal(step(e, 'Hunderter').hint, 'Hunderter: 3 + 1 (Übertrag) = 4. 4 + ? = 0 geht nicht, also bis 10: 4 + 6 = 10. Schreibe 6, übertrage 1 zu den Tausendern.');
+    assert.equal(step(e, 'Tausender').hint, 'Tausender: Unten steht nichts, nur der Übertrag 1. 1 + 0 = 1. Eine 0 ganz vorne schreibst du nicht hin.');
+  });
+  test('1000 − 99 und 1000 − 8', () => {
+    for (const [b, res] of [[99, 901], [8, 992]]) {
+      for (const kind of ['sub', 'erg']) {
+        for (const level of ['hilfe', 'zerlegen', 'selbst']) {
+          const t = S.build(kind, [1000, b], { level, max: 1000 });
+          assert.equal(t.answer, res);
+          solve(t); solve(t, true); solve(t, false, true); rejectsWrong(t);
+        }
+      }
+    }
+    assert.equal(step(S.build('sub', [1000, 99], { level: 'selbst', max: 1000 }), 'Hunderter').hint,
+      'Hunderter: Unten steht nichts. Schreibe die 9 ab.');
+  });
+  test('Erzeugen: bis 1000 kommt manchmal 1000 − x vor, aber nicht ohne Umwechseln', () => {
+    for (const key of ['schriftlich', 'schriftlich-erg']) {
+      let top = 0;
+      for (let i = 0; i < 400; i++) {
+        const t = Tasks.generate({ op: '−', strategy: key, level: 'selbst', max: 1000 });
+        if (t.a === 1000) { top++; assert.ok(t.answer >= 10 && t.b >= 10, Tasks.taskText(t)); }
+        assert.notEqual(Tasks.generate({ op: '−', strategy: key, level: 'selbst', max: 1000, crossing: 'ohne' }).a, 1000);
+        assert.notEqual(Tasks.generate({ op: '−', strategy: key, level: 'selbst', max: 100 }).a, 1000);
+      }
+      assert.ok(top > 10 && top < 120, key + ': ' + top);
+    }
+  });
+});
+
 describe('Erzeugen: Zahlenraum, Stufen, Übergänge', () => {
   const kinds = [['+', 'schriftlich', 'add'], ['−', 'schriftlich', 'sub'], ['−', 'schriftlich-erg', 'erg']];
   // gibt es einen Übertrag oder ein Umwechseln?
@@ -440,10 +638,13 @@ describe('Erzeugen: Zahlenraum, Stufen, Übergänge', () => {
             const exact = op === '+' ? terms.reduce((x, y) => x + y) : t.a - t.b;
             assert.equal(t.answer, exact);
             assert.ok(t.answer <= max && t.answer > 0, Tasks.taskText(t));
-            assert.ok(terms.every((x) => x >= 10 && x < max), Tasks.taskText(t));
-            assert.equal(String(t.a).length, max === 1000 ? 3 : 2, Tasks.taskText(t));
+            // bis 1000 beim Minus auch 1000 − x
+            const top = op === '−' && max === 1000 && t.a === 1000;
+            assert.ok(terms.every((x, k) => x >= 10 && (x < max || (k === 0 && top))), Tasks.taskText(t));
+            assert.equal(String(t.a).length, top ? 4 : max === 1000 ? 3 : 2, Tasks.taskText(t));
             assert.match(UI.introText(t, ''), /^[A-ZÄÖÜ].+[.!?]/);
             solve(t);
+            if (op === '−' && i < 40) solve(t, false, true);
             if (i < 40) rejectsWrong(t);
           }
           if (op === '+') assert.ok(three > 0, 'manchmal drei Zahlen');

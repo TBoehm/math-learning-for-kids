@@ -151,8 +151,21 @@
     return 'stuck';
   }
 
+  /**
+   * Wie muss ein Element ins Bild gescrollt werden? scrollIntoView mit block 'nearest' beachtet den Rand
+   * (scroll-margin) nicht, wenn das Element schon ganz im Fenster ist – dann bleibt z. B. eine Zeile hinter dem
+   * Zahlenfeld, das unten über der Seite klebt. box: { top, bottom, marginTop, marginBottom } (wie im Fenster),
+   * viewH: Fensterhöhe -> 'start' | 'end' | null (nicht scrollen)
+   */
+  function revealBlock(box, viewH) {
+    var top = box.top - (box.marginTop || 0), bottom = box.bottom + (box.marginBottom || 0);
+    if (top < 0) return 'start';
+    if (bottom <= viewH) return null;
+    return bottom - top > viewH ? 'start' : 'end';
+  }
+
   var api = {
-    afterCorrect: afterCorrect,
+    afterCorrect: afterCorrect, revealBlock: revealBlock,
     TEXTS: TEXTS, pick: pick, sanitize: sanitize, applyKey: applyKey, pickTarget: pickTarget, inputMode: inputMode,
     fieldEffect: fieldEffect, outcome: outcome, wrongText: wrongText, rowDoneText: rowDoneText,
     cellLabels: cellLabels, badgeText: badgeText, introText: introText, welcomeText: welcomeText, cleanName: cleanName

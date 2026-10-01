@@ -231,3 +231,24 @@ describe('Zufallsauswahl', () => {
     assert.ok(['a', 'b'].includes(UI.pick(['a', 'b'])));
   });
 });
+
+describe('Ins Bild scrollen mit Rand (scroll-margin)', () => {
+  // box: Lage im Fenster und Rand, der frei bleiben soll (z. B. für das Zahlenfeld oder den Prüfen-Knopf)
+  const box = (top, bottom, marginBottom) => ({ top, bottom, marginTop: 0, marginBottom });
+  test('ganz im Bild, Rand frei: nicht scrollen', () => {
+    assert.equal(UI.revealBlock(box(100, 300, 96), 900), null);
+  });
+  test('im Bild, aber der Rand darunter fehlt (Zahlenfeld verdeckt die Zeile): unten ausrichten', () => {
+    assert.equal(UI.revealBlock(box(660, 820, 170), 844), 'end');
+    assert.equal(UI.revealBlock(box(800, 880, 96), 900), 'end');
+  });
+  test('unten abgeschnitten: unten ausrichten', () => {
+    assert.equal(UI.revealBlock(box(700, 1000, 0), 900), 'end');
+  });
+  test('zu hoch für das Fenster: oben ausrichten', () => {
+    assert.equal(UI.revealBlock(box(500, 1300, 170), 844), 'start');
+  });
+  test('oben abgeschnitten: oben ausrichten', () => {
+    assert.equal(UI.revealBlock(box(-40, 200, 96), 900), 'start');
+  });
+});

@@ -56,20 +56,37 @@ body.has-numpad .layout-column .cpaper { scroll-margin-bottom: 190px; }
 .layout-column .cgrid .cell.ok:placeholder-shown { border-style: dashed; border-color: #bfeed6; background: transparent; }
 .layout-column .cgrid .row.done .cell.ok:placeholder-shown { visibility: hidden; }
 
-/* Umwechseln: alte Ziffer wird durchgestrichen, sobald darüber eine neue steht */
+/* Umwechseln: alte Ziffer wird durchgestrichen, sobald darüber eine neue steht
+   (k-lead: ganz vorne wird aus der 1 eine 0 – auch durchstreichen, wenn das Feld leer bleibt) */
 .cgrid:has(.k-n1.k-c0 .cell:not(:placeholder-shown), .k-n2.k-c0 .cell:not(:placeholder-shown),
   .row:not(.future) > .k-n1.k-c0.fix, .row:not(.future) > .k-n2.k-c0.fix) .k-top.k-c0::after,
 .cgrid:has(.k-n1.k-c1 .cell:not(:placeholder-shown), .k-n2.k-c1 .cell:not(:placeholder-shown),
-  .row:not(.future) > .k-n1.k-c1.fix, .row:not(.future) > .k-n2.k-c1.fix) .k-top.k-c1::after,
+  .row:not(.future) > .k-n1.k-c1.fix, .row:not(.future) > .k-n2.k-c1.fix, .row.done > .k-lead.k-c1) .k-top.k-c1::after,
 .cgrid:has(.k-n1.k-c2 .cell:not(:placeholder-shown), .k-n2.k-c2 .cell:not(:placeholder-shown),
-  .row:not(.future) > .k-n1.k-c2.fix, .row:not(.future) > .k-n2.k-c2.fix) .k-top.k-c2::after,
+  .row:not(.future) > .k-n1.k-c2.fix, .row:not(.future) > .k-n2.k-c2.fix, .row.done > .k-lead.k-c2) .k-top.k-c2::after,
+.cgrid:has(.k-n1.k-c3 .cell:not(:placeholder-shown), .row:not(.future) > .k-n1.k-c3.fix, .row.done > .k-lead.k-c3) .k-top.k-c3::after,
 .cgrid:has(.k-n2.k-c1 .cell:not(:placeholder-shown), .row:not(.future) > .k-n2.k-c1.fix)
-  .k-n1.k-c1:is(.fix, :has(.cell:not(:placeholder-shown)))::after {
+  .k-n1.k-c1:is(.fix, :has(.cell:not(:placeholder-shown)))::after,
+.cgrid:has(.k-n2.k-c2 .cell:not(:placeholder-shown), .row:not(.future) > .k-n2.k-c2.fix)
+  .k-n1.k-c2:is(.fix, :has(.cell:not(:placeholder-shown)))::after {
   content: ''; position: absolute; left: 22%; right: 22%; top: 50%; border-top: 3px solid var(--orange);
   transform: rotate(-35deg); border-radius: 2px; pointer-events: none;
 }
 .cgrid .k-n1::after { top: 62%; }
 
+/* Zeilen unter dem Raster: Vergleich und Probe */
+.layout-column .tok-word { font-size: .62em; color: var(--ink-soft); font-weight: 600; }
+.layout-column .tok-word ~ .tok-word { margin-left: .3em; }
+.layout-column .after-paper .choice-btn { font-size: .78em; min-height: 1.8em; padding: 0 .6em; }
+
+/* beim Weiterschalten bleibt der Prüfen-Knopf unter dem Raster bzw. der Zeile im Bild */
+.layout-column .cpaper, .layout-column .row.after-paper { scroll-margin-bottom: 96px; }
+body.has-numpad .layout-column .row.after-paper { scroll-margin-bottom: 170px; }
+
 @media (min-width: 700px) {
   .layout-column { --sq: 3.2rem; }
+}
+/* niedrige Bildschirme (Laptop): etwas kleinere Kästchen, damit die ganze Rechnung besser ins Bild passt */
+@media (min-width: 700px) and (max-height: 960px) {
+  .layout-column { --sq: 2.75rem; }
 }

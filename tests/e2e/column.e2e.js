@@ -56,21 +56,25 @@ async function showTask(page, kind, terms, level) {
   await page.locator('#rows .row.active').first().waitFor();
 }
 
-// Musterlösung der aktiven Zeile: Felder, die leer bleiben dürfen, bleiben leer
+// Musterlösung der aktiven Zeile: Felder, die leer bleiben dürfen, bleiben leer; Auswahl: Nummer der Antwort
 function activeAnswers(page) {
   return page.evaluate(() => {
     const c = window.RR.app.current;
-    return c.task.rows[c.row].tokens.filter((t) => t.t === 'in')
-      .map((t) => ({ id: t.id, v: t.silent || (typeof t.blank === 'number' && t.answer === t.blank) ? '' : String(t.answer) }));
+    return c.task.rows[c.row].tokens.filter((t) => t.t === 'in' || t.t === 'choice')
+      .map((t) => ({ id: t.id, choice: t.t === 'choice', v: t.silent || (typeof t.blank === 'number' && t.answer === t.blank) ? '' : String(t.answer) }));
   });
 }
 
 async function solveActiveRow(page) {
   const row = await page.evaluate(() => window.RR.app.current.row);
-  for (const { id, v } of await activeAnswers(page)) {
-    if (v) await page.locator(`.row.active .cell[data-id="${id}"]`).fill(v);
+  const answers = await activeAnswers(page);
+  for (const { id, v, choice } of answers) {
+    if (v && !choice) await page.locator(`.row.active .cell[data-id="${id}"]`).fill(v);
   }
-  await page.locator('#checkBtn').click();
+  // Auswahl antippen prüft gleich (sonst ist in der Zeile nichts mehr einzutragen)
+  const choice = answers.find((x) => x.choice);
+  if (choice) await page.locator(`.row.active .choice-btn[data-k="${choice.v}"]`).click();
+  else await page.locator('#checkBtn').click();
   await page.waitForFunction((r) => window.RR.app.current.row > r || window.RR.app.current.done, row);
 }
 
@@ -108,6 +112,9 @@ describe('Schriftlich rechnen im Raster', () => {
       await solveActiveRow(page);
     }
     assert.ok(xs[0] > xs[1] && xs[1] > xs[2], 'Einer, Zehner, Hunderter: ' + xs);
+    // Ergebnis steht, aber erst noch der Vergleich mit dem Überschlag
+    assert.equal(await page.evaluate(() => window.RR.app.current.done), false);
+    await solveActiveRow(page);
     assert.equal(await page.locator('#final').textContent(), '692');
     assert.deepEqual(errors, []);
     await ctx.close();
@@ -131,20 +138,25 @@ describe('Schriftlich rechnen im Raster', () => {
     const { page, ctx, errors } = await openPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     await showTask(page, 'sub', [503, 278], 'zerlegen');
     assert.equal(await page.locator('#numpad').isVisible(), true);
-    for (let r = 0; r < 4; r++) {
+    for (let r = 0; r < 6; r++) {
       const row = await page.evaluate(() => window.RR.app.current.row);
-      for (const { id, v } of await activeAnswers(page)) {
-        if (!v) continue;
+      const answers = await activeAnswers(page);
+      for (const { id, v, choice } of answers) {
+        if (!v || choice) continue;
         await page.locator(`.row.active .cell[data-id="${id}"]`).tap();
         for (const d of v) await page.locator('.np-key', { hasText: new RegExp('^' + d + '$') }).tap();
       }
-      await page.locator('.np-ok').tap();
+      const choice = answers.find((x) => x.choice);
+      if (choice) await page.locator(`.row.active .choice-btn[data-k="${choice.v}"]`).tap();
+      else await page.locator('.np-ok').tap();
       await page.waitForFunction((r) => window.RR.app.current.row > r || window.RR.app.current.done, row);
-      if (r === 0) {
-        // die aktive Spalte wird über das Zahlenfeld geschoben, nicht dahinter versteckt
+      if (r === 0 || r >= 3) {
+        // die aktive Spalte bzw. Zeile wird über das Zahlenfeld geschoben, nicht dahinter versteckt
         await page.waitForFunction(() => {
-          const cell = document.querySelector('.row.active .k-res .cell').getBoundingClientRect();
-          return cell.top >= 0 && cell.bottom <= document.getElementById('numpad').getBoundingClientRect().top;
+          const el = document.querySelector('.row.active .k-res .cell') || document.querySelector('.row.active');
+          if (!el) return true; // fertig
+          const box = el.getBoundingClientRect();
+          return box.top >= 0 && box.bottom <= document.getElementById('numpad').getBoundingClientRect().top;
         }, null, { timeout: 3000 });
       }
     }
@@ -157,7 +169,7 @@ describe('Schriftlich rechnen im Raster', () => {
   for (const [w, h] of [[320, 640], [390, 844], [1280, 900]]) {
     test(`${w}×${h}: Raster passt, kein waagerechtes Scrollen`, async () => {
       const { page, ctx, errors } = await openPage({ viewport: { width: w, height: h } });
-      for (const [kind, terms] of [['sub', [503, 278]], ['add', [199, 299, 399]]]) {
+      for (const [kind, terms] of [['sub', [503, 278]], ['sub', [1000, 374]], ['add', [199, 299, 399]]]) {
         await showTask(page, kind, terms, 'selbst');
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         assert.ok(overflow <= 0, 'horizontaler Überlauf: ' + overflow + 'px');
@@ -171,6 +183,39 @@ describe('Schriftlich rechnen im Raster', () => {
       await ctx.close();
     });
   }
+
+  test('Vergleich und Probe: normale Zeilen unter dem Raster, Probe in anderer Reihenfolge', async () => {
+    const { page, ctx, errors } = await openPage();
+    await showTask(page, 'sub', [1000, 374], 'zerlegen');
+    // Reihenfolge im Dokument: Überschlag, Raster, Vergleich, Probe
+    const order = await page.locator('#rows > *').evaluateAll((es) => es.map((e) => e.classList.contains('cpaper') ? 'raster' : e.querySelector('.row-label').textContent));
+    assert.deepEqual(order, ['Überschlag', 'raster', 'Vergleich', 'Probe']);
+    for (let i = 0; i < 5; i++) await solveActiveRow(page); // Überschlag, E, Z, H, T
+    const cmp = page.locator('.row.active.after-paper');
+    assert.equal(await cmp.locator('.row-label').textContent(), 'Vergleich');
+    assert.equal(await cmp.isVisible(), true);
+    // Überschlag und Ergebnis stehen in der Zeile
+    assert.deepEqual(await cmp.locator('.tok-ref').allTextContents(), ['630', '626']);
+    // falsch gewählt: Fehler, Zeile bleibt
+    await cmp.locator('.choice-btn', { hasText: 'passt nicht' }).click();
+    await cmp.locator('.choice.bad').waitFor();
+    assert.equal(await page.evaluate(() => window.RR.app.current.mistakes), 1);
+    await cmp.locator('.choice-btn', { hasText: /^passt$/ }).click();
+    await page.locator('.row.active .row-label', { hasText: 'Probe' }).waitFor();
+    assert.equal(await page.evaluate(() => window.RR.app.current.done), false);
+    // Probe: erst die abgezogene Zahl, dann das Ergebnis
+    await page.locator('.row.active .cell[data-id="px"]').fill('374');
+    await page.locator('.row.active .cell[data-id="py"]').fill('626');
+    await page.locator('.row.active .cell[data-id="pa"]').fill('1000');
+    await page.locator('#checkBtn').click();
+    await page.waitForFunction(() => window.RR.app.current.done);
+    assert.equal(await page.locator('#final').textContent(), '626');
+    // aus der 1 bei den Tausendern ist eine 0 geworden: durchgestrichen
+    const strike = await page.locator('.cgrid .k-top.k-c3').evaluate((e) => getComputedStyle(e, '::after').content);
+    assert.notEqual(strike, 'none');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
 
   test('Auswahl: Gruppe "Schriftlich" mit eigenen Rechenwegen', async () => {
     const { page, ctx } = await openPage();
