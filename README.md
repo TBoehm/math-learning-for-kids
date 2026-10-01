@@ -1,4 +1,4 @@
-# Einhorn-Rechenranch 🦄🐴
+# Einhorn-Rechenranch 🦄🐴 & Turbo-Rechenwerkstatt 🏎️🚜
 
 Lern-App für Kinder der **3. Klasse**: Plus, Minus, Mal und Geteilt im **Zahlenraum bis 100** –
 gerechnet wird im **halbschriftlichen Verfahren**, Schritt für Schritt, mit Einhörnern und Pferden als Begleiter.
@@ -52,6 +52,8 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 | `js/ui-logic.js` | Logik der Oberfläche ohne DOM: Eingaben, Zahlenfeld, Felder nach dem Prüfen, Texte des Begleiters |
 | `js/viz-logic.js` | Inhalte der Anschauungen ohne DOM: Malkreuz, Zerlegungsbaum, Punktefeld, Lage auf dem Rechenstrich |
 | `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |
+| `js/themes.js` | Welten: Texte, Begleiter, Effekte und Klänge je Welt, Weltwechsel |
+| `js/vehicles.js` | Fahrzeug-Begleiter der Werkstatt als SVG (Bagger, Rennauto, Feuerwehr, Kipplaster, Monstertruck, Helden-Auto) |
 | `js/companion.js` | Begleiter als SVG |
 | `js/sound.js` | Klänge per Web-Audio (keine Sounddateien) |
 | `js/app.js` | Oberfläche und Ablauf |

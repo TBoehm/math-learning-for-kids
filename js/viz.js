@@ -45,9 +45,7 @@
 
     // hüpfender Begleiter
     var hop = el('g', { class: 'rs-hopper' });
-    var mini = root.RR.Companion.svg(companionKey)
-      .replace('<svg class="pony"', '<svg class="pony mini" x="-26" y="-50" width="52" height="48"');
-    hop.innerHTML = mini;
+    hop.innerHTML = root.RR.VizLogic.miniSvg(root.RR.Companion.svg(companionKey));
     svg.appendChild(hop);
     function place(px, py) { hop.setAttribute('transform', 'translate(' + px + ',' + py + ')'); }
     place(x(task.line.start), Y);

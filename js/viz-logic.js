@@ -86,7 +86,13 @@
     return [vals.p1 !== undefined ? vals.p1 : null, vals.p2 !== undefined ? vals.p2 : null];
   }
 
+  /** Begleiter-SVG als kleine Figur für den Rechenstrich (Einhörner wie Fahrzeuge). */
+  function miniSvg(svg) {
+    return String(svg).replace(/^<svg class="pony/, '<svg x="-26" y="-50" width="52" height="48" class="pony mini');
+  }
+
   var api = {
+    miniSvg: miniSvg,
     PAD: PAD, GAP: GAP, show: show, lineWidth: lineWidth, lineLayout: lineLayout,
     malkreuz: malkreuz, baum: baum, punktefeld: punktefeld
   };

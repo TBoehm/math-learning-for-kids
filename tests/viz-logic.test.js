@@ -117,3 +117,15 @@ describe('Rechenstrich', () => {
     assert.ok(L.x(37) < L.x(40) && L.x(40) < L.x(82));
   });
 });
+
+describe('miniSvg: kleiner Begleiter auf dem Rechenstrich', () => {
+  test('Einhorn und Fahrzeug werden verkleinert, Klassen bleiben erhalten', () => {
+    const pony = VizLogic.miniSvg('<svg class="pony" viewBox="0 0 1 1"><g/></svg>');
+    const car = VizLogic.miniSvg('<svg class="pony vehicle" viewBox="0 0 1 1"><g/></svg>');
+    for (const s of [pony, car]) {
+      assert.match(s, /^<svg x="-26" y="-50" width="52" height="48" class="pony mini/);
+      assert.equal((s.match(/class=/g) || []).length, 1, 'nur ein class-Attribut');
+    }
+    assert.match(car, /class="pony mini vehicle"/);
+  });
+});
