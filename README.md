@@ -32,6 +32,8 @@ Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; je
     angenommen (welche Zahl gerundet wird, welche Stelle zuerst kommt, wie viele Schritte, Sprünge oder
     Teile); jeder weitere Schritt wird gegen die Zahlen geprüft, die das Kind tatsächlich eingetragen hat,
     und die Rechnung wächst mit. Umständliche Wege werden angenommen, der Begleiter zeigt dann einen leichteren.
+    Wo die Reihenfolge frei ist (Stellenweise), heißt die Zeile erst „Eine Stelle“ und nach dem Rechnen
+    so wie die Stelle, die das Kind gewählt hat (z. B. „Zehner“).
 - **Über der Aufgabe:** Rechenart, ein aufklappbares Menü mit allen Rechenwegen (gruppiert in Rechenwege, Knobeln,
   Schriftlich) und der Schalter für den Zahlenraum bis 100 (Wiederholung) / bis 1000 (Stoff der 3. Klasse).
 - **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Hilfe-Stufe, Geteilt mit Rest, Töne, Zahlenfeld.
@@ -53,7 +55,7 @@ halten sich an den eingestellten Zahlenraum (bis 100 oder bis 1000).
 |---|---|---|
 | **Zahlenmauer** | + (Plusmauer), − (Minusmauer) | Jeder Stein ist die Summe der zwei Steine darunter. Plusmauer: untere Reihe gegeben, Reihe für Reihe nach oben. Minusmauer: Spitze und einige Steine gegeben, die fehlenden Steine Schritt für Schritt finden – mal plus, mal minus. *Mit Hilfe:* 3 Reihen, sonst 4. |
 | **Fehler finden** | + − · : | Eine fertige Rechnung aus einem echten Rechenweg, in genau einer Zeile steckt ein typischer Fehler (Zehnerübergang vergessen, verzählt, Einer vergessen, Null vergessen, Einmaleins-Fehler, falsches Rechenzeichen beim Ausgleichen). Falsche Zeile antippen, verbessern, richtiges Ergebnis. |
-| **Welcher Weg?** | + − | Welcher Rechenweg ist hier besonders geschickt? (328 + 99 → Hilfsaufgabe, 702 − 698 → Ergänzen, 346 + 228 → Schrittweise …) Alle sinnvollen Wege zählen; danach wird mit dem gewählten Weg gerechnet. Auch „Vereinfachen“ wird angeboten. |
+| **Welcher Weg?** | + − | Welcher Rechenweg ist hier besonders geschickt? (328 + 99 → Hilfsaufgabe, 702 − 698 → Ergänzen, 346 + 228 → Schrittweise …) Alle sinnvollen Wege zählen; danach wird mit dem gewählten Weg gerechnet – genau so wie beim Rechenweg selbst und passend zur eingestellten Stufe (bei *Alles selbst* mit allen richtigen anderen Schritten, ohne Rechenstrich). Auch „Vereinfachen“ wird angeboten. |
 | **Überschlagen** | + − · | Ü: beide Zahlen auf Zehner (bis 1000 auch beide auf Hunderter) runden und grob rechnen, dann genau rechnen und vergleichen: „Passt dein Ergebnis zum Überschlag?“ – oder: Passt das Ergebnis eines anderen Kindes? |
 
 Jede Knobelei ist ein eigenes Modul in `js/formats/` und meldet sich mit `Tasks.register(op, def)` an
@@ -74,7 +76,7 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 
 | Datei | Inhalt |
 |---|---|
-| `js/tasks.js` | Aufgaben-Generator für alle Rechenwege |
+| `js/tasks.js` | Aufgaben-Generator für alle Rechenwege; `Tasks.build(op, weg, a, b, opt)` baut einen Rechenweg zu festen Zahlen (z. B. für „Welcher Weg?“) |
 | `js/formats/*.js` | Knobel-Aufgaben: Zahlenmauer, Fehler finden, Welcher Weg?, Überschlagen |
 | `js/layouts/wall.js` | Darstellung der Zahlenmauer als Pyramide |
 | `js/check.js` | Prüf-Logik: Eingaben lesen, Zeilen bewerten, Hilfe-Stufen, Lösungstext |

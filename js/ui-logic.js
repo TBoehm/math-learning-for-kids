@@ -93,6 +93,15 @@
     return advice || (pickFn || pick)((texts || TEXTS).rowOk) + (next && next.label ? ' Weiter: ' + next.label + '.' : '');
   }
 
+  /**
+   * Name einer gelösten Zeile: row.labelDone(vals) benennt sie nach dem, was das Kind gerechnet hat
+   * (Stellenweise, alles selbst: "Eine Stelle" -> "Zehner"), sonst bleibt row.label.
+   */
+  function doneLabel(row, vals) {
+    var l = typeof row.labelDone === 'function' ? row.labelDone(vals || {}) : null;
+    return l || row.label || '';
+  }
+
   // ---------- Texte zur Aufgabe ----------
   /** Namen der Eingabefelder einer Zeile, z. B. "Zehner: 1. Zahl". */
   function cellLabels(row) {
@@ -164,7 +173,7 @@
   var api = {
     afterCorrect: afterCorrect, revealDelta: revealDelta,
     TEXTS: TEXTS, pick: pick, sanitize: sanitize, applyKey: applyKey, pickTarget: pickTarget, inputMode: inputMode,
-    fieldEffect: fieldEffect, outcome: outcome, wrongText: wrongText, rowDoneText: rowDoneText,
+    fieldEffect: fieldEffect, outcome: outcome, wrongText: wrongText, rowDoneText: rowDoneText, doneLabel: doneLabel,
     cellLabels: cellLabels, badgeText: badgeText, introText: introText, welcomeText: welcomeText, cleanName: cleanName
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

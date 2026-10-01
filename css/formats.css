@@ -1,4 +1,4 @@
-/* Knobel-Aufgaben: eigene Darstellungen (Zahlenmauer, Fehler finden, Welcher Weg?).
+/* Knobel-Aufgaben: eigene Darstellungen (Zahlenmauer, Fehler finden, Welcher Weg?, Überschlagen).
    Alles ist auf die Klasse .layout-… von #rows beschränkt; css/style.css bleibt unverändert. */
 
 /* ============ Zahlenmauer ============ */
@@ -56,4 +56,17 @@
 .layout-weg .row:first-child { grid-template-columns: 1fr; }
 @media (min-width: 700px) {
   .layout-weg .choice { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); max-width: 30em; }
+}
+
+/* ============ Überschlagen ============ */
+/* Die Ü-Zeile "Ü: [330] + [250] = [580]" bleibt in einer Zeile: schmalere Felder (vier Ziffern passen
+   noch), ein kleineres "Ü:", auf dem Handy etwas kleinere Schrift, auf dem Tablet der Name über der Rechnung. */
+.layout-ueberschlag .cell { width: 2.5em; }
+.layout-ueberschlag .row:first-child .eq > .tok-op:first-child { font-size: .8em; }
+@media (max-width: 699px) {
+  .layout-ueberschlag .eq { font-size: clamp(1.1rem, 6vw, 2.1rem); gap: 6px; }
+  .layout-ueberschlag .cell { height: 1.7em; }
+}
+@media (min-width: 700px) and (max-width: 1023px) {
+  .layout-ueberschlag .row { grid-template-columns: 1fr; gap: 2px; }
 }

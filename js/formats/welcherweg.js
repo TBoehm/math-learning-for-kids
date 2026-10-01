@@ -1,9 +1,14 @@
 /*
  * Knobeln: Welcher Weg passt? Zu einer Aufgabe, die zu einem Rechenweg besonders gut passt
  * (328 + 99 -> Hilfsaufgabe, 702 − 698 -> Ergänzen, 239 + 41 -> Vereinfachen, 346 + 228 -> Schrittweise),
- * wählt das Kind erst den Weg (Auswahlfeld, alle sinnvollen Wege zählen) und rechnet dann damit:
- * die Zeilen des gewählten Wegs hängt task.nextRow(vals) eine nach der anderen an.
- * Angeboten werden nur Rechenwege, die es in Tasks.STRATEGIES gibt (z. B. "Vereinfachen" erst, wenn er angemeldet ist).
+ * wählt das Kind erst den Weg (Auswahlfeld, alle sinnvollen Wege zählen) und rechnet dann damit.
+ * Nach der Wahl kommen die Zeilen des echten Rechenwegs aus js/tasks.js (Tasks.build) für genau diese
+ * Zahlen und die eingestellte Stufe – bei "Alles selbst" mit allen richtigen anderen Schritten.
+ * task.nextRow(vals) hängt sie eine nach der anderen an, task.more(vals) reicht die Probe durch.
+ * Info-Zeilen ohne Eingabefeld (z. B. "99 = 100 − 1" bei "Mit Hilfe") fallen weg; die Tipps erklären es.
+ * Ohne Anschauung: Der Rechenstrich des Wegs (task.line) wird nicht gezeigt, weil die Darstellung
+ * beim Anzeigen der Aufgabe entsteht und der Weg da noch nicht feststeht (layout 'weg').
+ * Angeboten werden nur Rechenwege, die es in Tasks.STRATEGIES gibt und die Tasks.build kennt.
  * Reines Modul ohne DOM – getestet in tests/welcherweg.test.js.
  */
 (function (root) {
@@ -12,19 +17,12 @@
   var node = typeof module !== 'undefined' && module.exports;
   var Tasks = node ? require('../tasks.js') : root.RR.Tasks;
 
-  var T = function (v) { return { t: 'txt', v: v }; };
-  var N = function (v) { return { t: 'num', v: v }; };
-  var R = function (id) { return { t: 'ref', id: id }; };
-  function I(id, answer) { return { t: 'in', id: id, answer: answer, check: function (v) { return v === answer; } }; }
   function rndInt(rnd, a, b) { return a + Math.floor(rnd() * (b - a + 1)); }
-  function row(tokens, label, hint) { return { tokens: tokens, label: label, hint: hint }; }
 
   var NAMES = { stellenweise: 'Stellenweise', schrittweise: 'Schrittweise', hilfsaufgabe: 'Hilfsaufgabe', ergaenzen: 'Ergänzen', vereinfachen: 'Vereinfachen' };
-  var PLACES = [[100, 'Hunderter'], [10, 'Zehner'], [1, 'Einer']];
 
   function calc(a, op, b) { return op === '+' ? a + b : a - b; }
   function ceilTo(x, u) { return Math.ceil(x / u) * u; }
-  function place(x, u) { return Math.floor(x % (u * 10) / u) * u; }
 
   /** Fast eine glatte Zahl? Bis 1000: fast ein Hunderter (397, 698) oder zweistellig fast ein Zehner (39); bis 100: fast ein Zehner. */
   function near(x, max) {
@@ -55,109 +53,19 @@
     return { accepted: accepted, canonical: accepted[0] };
   }
 
-  // Die Zahl, die glatt gemacht wird: [Zahl, { X, d }, 'a' | 'b']
+  // Die Zahl, die glatt gemacht wird: [Zahl, { X, d }, 'a' | 'b'] – erst die, die fast glatt ist (397 vor 148)
   function roundPick(a, b, max, op) {
     var c = op === '+' ? complement(a, b) : null;
     if (c) return c === 'a' ? [a, ten(a), 'a'] : [b, ten(b), 'b'];
-    if (near(b, max) || ten(b)) return [b, near(b, max) || ten(b), 'b'];
-    return [a, near(a, max) || ten(a), 'a'];
+    if (near(b, max)) return [b, near(b, max), 'b'];
+    if (op === '+' && near(a, max)) return [a, near(a, max), 'a'];
+    if (ten(b) || op === '−') return [b, ten(b), 'b'];
+    return [a, ten(a), 'a'];
   }
 
-  // ---------- Rechenwege für feste Zahlen (Schritte vorgegeben, Ergebnisse eintragen) ----------
-  function stellenweise(a, b) {
-    var rows = [], sum = [];
-    PLACES.forEach(function (p) {
-      var x = place(a, p[0]), y = place(b, p[0]);
-      if (x && y) {
-        var id = 'p' + p[0];
-        rows.push(row([N(x), T('+'), N(y), T('='), I(id, x + y)], p[1], 'Nimm nur die ' + p[1] + ': ' + x + ' + ' + y + '.'));
-        sum.push(R(id));
-      } else if (x || y) sum.push(N(x + y));
-    });
-    var tokens = [];
-    sum.forEach(function (s, k) { if (k) tokens.push(T('+')); tokens.push(s); });
-    tokens.push(T('='), I('res', a + b));
-    rows.push(row(tokens, 'Zusammen', 'Rechne deine Ergebnisse zusammen.'));
-    return rows;
-  }
-
-  function schrittweise(op) {
-    return function (a, b) {
-      var parts = PLACES.map(function (p) { return [place(b, p[0]), p[1]]; }).filter(function (p) { return p[0]; });
-      var cur = a, rows = [];
-      parts.forEach(function (p, k) {
-        var next = calc(cur, op, p[0]), id = k === parts.length - 1 ? 'res' : 's' + k;
-        rows.push(row([k ? R('s' + (k - 1)) : N(a), T(op), N(p[0]), T('='), I(id, next)],
-          p[1] + (op === '+' ? ' dazu' : ' weg'), 'Rechne ' + cur + ' ' + op + ' ' + p[0] + '.'));
-        cur = next;
-      });
-      return rows;
-    };
-  }
-
-  function hilfsaufgabe(op) {
-    return function (a, b, max) {
-      var r = roundPick(a, b, max, op), x = r[0], X = r[1].X, d = r[1].d;
-      var A = r[2] === 'a' ? X : a, B = r[2] === 'a' ? b : X;
-      var s1 = calc(A, op, B);
-      var back = op === '+' ? '−' : '+';
-      return [
-        row([N(A), T(op), N(B), T('='), I('s1', s1)], 'Leichte Aufgabe',
-          x + ' ist fast ' + X + '. Rechne erst ' + A + ' ' + op + ' ' + B + '.'),
-        row([R('s1'), T(back), N(d), T('='), I('res', calc(a, op, b))], 'Ausgleichen',
-          op === '+' ? 'Du hast ' + d + ' zu viel dazugerechnet. Nimm ' + d + ' wieder weg.'
-            : 'Du hast ' + d + ' zu viel weggenommen. Gib ' + d + ' wieder dazu.')
-      ];
-    };
-  }
-
-  function vereinfachen(op) {
-    return function (a, b, max) {
-      var r = roundPick(a, b, max, op), d = r[1].d;
-      // Plus: was eine Zahl mehr bekommt, gibt die andere ab. Minus: beide gleich viel größer.
-      var opA = op === '+' && r[2] === 'b' ? '−' : '+';
-      var opB = op === '+' && r[2] === 'a' ? '−' : '+';
-      var A = calc(a, opA, d), B = calc(b, opB, d);
-      return [
-        row([N(a), T(opA), N(d), T('='), I('v1', A)], '1. Zahl',
-          op === '+' ? (r[2] === 'a' ? 'Mach ' + a + ' zur glatten Zahl: ' + a + ' + ' + d + '.' : 'Gib ' + d + ' von ' + a + ' ab: ' + a + ' − ' + d + '.')
-            : 'Mach ' + b + ' zur glatten Zahl. Dafür tust du zu beiden Zahlen ' + d + ' dazu: ' + a + ' + ' + d + '.'),
-        row([N(b), T(opB), N(d), T('='), I('v2', B)], '2. Zahl',
-          op === '+' && r[2] === 'a' ? 'Was ' + a + ' bekommen hat, gibt ' + b + ' ab: ' + b + ' − ' + d + '.'
-            : 'Jetzt ' + b + ' + ' + d + '.'),
-        row([R('v1'), T(op), R('v2'), T('='), I('res', calc(a, op, b))], 'Leichte Aufgabe',
-          'Jetzt ist es leicht: ' + A + ' ' + op + ' ' + B + '.')
-      ];
-    };
-  }
-
-  function ergaenzen(a, b) {
-    var stops = [b], cur = b;
-    if (cur % 10 && ceilTo(cur, 10) <= a) stops.push(cur = ceilTo(cur, 10));
-    if (cur % 100 && ceilTo(cur, 100) <= a) stops.push(cur = ceilTo(cur, 100));
-    if (Math.floor(a / 100) * 100 > cur) stops.push(cur = Math.floor(a / 100) * 100);
-    if (Math.floor(a / 10) * 10 > cur) stops.push(cur = Math.floor(a / 10) * 10);
-    if (a > cur) stops.push(a);
-    var rows = [], sum = [], single = stops.length === 2;
-    for (var k = 1; k < stops.length; k++) {
-      var from = stops[k - 1], to = stops[k], id = single ? 'res' : 'j' + k;
-      rows.push(row([N(from), T('+'), I(id, to - from), T('='), N(to)], 'Bis ' + to,
-        'Wie viel fehlt von ' + from + ' bis ' + to + '?'));
-      if (sum.length) sum.push(T('+'));
-      sum.push(R(id));
-    }
-    if (!single) rows.push(row(sum.concat([T('='), I('res', a - b)]), 'Zusammen', 'Rechne alle Sprünge zusammen.'));
-    return rows;
-  }
-
-  var PLANS = {
-    '+': { stellenweise: stellenweise, schrittweise: schrittweise('+'), hilfsaufgabe: hilfsaufgabe('+'), vereinfachen: vereinfachen('+') },
-    '−': { schrittweise: schrittweise('−'), ergaenzen: ergaenzen, hilfsaufgabe: hilfsaufgabe('−'), vereinfachen: vereinfachen('−') }
-  };
-
-  /** Angebotene Wege: Rechenwege der Rechenart, die es gibt und für die es hier einen Plan gibt. */
+  /** Angebotene Wege: Rechenwege der Rechenart, die es gibt und die es zu festen Zahlen gibt. */
   function offeredKeys(op) {
-    return Tasks.STRATEGIES[op].filter(function (s) { return s.group === 'weg' && PLANS[op][s.key]; })
+    return Tasks.STRATEGIES[op].filter(function (s) { return s.group === 'weg' && Tasks.canBuild(op, s.key); })
       .map(function (s) { return s.key; });
   }
   function nameOf(op, key) {
@@ -182,10 +90,19 @@
       : 'Genau! Mach aus ' + r[0] + ' die glatte Zahl ' + r[1].X + ' und verändere die andere Zahl passend.';
   }
 
-  /** Aufgabe zu festen Zahlen. opt: { max, offered: angebotene Wege (Standard: offeredKeys) } */
+  /** Rechenweg key zu diesen Zahlen in Stufe level (welche Zahl glatt wird, wie beim Tipp) */
+  function wayTask(key, a, op, b, max, level) {
+    return Tasks.build(op, key, a, b, { level: level, max: max, round: roundPick(a, b, max, op)[2] });
+  }
+  function hasInput(row) { return row.tokens.some(function (t) { return t.t === 'in' || t.t === 'choice'; }); }
+
+  /**
+   * Aufgabe zu festen Zahlen.
+   * opt: { max, level: 'hilfe' | 'zerlegen' | 'selbst', offered: angebotene Wege (Standard: offeredKeys) }
+   */
   function build(a, op, b, opt) {
     opt = opt || {};
-    var max = opt.max === 1000 ? 1000 : 100;
+    var max = opt.max === 1000 ? 1000 : 100, level = opt.level || 'hilfe';
     var offered = opt.offered || offeredKeys(op);
     var c = classify(a, op, b, max, offered);
     var ok = c.accepted.map(function (k) { return offered.indexOf(k); });
@@ -205,11 +122,28 @@
         advice: function (vals) { return advice(offered[vals.weg], a, op, b, max); }
       }]
     };
-    var plan = null;
     // nach der Wahl: die Zeilen des gewählten Wegs, eine nach der anderen
+    var way = null, wayKey = null, used = 0;
+    function wayRows(vals) {
+      if (!way || wayKey !== vals.weg) { way = wayTask(offered[vals.weg], a, op, b, max, level); wayKey = vals.weg; used = 0; }
+      return way;
+    }
     task.nextRow = function (vals) {
-      if (!plan) plan = PLANS[op][offered[vals.weg]](a, b, max);
-      return plan[task.rows.length - 1];
+      var w = wayRows(vals);
+      for (var guard = 0; guard < 50; guard++) {
+        var r;
+        if (used < w.rows.length) r = w.rows[used++];
+        else { r = w.nextRow(vals); w.rows.push(r); used++; }
+        if (hasInput(r)) return r;   // Info-Zeilen überspringen
+      }
+      throw new Error('Kein Rechenschritt mehr');
+    };
+    // nach dem Ergebnis noch eine Zeile? Eine feste Zeile des Wegs (Probe beim Ergänzen) oder eine,
+    // die der Weg selbst noch anhängt (alles selbst)
+    task.more = function (vals) {
+      if (!way) return false;
+      for (var i = used; i < way.rows.length; i++) if (hasInput(way.rows[i])) return true;
+      return typeof way.more === 'function' && way.more(vals);
     };
     return task;
   }
@@ -252,10 +186,12 @@
     if (c.canonical !== type) return false;
     // jeder sinnvolle Weg bleibt im Zahlenraum
     return c.accepted.every(function (k) {
-      return PLANS[op][k](a, b, max).every(function (r) {
-        return r.tokens.every(function (t) {
-          var v = t.t === 'num' ? t.v : t.t === 'in' ? t.answer : 0;
-          return v >= 0 && v <= max;
+      return ['hilfe', 'zerlegen'].every(function (level) {
+        return wayTask(k, a, op, b, max, level).rows.every(function (r) {
+          return r.tokens.every(function (t) {
+            var v = t.t === 'num' ? t.v : t.t === 'in' ? t.answer : 0;
+            return v >= 0 && v <= max;
+          });
         });
       });
     });
@@ -270,7 +206,7 @@
     var type = types[Math.floor(rnd() * types.length)];
     for (var i = 0; i < 5000; i++) {
       var n = numbersFor(type, op, max, rnd);
-      if (fits(n[0], op, n[1], max, offered, type)) return build(n[0], op, n[1], { max: max, offered: offered });
+      if (fits(n[0], op, n[1], max, offered, type)) return build(n[0], op, n[1], { max: max, offered: offered, level: opt.level });
     }
     throw new Error('Keine passende Aufgabe für ' + type);
   }

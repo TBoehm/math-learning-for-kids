@@ -98,6 +98,7 @@
     var r = { tokens: tokens, label: opts.label || '', hint: opts.hint || '', jump: opts.jump || null };
     if (opts.fixedOrder) r.fixedOrder = true;
     if (opts.advice) r.advice = opts.advice;
+    if (opts.labelDone) r.labelDone = opts.labelDone; // Name der Zeile, nachdem sie gelöst ist (aus den Werten)
     return r;
   }
 
@@ -239,8 +240,10 @@
     return { shared: shared, lonely: lonely };
   }
 
-  function addStellenweise(opt) {
-    var n = addNumbers(opt), a = n.a, b = n.b, lvl = opt.level;
+  function addStellenweise(opt) { var n = addNumbers(opt); return buildStellenweise(n.a, n.b, opt); }
+
+  function buildStellenweise(a, b, opt) {
+    var lvl = opt.level;
     var sp = placeSplit(a, b), shared = sp.shared, lonely = sp.lonely;
     var rows = [];
     shared.forEach(function (s, i) {
@@ -280,7 +283,9 @@
 
   /**
    * Stellenweise, alles selbst: [x] + [y] = [z] für eine Stelle, die noch nicht dran war.
-   * Die Reihenfolge der Stellen und der beiden Zahlen ist egal.
+   * Die Reihenfolge der Stellen und der beiden Zahlen ist egal. Darum heißt die Zeile vorher
+   * neutral ("Eine Stelle", "Nächste Stelle", "Letzte Stelle") und nach dem Rechnen so wie die
+   * Stelle, die das Kind gewählt hat (row.labelDone: "Hunderter", "Zehner", "Einer").
    */
   function placeRowSelbst(shared, i) {
     var k = i + 1, xId = 'sx' + k, yId = 'sy' + k, zId = 'z' + k;
@@ -303,7 +308,11 @@
       ? 'Nimm von beiden Zahlen dieselbe Stelle, zum Beispiel die ' + PLACE[canon.p] + ': ' + canon.x + ' + ' + canon.y +
         '. Mit welcher Stelle du anfängst, darfst du selbst wählen.'
       : 'Jetzt eine Stelle, die du noch nicht gerechnet hast (' + names + '). Nimm von beiden Zahlen dieselbe Stelle.';
-    return row([x, T('+'), y, T('='), z], { label: k + '. Stelle', hint: hint });
+    var label = k === 1 ? 'Eine Stelle' : k === shared.length ? 'Letzte Stelle' : 'Nächste Stelle';
+    return row([x, T('+'), y, T('='), z], {
+      label: label, hint: hint,
+      labelDone: function (vals) { return PLACE[placeOf(vals[xId])] || null; }
+    });
   }
 
   // ---------- Plus und Minus: schrittweise ----------
@@ -324,7 +333,11 @@
   }
 
   function schrittweise(op, opt) {
-    var n = op === '+' ? addNumbers(opt) : subNumbers(opt), a = n.a, b = n.b;
+    var n = op === '+' ? addNumbers(opt) : subNumbers(opt);
+    return buildSchrittweise(op, n.a, n.b, opt);
+  }
+
+  function buildSchrittweise(op, a, b, opt) {
     var answer = op === '+' ? a + b : a - b;
     var task = { op: op, strategy: 'schrittweise', a: a, b: b, answer: answer, line: { start: a, end: answer } };
     if (opt.level === 'selbst') {
@@ -456,28 +469,42 @@
       if (!crossingOk(op === '+' ? carries(a, b) : borrows(a, b), opt.crossing)) return null;
       return { a: a, b: b };
     });
-    var a = n.a, b = n.b, p = opt.profi;
-    var B = tens(b) + 10, d = B - b;
-    var answer = op === '+' ? a + b : a - b, s1 = op === '+' ? a + B : a - B;
-    var task = { op: op, strategy: 'hilfsaufgabe', a: a, b: b, answer: answer, line: { start: a, end: answer } };
+    return buildHilfsaufgabe(op, n.a, n.b, Object.assign({}, opt, { round: 'b' }));
+  }
+
+  /**
+   * Hilfsaufgabe zu festen Zahlen. opt.round: welche Zahl glatt wird – 'b' (Standard) oder bei Plus
+   * auch 'a' (239 + 41 -> 240 + 41 − 1). Die glatte Zahl ist die nächste Zehnerzahl (99 -> 100,
+   * 231 -> 230); wird abgerundet, gleicht man in die andere Richtung aus.
+   */
+  function buildHilfsaufgabe(op, a, b, opt) {
+    var max = opt.max, p = opt.profi;
+    var ra = op === '+' && opt.round === 'a';
+    var x = ra ? a : b, X = nearestGlatt(x), up = X > x, d = Math.abs(X - x);
+    var A = ra ? X : a, B = ra ? b : X;           // die leichte Aufgabe: A op B
+    var answer = op === '+' ? a + b : a - b, s1 = op === '+' ? A + B : A - B;
+    var start = ra ? b : a;                        // der Sprung auf dem Rechenstrich startet bei der Zahl, die bleibt
+    var task = { op: op, strategy: 'hilfsaufgabe', a: a, b: b, answer: answer, round: ra ? 'a' : 'b', line: { start: start, end: answer } };
     if (opt.level === 'selbst') {
-      task.rows = [hilfsFirstRow(op, a, b, max)];
+      task.rows = [hilfsFirstRow(op, a, b, max, ra)];
       task.nextRow = function (vals) { return hilfsCorrection(op, a, b, vals); };
       return task;
     }
-    var back = op === '+' ? '−' : '+';
+    // Ausgleichen: zu viel dazugerechnet/weggenommen oder zu wenig
+    var back = (op === '+') === up ? '−' : '+';
+    var fix = op === '+'
+      ? (up ? 'Du hast ' + d + ' zu viel dazugerechnet. Nimm ' + d + ' wieder weg!' : 'Du hast ' + d + ' zu wenig dazugerechnet. Rechne noch ' + d + ' dazu!')
+      : (up ? 'Du hast ' + d + ' zu viel weggenommen. Gib ' + d + ' wieder dazu!' : 'Du hast ' + d + ' zu wenig weggenommen. Nimm noch ' + d + ' weg!');
     task.rows = [
-      row([N(b), T('='), NP(p, 'B', B), T('−'), NP(p, 'd', d)], {
-        label: 'Hilfszahl', hint: b + ' ist fast ' + B + '. Wie viel fehlt bis ' + B + '?'
+      row([N(x), T('='), NP(p, 'B', X), T(up ? '−' : '+'), NP(p, 'd', d)], {
+        label: 'Hilfszahl', hint: x + ' ist fast ' + X + '. ' + (up ? 'Wie viel fehlt bis ' + X + '?' : 'Wie viel ist ' + x + ' mehr als ' + X + '?')
       }),
-      row([N(a), T(op), RP(p, 'B', B), T('='), I('s1', s1)], {
-        label: 'Leichte Aufgabe', jump: { from: a, to: s1, text: op + B },
-        hint: 'Rechne mit der glatten Zahl: ' + a + ' ' + op + ' ' + B + '.'
+      row((ra ? [RP(p, 'B', X), T(op), N(b)] : [N(a), T(op), RP(p, 'B', X)]).concat([T('='), I('s1', s1)]), {
+        label: 'Leichte Aufgabe', jump: { from: start, to: s1, text: op + X },
+        hint: 'Rechne mit der glatten Zahl: ' + A + ' ' + op + ' ' + B + '.'
       }),
       row([R('s1'), T(back), RP(p, 'd', d), T('='), I('res', answer)], {
-        label: 'Ausgleichen', jump: { from: s1, to: answer, text: back + d, back: true },
-        hint: op === '+' ? 'Du hast ' + d + ' zu viel dazugerechnet. Nimm ' + d + ' wieder weg!'
-          : 'Du hast ' + d + ' zu viel weggenommen. Gib ' + d + ' wieder dazu!'
+        label: 'Ausgleichen', jump: { from: s1, to: answer, text: back + d, back: true }, hint: fix
       })
     ];
     return task;
@@ -488,8 +515,9 @@
    * glatt gemacht. Bei Plus darf jeder Summand gerundet werden (60 + 19 oder 59 + 20),
    * bei Minus der Minuend oder der Subtrahend (82 − 40, 80 − 39), auf- oder abgerundet.
    */
-  function hilfsFirstRow(op, a, b, max) {
-    var B = tens(b) + 10;
+  function hilfsFirstRow(op, a, b, max, ra) {
+    var nx = ra ? a : b, X = nearestGlatt(nx), B = ra ? b : X;
+    function glatt(v) { return nearestGlatt(v) === v ? tens(v) + 10 : nearestGlatt(v); }
     function kind(v, orig) { return v === orig ? 0 : isGlatt(v, orig, max) ? 1 : -1; }
     function okAs(x, y, oa, ob) { var u = kind(x, oa), w = kind(y, ob); return u >= 0 && w >= 0 && u + w >= 1; }
     function pairOk(x, y) {
@@ -503,17 +531,18 @@
     function secondOk(v) { return op === '+' ? firstOk(v) : v === b || isGlatt(v, b, max); }
     function partner(x) {
       if (op === '−') return x === a ? B : b;
-      if (x === a) return B;
-      if (x === b) return nearestGlatt(a) === a ? tens(a) + 10 : nearestGlatt(a);
+      if (x === a) return glatt(b);
+      if (x === b) return glatt(a);
       return kind(x, a) === 1 ? b : a;
     }
     var calc = function (vals) { return op === '+' ? vals.xa + vals.xb : vals.xa - vals.xb; };
+    var x0 = ra ? X : a; // Musterlösung: X + b oder a op X
     return row([
-      IC('xa', a, firstOk, function () { return a; }),
+      IC('xa', x0, firstOk, function () { return x0; }),
       T(op),
       IC('xb', B, function (v, vals) { return 'xa' in vals ? pairOk(vals.xa, v) : secondOk(v); },
         function (vals) { return 'xa' in vals ? partner(vals.xa) : B; }),
-      T('='), IC('s1', op === '+' ? a + B : a - B, function (v, vals) { return v === calc(vals); }, calc, ['xa', 'xb'])
+      T('='), IC('s1', op === '+' ? x0 + B : x0 - B, function (v, vals) { return v === calc(vals); }, calc, ['xa', 'xb'])
     ], {
       label: 'Leichte Aufgabe', fixedOrder: op === '−',
       jump: function (vals) {
@@ -522,8 +551,8 @@
         if (op === '+' && x !== a && x !== b && (y === a || y === b)) { from = y; y = x; }
         return { from: from, to: vals.s1, text: op + y };
       },
-      hint: b + ' ist fast ' + B + '. Rechne erst mit der glatten Zahl: ' + a + ' ' + op + ' ' + B + '.' +
-        (op === '+' ? ' Du darfst auch ' + a + ' glatt machen.' : '')
+      hint: nx + ' ist fast ' + X + '. Rechne erst mit der glatten Zahl: ' + x0 + ' ' + op + ' ' + B + '.' +
+        (op === '+' ? ' Du darfst auch ' + (ra ? b : a) + ' glatt machen.' : '')
     });
   }
 
@@ -579,9 +608,21 @@
       if (op === '+') { x = nearA ? G : a - k; y = nearA ? b - k : G; } else { x = a + k; y = G; }
       if (x <= 0 || y <= 0 || x > max) return null;
       if (!crossingOk(op === '+' ? carries(a, b) : borrows(a, b), opt.crossing)) return null;
-      return { a: a, b: b, x: x, y: y, k: k, near: near, nearA: nearA };
+      return { a: a, b: b, nearA: nearA };
     });
-    var a = n.a, b = n.b, x = n.x, y = n.y, k = n.k, kk = Math.abs(k), lvl = opt.level;
+    return buildVereinfachen(op, n.a, n.b, Object.assign({}, opt, { round: n.nearA ? 'a' : 'b' }));
+  }
+
+  /**
+   * Vereinfachen zu festen Zahlen. opt.round: welche Zahl glatt wird – 'b' (Standard) oder bei Plus
+   * auch 'a'. Sie wird zur nächsten Zehnerzahl (99 -> 100, 41 -> 40).
+   */
+  function buildVereinfachen(op, a, b, opt) {
+    var max = opt.max, lvl = opt.level;
+    var nearA = op === '+' && opt.round === 'a';
+    var near = nearA ? a : b, G = nearestGlatt(near), k = G - near, kk = Math.abs(k);
+    var x, y;
+    if (op === '+') { x = nearA ? G : a - k; y = nearA ? b - k : G; } else { x = a + k; y = G; }
     var answer = op === '+' ? a + b : a - b;
     function pairOk(u, w) {
       if (!(u > 0 && w > 0)) return false;
@@ -598,11 +639,11 @@
       return 'vx' in vals ? v === otherOf(vals.vx) && pairOk(vals.vx, v) : pairOk(firstOf(v), v);
     }, function (vals) { return 'vx' in vals ? otherOf(vals.vx) : y; });
     var calc = function (vals) { return op === '+' ? vals.vx + vals.vy : vals.vx - vals.vy; };
-    var G = n.near + k, hint;
+    var hint;
     if (op === '+') {
-      var other = n.nearA ? b : a;
-      hint = k > 0 ? n.near + ' bekommt ' + kk + ' dazu und wird ' + G + '. Damit es gerecht bleibt, gibt ' + other + ' genau ' + kk + ' ab.'
-        : n.near + ' gibt ' + kk + ' ab und wird ' + G + '. Dafür bekommt ' + other + ' genau ' + kk + ' dazu.';
+      var other = nearA ? b : a;
+      hint = k > 0 ? near + ' bekommt ' + kk + ' dazu und wird ' + G + '. Damit es gerecht bleibt, gibt ' + other + ' genau ' + kk + ' ab.'
+        : near + ' gibt ' + kk + ' ab und wird ' + G + '. Dafür bekommt ' + other + ' genau ' + kk + ' dazu.';
     } else {
       var sg = k > 0 ? ' + ' : ' − ';
       hint = 'Verändere beide Zahlen um gleich viel: ' + b + sg + kk + ' = ' + y + ', also auch ' + a + sg + kk + ' = ' + x +
@@ -622,13 +663,13 @@
       ];
     } else {
       // Mit Hilfe: die glatte Zahl steht da, die andere rechnet das Kind aus
-      var right = op === '+' && n.nearA ? [N(x), T('+'), I('vy', y)] : [I('vx', x), T(op), N(y)];
+      var right = nearA ? [N(x), T('+'), I('vy', y)] : [I('vx', x), T(op), N(y)];
       rows = [
         row([N(a), T(op), N(b), T('=')].concat(right), { label: 'Verändern', hint: hint }),
         row([N(x), T(op), N(y), T('='), I('res', answer)], { label: 'Leichte Aufgabe', hint: 'Jetzt ist es leicht: ' + x + ' ' + op + ' ' + y + '.' })
       ];
     }
-    return { op: op, strategy: 'vereinfachen', a: a, b: b, answer: answer, rows: rows };
+    return { op: op, strategy: 'vereinfachen', a: a, b: b, answer: answer, round: nearA ? 'a' : 'b', rows: rows };
   }
   function addVereinfachen(opt) { return vereinfachen('+', opt); }
   function subVereinfachen(opt) { return vereinfachen('−', opt); }
@@ -658,7 +699,11 @@
       if (opt.max === 1000) return d <= 200 || (b % 100 >= 80 && d <= 400);
       return d <= 20 || (ones(b) >= 7 && d <= 50);
     });
-    var a = n.a, b = n.b, d = a - b;
+    return buildErgaenzen(n.a, n.b, opt);
+  }
+
+  function buildErgaenzen(a, b, opt) {
+    var d = a - b;
     var stops = ergStops(b, a);
     var task = { op: '−', strategy: 'ergaenzen', a: a, b: b, answer: d, line: { start: b, end: a } };
     if (opt.level === 'selbst') {
@@ -1325,23 +1370,63 @@
         ? wege.filter(function (x) { return x.key !== 'hilfsaufgabe' && x.key !== 'vereinfachen'; }) : wege;
       s = pick(pool.length ? pool : wege);
     }
-    var max = opt.max === 1000 ? 1000 : 100;
+    var o = genOptions(opt);
+    return decorate(s.gen(o), s, o);
+  }
+
+  /** Einstellungen für einen Generator: Stufe, Zahlenraum, Übergang, Rest (und round beim Bauen) */
+  function genOptions(opt) {
     var level = opt.level || (opt.profi ? 'zerlegen' : 'hilfe');
-    var task = s.gen({ crossing: opt.crossing || 'egal', level: level, profi: level === 'zerlegen', rest: !!opt.rest, max: max });
+    return {
+      crossing: opt.crossing || 'egal', level: level, profi: level === 'zerlegen', rest: !!opt.rest,
+      max: opt.max === 1000 ? 1000 : 100, round: opt.round === 'a' ? 'a' : 'b'
+    };
+  }
+  /** Name, Stufe und Zahlenraum an der Aufgabe vermerken */
+  function decorate(task, s, o) {
     task.strategyName = s.name;
     task.strategyDesc = s.desc;
-    task.level = level;
-    task.profi = level !== 'hilfe';
-    task.max = max;
+    task.level = o.level;
+    task.profi = o.level !== 'hilfe';
+    task.max = o.max;
     task.group = s.group;
     return task;
+  }
+
+  // Rechenwege, die es auch zu festen Zahlen gibt (Plus und Minus)
+  var BUILD = {
+    '+': {
+      stellenweise: buildStellenweise,
+      schrittweise: function (a, b, o) { return buildSchrittweise('+', a, b, o); },
+      hilfsaufgabe: function (a, b, o) { return buildHilfsaufgabe('+', a, b, o); },
+      vereinfachen: function (a, b, o) { return buildVereinfachen('+', a, b, o); }
+    },
+    '−': {
+      schrittweise: function (a, b, o) { return buildSchrittweise('−', a, b, o); },
+      ergaenzen: buildErgaenzen,
+      hilfsaufgabe: function (a, b, o) { return buildHilfsaufgabe('−', a, b, o); },
+      vereinfachen: function (a, b, o) { return buildVereinfachen('−', a, b, o); }
+    }
+  };
+  function canBuild(op, key) { return !!(BUILD[op] && BUILD[op][key]); }
+
+  /**
+   * Rechenweg zu festen Zahlen – dieselbe Aufgabe, die der Generator zu diesen Zahlen bauen würde,
+   * in jeder Stufe (z. B. für "Welcher Weg?"). opt: { level, max, round: 'a' | 'b' (welche Zahl
+   * bei Hilfsaufgabe und Vereinfachen glatt wird; nur bei Plus darf es die erste sein) }
+   */
+  function build(op, key, a, b, opt) {
+    if (!canBuild(op, key)) throw new Error('Kein Rechenweg ' + key + ' zu festen Zahlen bei ' + op);
+    var s = STRATEGIES[op].filter(function (x) { return x.key === key; })[0];
+    var o = genOptions(opt || {});
+    return decorate(BUILD[op][key](a, b, o), s, o);
   }
 
   /** Text der Aufgabe, z. B. "47 + 38"; mit task.terms auch mehr Zahlen: "235 + 123 + 418" */
   function taskText(task) { return (task.terms || [task.a, task.b]).join(' ' + task.op + ' '); }
 
   var api = {
-    generate: generate, taskText: taskText, isEasySplit: isEasySplit, isGlatt: isGlatt, placeParts: placeParts,
+    generate: generate, build: build, canBuild: canBuild, taskText: taskText, isEasySplit: isEasySplit, isGlatt: isGlatt, placeParts: placeParts,
     LEVELS: LEVELS, GROUPS: GROUPS, register: register, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

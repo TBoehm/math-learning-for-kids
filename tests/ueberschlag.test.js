@@ -29,6 +29,13 @@ describe('Runden', () => {
 describe('Überschlag-Zeile', () => {
   const t = UE.build(328, '+', 249, { max: 1000, rnd: seeded(1) });
   const ue = t.rows[0];
+  test('eigene Darstellung (layout "ueberschlag"): die Ü-Zeile ist die erste Zeile', () => {
+    for (const variant of ['selbst', 'fremd']) {
+      const u = UE.build(328, '+', 249, { max: 1000, rnd: seeded(1), variant });
+      assert.equal(u.layout, 'ueberschlag');
+      assert.equal(u.rows[0].label, 'Überschlag');
+    }
+  });
   test('Musterlösung: auf Zehner gerundet', () => {
     assert.equal(ue.label, 'Überschlag');
     assert.deepEqual(fields(ue).map((f) => f.answer), [330, 250, 580]);
