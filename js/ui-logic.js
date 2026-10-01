@@ -112,13 +112,17 @@
 
   /** Einleitung des Begleiters; greetName: Name für die Anrede oder ''. */
   function introText(task, greetName) {
+    var big = task.max === 1000 && (task.a >= 100 || task.b >= 100);
     var intro = {
-      stellenweise: 'rechne stellenweise: Zehner und Einer getrennt.',
-      schrittweise: task.op === '+' ? 'rechne schrittweise: erst die Zehner dazu, dann die Einer.'
-        : 'rechne schrittweise: erst die Zehner weg, dann die Einer.',
+      stellenweise: 'rechne stellenweise: ' + (big ? 'Hunderter, Zehner und Einer' : 'Zehner und Einer') + ' getrennt.',
+      schrittweise: task.op === '+'
+        ? 'rechne schrittweise: erst die ' + (task.b >= 100 ? 'Hunderter dazu, dann die Zehner' : 'Zehner dazu') + ', dann die Einer.'
+        : 'rechne schrittweise: erst die ' + (task.b >= 100 ? 'Hunderter weg, dann die Zehner' : 'Zehner weg') + ', dann die Einer.',
       hilfsaufgabe: 'nimm eine Hilfsaufgabe mit einer glatten Zahl.',
+      vereinfachen: task.op === '+' ? 'vereinfache: Eine Zahl gibt der anderen etwas ab, bis eine glatt ist.'
+        : 'vereinfache: Verändere beide Zahlen um gleich viel, bis eine glatt ist.',
       ergaenzen: 'ergänze von ' + task.b + ' bis ' + task.a + '. Wie weit musst du springen?',
-      zerlegen: task.op === ':' ? 'zerlege ' + task.a + ' in zwei leichte Teile.' : 'zerlege die Malaufgabe in zwei leichte.',
+      zerlegen: task.op === ':' ? 'zerlege ' + task.a + ' in leichte Teile.' : 'zerlege die Malaufgabe in zwei leichte.',
       kernaufgaben: 'nutze eine leichte Kernaufgabe.'
     }[task.strategy] || '';
     if (task.level === 'selbst') intro += ' Schreib jeden Schritt selbst auf. ✏️';
@@ -133,11 +137,13 @@
 
   /**
    * Was passiert nach einer richtigen Zeile?
-   * 'finish' (gelöst) | 'next' (nächste Zeile) | 'append' (das Kind verlängert die Rechnung:
+   * 'finish' (gelöst und task.more sagt nicht "noch eine Zeile") | 'next' (nächste Zeile) | 'append' (das Kind verlängert die Rechnung:
    * task.nextRow liefert die nächste Zeile) | 'stuck' (sollte nicht vorkommen)
    */
   function afterCorrect(task, vals, i) {
-    if (Check.isSolved(task, vals)) return 'finish';
+    // task.more(vals): nach dem Ergebnis kommt noch eine Zeile (z. B. die Probe)
+    var more = typeof task.more === 'function' && task.more(vals);
+    if (!more && Check.isSolved(task, vals)) return 'finish';
     if (i + 1 < task.rows.length) return 'next';
     if (typeof task.nextRow === 'function') return 'append';
     return 'stuck';

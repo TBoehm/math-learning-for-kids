@@ -102,9 +102,10 @@ describe('Laden und Speichern', () => {
 
 describe('Rechenwege zur Auswahl', () => {
   test('mit "Alle Wege" vorneweg, wenn es mehrere gibt', () => {
-    assert.deepEqual(Settings.strategyChoices('+').map((s) => s.key), ['mix', 'stellenweise', 'schrittweise', 'hilfsaufgabe']);
+    assert.deepEqual(Settings.strategyChoices('+').map((s) => s.key), ['mix', 'stellenweise', 'schrittweise', 'hilfsaufgabe', 'vereinfachen']);
+    assert.deepEqual(Settings.strategyChoices('−').map((s) => s.key), ['mix', 'schrittweise', 'ergaenzen', 'hilfsaufgabe', 'vereinfachen']);
     assert.equal(Settings.strategyChoices('+')[0].name, 'Alle Wege');
-    assert.deepEqual(Settings.strategyChoices('·').map((s) => s.key), ['mix', 'zerlegen', 'kernaufgaben']);
+    assert.deepEqual(Settings.strategyChoices('·').map((s) => s.key), ['mix', 'zerlegen', 'kernaufgaben', 'hilfsaufgabe']);
   });
 
   test('nur ein Weg: kein "Alle Wege"', () => {
