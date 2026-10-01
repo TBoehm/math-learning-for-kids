@@ -42,7 +42,9 @@ describe('Tasks.build: feste Zahlen', () => {
 
   test('328 + 99 Hilfsaufgabe mit Hilfe: 99 ist fast 100', () => {
     const t = Tasks.build('+', 'hilfsaufgabe', 328, 99, { level: 'hilfe', max: 1000 });
-    assert.deepEqual(t.rows.map(text), ['99 = 100 − 1', '328 + 100 = [428]', '(s1) − 1 = [427]']);
+    // wie im Heft: keine eigene Zeile "99 = 100 − 1", nur die Teilaufgaben untereinander
+    assert.deepEqual(t.rows.map(text), ['328 + 100 = [428]', '(s1) − 1 = [427]']);
+    assert.match(t.rows[0].hint, /99 ist fast 100/);
     assert.equal(t.answer, 427);
     assert.equal(t.strategyName, 'Hilfsaufgabe');
     assert.equal(t.level, 'hilfe');
@@ -50,10 +52,10 @@ describe('Tasks.build: feste Zahlen', () => {
 
   test('239 + 41 Hilfsaufgabe: die erste Zahl wird glatt (round: a)', () => {
     const t = Tasks.build('+', 'hilfsaufgabe', 239, 41, { level: 'hilfe', max: 1000, round: 'a' });
-    assert.deepEqual(t.rows.map(text), ['239 = 240 − 1', '240 + 41 = [281]', '(s1) − 1 = [280]']);
+    assert.deepEqual(t.rows.map(text), ['240 + 41 = [281]', '(s1) − 1 = [280]']);
     assert.match(t.rows[0].hint, /239 ist fast 240/);
     const z = Tasks.build('+', 'hilfsaufgabe', 239, 41, { level: 'zerlegen', max: 1000, round: 'a' });
-    assert.deepEqual(z.rows.map(text), ['239 = [240] − [1]', '(B) + 41 = [281]', '(s1) − (d) = [280]']);
+    assert.deepEqual(z.rows.map(text), ['[240] + 41 = [281]', '(s1) − [1] = [280]']);
     const s = Tasks.build('+', 'hilfsaufgabe', 239, 41, { level: 'selbst', max: 1000, round: 'a' });
     assert.equal(text(s.rows[0]), '[240] + [41] = [281]');
     assert.match(s.rows[0].hint, /239 ist fast 240/);
@@ -63,9 +65,24 @@ describe('Tasks.build: feste Zahlen', () => {
     for (const level of LEVELS) assert.ok(play(fresh(Tasks.build('+', 'hilfsaufgabe', 239, 41, { level, max: 1000, round: 'a' }))).ok, level);
   });
 
+  test('Schrittweise wie im Heft: keine Zeile "46 = 40 + 6", nur die Schritte untereinander', () => {
+    let t = Tasks.build('+', 'schrittweise', 14, 46, { level: 'hilfe', max: 100 });
+    assert.deepEqual(t.rows.map(text), ['14 + 40 = [54]', '(s1) + 6 = [60]']);
+    assert.match(t.rows[0].hint, /Zehner/);
+    t = Tasks.build('−', 'schrittweise', 833, 124, { level: 'hilfe', max: 1000 });
+    assert.deepEqual(t.rows.map(text), ['833 − 100 = [733]', '(s1) − 20 = [713]', '(s2) − 4 = [709]']);
+    // Zerlegung selbst: die Stelle trägt das Kind in den Schritt ein, die Reihenfolge ist frei
+    const z = Tasks.build('+', 'schrittweise', 14, 46, { level: 'zerlegen', max: 100 });
+    assert.deepEqual(z.rows.map(text), ['14 + [40] = [54]', '(s1) + [6] = [60]']);
+    assert.ok(playPath(z, [[40, 54], [6, 60]]).ok);
+    assert.ok(playPath(Tasks.build('+', 'schrittweise', 14, 46, { level: 'zerlegen', max: 100 }), [[6, 20], [40, 60]]).ok, 'erst die Einer');
+    const r = playPath(Tasks.build('+', 'schrittweise', 14, 46, { level: 'zerlegen', max: 100 }), [[7, 21]]);
+    assert.equal(r.ok, false, '7 ist keine Stelle von 46');
+  });
+
   test('Minus wird immer beim Subtrahenden glatt gemacht (round wird ignoriert)', () => {
     const t = Tasks.build('−', 'hilfsaufgabe', 523, 198, { level: 'hilfe', max: 1000, round: 'a' });
-    assert.deepEqual(t.rows.map(text), ['198 = 200 − 2', '523 − 200 = [323]', '(s1) + 2 = [325]']);
+    assert.deepEqual(t.rows.map(text), ['523 − 200 = [323]', '(s1) + 2 = [325]']);
   });
 
   test('239 + 41 Vereinfachen: 239 bekommt 1 dazu, 41 gibt 1 ab', () => {

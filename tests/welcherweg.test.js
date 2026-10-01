@@ -67,7 +67,7 @@ describe('Erst wählen, dann mit dem gewählten Weg rechnen – passend zur Stuf
   test('328 + 99, Zerlegung selbst: die Hilfszahl trägt das Kind ein', () => {
     const t = ww(328, '+', 99, 'zerlegen');
     solve(t, (row, i) => (i === 0 ? { weg: '2' } : null));
-    assert.deepEqual(t.rows.slice(1).map(text), ['99 = [100] − [1]', '328 + (B) = [428]', '(s1) − (d) = [427]']);
+    assert.deepEqual(t.rows.slice(1).map(text), ['328 + [100] = [428]', '(s1) − [1] = [427]']);
   });
 
   test('328 + 99, alles selbst: jede Zahl selbst, auch 330 + 99 − 2 ist richtig', () => {

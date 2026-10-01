@@ -54,6 +54,11 @@ const rejected = (task, rows, rowIndex, msg) => {
   assert.ok(!r.ok, Tasks.taskText(task) + ' ' + (msg || '') + ': falscher Weg angenommen ' + JSON.stringify(rows));
   assert.equal(r.row, rowIndex, Tasks.taskText(task) + ' ' + (msg || '') + ': abgelehnt in Zeile ' + r.row + ' statt ' + rowIndex);
 };
+/** Schritte mit vorgegebenem Start ("Zerlegung selbst"): [[stelle, zwischenergebnis], …] */
+function steps(start, parts, op) {
+  let cur = start;
+  return parts.map((x) => { cur = op === '+' ? cur + x : cur - x; return [x, cur]; });
+}
 /** Kette von Schritten: [[start, schritt, ergebnis], …] mit op */
 function chain(start, steps, op) {
   let cur = start;
@@ -185,11 +190,13 @@ describe('Schrittweise Plus: eigene Schritte, auch mehr als zwei', () => {
     for (const max of RANGES) {
       for (let k = 0; k < RUNS; k++) {
         const t = gen('+', 'schrittweise', 'zerlegen', max);
+        // jede Zeile: [Stelle, Zwischenergebnis] – die Stelle steht im Schritt (14 + [6] = [20])
         for (const p of permutations(placeParts(t.b))) {
-          const r = ok(t, [p]);
+          const r = ok(t, steps(t.a, p, '+'));
           assert.equal(r.vals.res, t.answer);
         }
-        rejected(t, [placeParts(t.b).map((x, i) => (i === 0 ? x + 1 : x))], 0, 'falsche Zerlegung');
+        const p0 = placeParts(t.b)[0];
+        rejected(t, [[p0 + 1, t.a + p0 + 1]], 0, 'keine Stelle');
       }
     }
   });
@@ -215,7 +222,7 @@ describe('Schrittweise Minus: eigene Schritte, auch mehr als zwei', () => {
     for (const max of RANGES) {
       for (let k = 0; k < RUNS; k++) {
         const t = gen('−', 'schrittweise', 'zerlegen', max);
-        for (const p of permutations(placeParts(t.b))) assert.equal(ok(t, [p]).vals.res, t.answer);
+        for (const p of permutations(placeParts(t.b))) assert.equal(ok(t, steps(t.a, p, '−')).vals.res, t.answer);
       }
     }
   });

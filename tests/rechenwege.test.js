@@ -393,3 +393,24 @@ describe('Mal: die Zerlegung steht in der Malaufgabe', () => {
     assert.equal(text(t.rows[0]), '3 · 28 = 3 · [30] − 3 · [2]');
   });
 });
+
+// Plus und Minus wie im Heft: keine eigene Zeile nur mit einer Zahl links ("46 = 40 + 6", "18 = 20 − 2")
+describe('Plus und Minus: die Teilaufgaben stehen untereinander, keine Zerlegungszeile', () => {
+  for (const op of ['+', '−']) {
+    for (const key of ['schrittweise', 'hilfsaufgabe']) {
+      for (const level of ['hilfe', 'zerlegen']) {
+        test(`${op} ${key}, ${level}`, () => {
+          for (let k = 0; k < 300; k++) {
+            const t = gen(op, key, level, k % 2 ? 100 : 1000);
+            const played = solveChecked(t);
+            played.rows.forEach((r) => {
+              const eq = r.tokens.findIndex((x) => x.v === '=');
+              assert.ok(eq !== 1, Tasks.taskText(t) + ': Zeile nur mit einer Zahl links (' + r.label + ')');
+              assert.ok(!/Zerlegen|Hilfszahl/.test(r.label), r.label);
+            });
+          }
+        });
+      }
+    }
+  }
+});

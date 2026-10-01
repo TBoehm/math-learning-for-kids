@@ -350,19 +350,17 @@
   }
 
   /**
-   * Mit Hilfe / Zerlegung selbst: b in Stellen zerlegen, dann Schritt für Schritt.
-   * Bei "Zerlegung selbst" darf die Reihenfolge der Stellen frei sein (erst die Einer geht auch);
-   * die Schritte folgen dann der eigenen Zerlegung.
+   * Mit Hilfe / Zerlegung selbst: Schritt für Schritt die Stellen von b dazu oder weg – wie im Heft
+   * nur die Teilaufgaben untereinander (14 + 40 = 54, 54 + 6 = 60), keine eigene Zeile "46 = 40 + 6".
+   * Bei "Zerlegung selbst" trägt das Kind die Stelle in jeden Schritt ein; die Reihenfolge ist frei
+   * (erst die Einer geht auch).
    */
   function givenSteps(op, a, b, own) {
     var parts = placeParts(b);
     var ids = parts.map(function (x, i) { return 'q' + (i + 1); });
     var names = parts.map(placeName);
-    var split = own ? freeFields(parts.map(function (x, i) { return { id: ids[i], v: x }; })) : parts.map(N);
-    var rows = [row([N(b), T('=')].concat(joined(split, '+')), {
-      label: 'Zerlegen',
-      hint: 'Zerlege ' + b + ' in ' + andList(names) + '.' + (own ? ' Die Reihenfolge darfst du selbst wählen.' : '')
-    })];
+    var stepToks = own ? freeFields(parts.map(function (x, i) { return { id: ids[i], v: x }; })) : parts.map(N);
+    var rows = [];
     var cur = a, word = op === '+' ? 'dazu' : 'weg';
     parts.forEach(function (x, i) {
       var k = i + 1, id = k === parts.length ? 'res' : 's' + k;
@@ -371,10 +369,11 @@
       var resOf = function (vals) { return op === '+' ? startOf(vals) + stepOf(vals) : startOf(vals) - stepOf(vals); };
       var next = op === '+' ? cur + x : cur - x;
       var hint = own
-        ? 'Nimm die ' + k + '. Zahl aus deiner Zerlegung und rechne sie ' + word + '.'
-        : (k === 1 ? 'Erst die ' : 'Jetzt die ') + names[i] + ' ' + word + ': ' + cur + ' ' + op + ' ' + x + '.' +
+        ? (k === 1 ? 'Zerlege ' + b + ' in ' + andList(names) + '. Nimm eine Stelle und rechne sie ' + word + ', zum Beispiel ' + cur + ' ' + op + ' ' + x + '.'
+          : 'Nimm die nächste Stelle von ' + b + ' und rechne sie ' + word + '.')
+        : (k === 1 ? 'Zerlege ' + b + ' in ' + andList(names) + '. Erst die ' : 'Jetzt die ') + names[i] + ' ' + word + ': ' + cur + ' ' + op + ' ' + x + '.' +
           (k === 1 && placeOf(x) === 10 ? ' Zähle in Zehnerschritten!' : '') + crossTip(op, cur, x);
-      rows.push(row([k === 1 ? N(a) : R('s' + (k - 1)), T(op), own ? R(ids[i]) : N(x), T('='), IE(id, next, resOf)], {
+      rows.push(row([k === 1 ? N(a) : R('s' + (k - 1)), T(op), stepToks[i], T('='), IE(id, next, resOf, own ? [ids[i]] : null)], {
         label: k + '. Schritt',
         jump: own ? function (vals) { return { from: startOf(vals), to: resOf(vals), text: op + stepOf(vals) }; }
           : { from: cur, to: next, text: op + x },
@@ -495,15 +494,13 @@
     var fix = op === '+'
       ? (up ? 'Du hast ' + d + ' zu viel dazugerechnet. Nimm ' + d + ' wieder weg!' : 'Du hast ' + d + ' zu wenig dazugerechnet. Rechne noch ' + d + ' dazu!')
       : (up ? 'Du hast ' + d + ' zu viel weggenommen. Gib ' + d + ' wieder dazu!' : 'Du hast ' + d + ' zu wenig weggenommen. Nimm noch ' + d + ' weg!');
+    // wie im Heft nur die Teilaufgaben untereinander (328 + 100 = 428, 428 − 1 = 427) – keine Zeile "99 = 100 − 1"
     task.rows = [
-      row([N(x), T('='), NP(p, 'B', X), T(up ? '−' : '+'), NP(p, 'd', d)], {
-        label: 'Hilfszahl', hint: x + ' ist fast ' + X + '. ' + (up ? 'Wie viel fehlt bis ' + X + '?' : 'Wie viel ist ' + x + ' mehr als ' + X + '?')
-      }),
-      row((ra ? [RP(p, 'B', X), T(op), N(b)] : [N(a), T(op), RP(p, 'B', X)]).concat([T('='), I('s1', s1)]), {
+      row((ra ? [NP(p, 'B', X), T(op), N(b)] : [N(a), T(op), NP(p, 'B', X)]).concat([T('='), I('s1', s1)]), {
         label: 'Leichte Aufgabe', jump: { from: start, to: s1, text: op + X },
-        hint: 'Rechne mit der glatten Zahl: ' + A + ' ' + op + ' ' + B + '.'
+        hint: x + ' ist fast ' + X + '. Rechne erst mit der glatten Zahl: ' + A + ' ' + op + ' ' + B + '.'
       }),
-      row([R('s1'), T(back), RP(p, 'd', d), T('='), I('res', answer)], {
+      row([R('s1'), T(back), NP(p, 'd', d), T('='), I('res', answer)], {
         label: 'Ausgleichen', jump: { from: s1, to: answer, text: back + d, back: true }, hint: fix
       })
     ];
