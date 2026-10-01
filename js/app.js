@@ -249,7 +249,11 @@
     });
     inp.addEventListener('focus', function () {
       lastInput = inp; markCurrent(inp);
-      setTimeout(function () { try { inp.select(); } catch (e) { /* egal */ } }, 0);
+      // select() holt in Chromium den Fokus zurück – nur, wenn das Feld noch dran ist
+      setTimeout(function () {
+        if (document.activeElement !== inp) return;
+        try { inp.select(); } catch (e) { /* egal */ }
+      }, 0);
     });
     inp.addEventListener('pointerdown', function () { lastInput = inp; markCurrent(inp); });
     inp.addEventListener('keydown', function (e) {

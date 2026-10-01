@@ -270,7 +270,12 @@ describe('Review-Befunde in der Oberfläche', () => {
 describe('Rat bei umständlicher Zerlegung', () => {
   test('Profi-Division mit "Teiler + Rest": angenommen, ohne Fehler, aber mit Tipp', async () => {
     const { page, ctx } = await openPage();
-    await setSettings(page, { op: ':', level: 'zerlegen', rest: false });
+    // Aufgabe wählen, bei der "Teiler + Rest" sicher umständlich ist (nicht z. B. 42 = 2 + 40)
+    await page.evaluate(() => {
+      Object.assign(window.RR.app.state.settings, { op: ':', level: 'zerlegen', rest: false });
+      const t = () => window.RR.app.current.task;
+      do { window.RR.app.newTask(); } while (window.RR.Tasks.isEasySplit(t().b, t().a - t().b, t().b));
+    });
     await waitForInputRow(page);
     const { D, d } = await page.evaluate(() => ({ D: window.RR.app.current.task.a, d: window.RR.app.current.task.b }));
     const cells = page.locator('.row.active .cell');
@@ -342,6 +347,24 @@ describe('Alles selbst', () => {
     for (let i = 0; i < answers.length; i++) await cells.nth(i).fill(String(answers[i]));
     await cells.last().press('Enter');
     await page.waitForFunction(() => document.querySelector('.malkreuz [data-k="h0"]').textContent !== '?');
+    await ctx.close();
+  });
+});
+
+describe('Fokus', () => {
+  test('schnell nacheinander in mehrere Felder tippen: jede Zahl landet im richtigen Feld', async () => {
+    const { page, ctx } = await openPage();
+    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'selbst' });
+    await waitForInputRow(page);
+    // Fokus wechseln, ohne dem Browser Zeit für ausstehende Timer zu lassen
+    const values = await page.evaluate(() => {
+      const cells = [...document.querySelectorAll('.row.active .cell')];
+      cells[0].focus(); cells[1].focus(); cells[2].focus();
+      return new Promise((resolve) => setTimeout(() => {
+        resolve(document.activeElement === cells[2]);
+      }, 50));
+    });
+    assert.equal(values, true, 'Fokus bleibt im zuletzt gewählten Feld');
     await ctx.close();
   });
 });
