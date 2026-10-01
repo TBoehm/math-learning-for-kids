@@ -5,59 +5,23 @@
   var RR = window.RR;
   var Tasks = RR.Tasks, Check = RR.Check, Progress = RR.Progress;
   var Companion = RR.Companion, Sound = RR.Sound, Viz = RR.Viz;
+  var Settings = RR.Settings, UI = RR.UI;
 
-  var STORE = 'rechenranch-v1';
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var coarse = window.matchMedia('(pointer: coarse)');
 
-  var DEFAULTS = {
-    settings: { op: '+', strategy: 'mix', crossing: 'egal', level: 'selbst', rest: false, sound: true, numpad: 'auto' },
-    progress: { stars: 0, streak: 0, bestStreak: 0, solved: 0 },
-    companion: 'luna', name: '', welcomed: false
-  };
-
   // ---------- Speicher ----------
-  function load() {
-    var s = JSON.parse(JSON.stringify(DEFAULTS));
-    try {
-      var raw = JSON.parse(localStorage.getItem(STORE) || 'null');
-      if (raw) {
-        s.settings = Object.assign(s.settings, raw.settings);
-        // früher gab es nur "Profi-Modus" (an = Zerlegung selbst)
-        if (raw.settings && !raw.settings.level && raw.settings.profi) s.settings.level = 'zerlegen';
-        delete s.settings.profi;
-        if (!Tasks.LEVELS.some(function (l) { return l.key === s.settings.level; })) s.settings.level = 'selbst';
-        s.progress = Object.assign(s.progress, raw.progress);
-        ['companion', 'name', 'welcomed'].forEach(function (k) { if (k in raw) s[k] = raw[k]; });
-      }
-    } catch (e) { /* privater Modus o. Ä. – dann eben ohne Speichern */ }
-    return s;
-  }
-  function save() {
-    try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* egal */ }
-  }
+  // schon der Zugriff auf localStorage kann im privaten Modus einen Fehler werfen
+  function storage() { try { return window.localStorage; } catch (e) { return null; } }
+  function save() { Settings.save(storage(), state); }
 
-  var state = load();
+  var state = Settings.load(storage());
   var cur = null;      // aktuelle Aufgabe
   var lastInput = null;
   var taskSeq = 0;
 
   var $ = function (id) { return document.getElementById(id); };
-  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
-
-  // ---------- Texte ----------
-  var TXT = {
-    rowOk: ['Richtig!', 'Genau!', 'Super!', 'Prima!', 'Stimmt!', 'Klasse!', 'Jawoll!', 'Toll!'],
-    perfect: ['Wieherrrvorragend! 🐴', 'Zauberhaft gerechnet! ✨', 'Du bist ein Rechen-Star! ⭐',
-      'Galoppierend gut! 🏇', 'Einhorn-mäßig super! 🦄', 'Volltreffer! 🎯', 'Regenbogen-stark! 🌈'],
-    solved: ['Geschafft! Fehler machen schlau. 💪', 'Super, du hast nicht aufgegeben! 🌈',
-      'Richtig! Übung macht den Meister. ⭐', 'Juhu, gelöst! 🎉'],
-    oops: ['Fast! Schau noch mal genau hin. 🔍', "Hoppla! Probier's noch einmal. 🐎",
-      'Nicht ganz – du schaffst das! 💪', 'Hmm, rechne noch mal nach. 🤔'],
-    poke: ['Hihi, das kitzelt! 🦄', 'Ich mag Zahlen fast so gern wie Möhren! 🥕',
-      'Zusammen rechnen macht Spaß! 💖', 'Wiehern ist meine Lieblingssprache! 🐴',
-      'Ich glaub an dich! ⭐', 'Jede Aufgabe macht dich stärker! 💪']
-  };
+  var pick = UI.pick, TXT = UI.TEXTS;
 
   // ---------- Sprechblase ----------
   function say(text) {
@@ -118,9 +82,8 @@
     sbox.innerHTML = '';
     if (state.settings.op === 'mix') { sbox.hidden = true; return; }
     sbox.hidden = false;
-    var list = [{ key: 'mix', name: 'Alle Wege' }].concat(Tasks.STRATEGIES[state.settings.op]);
-    if (list.length === 2) list = list.slice(1);
-    if (!list.some(function (s) { return s.key === state.settings.strategy; })) state.settings.strategy = 'mix';
+    var list = Settings.strategyChoices(state.settings.op);
+    state.settings.strategy = Settings.validStrategy(state.settings.op, state.settings.strategy);
     list.forEach(function (s) {
       var b = document.createElement('button');
       var active = state.settings.strategy === s.key || (list.length === 1);
@@ -143,34 +106,21 @@
     var task = Tasks.generate({ op: s.op, strategy: s.strategy, crossing: s.crossing, level: s.level, rest: s.rest });
     cur = { task: task, row: -1, vals: {}, rowMistakes: 0, mistakes: 0, hintsUsed: 0, done: false, id: ++taskSeq };
     renderTask();
-    var greet = state.name && Math.random() < 0.3 ? state.name + ', ' : '';
-    var intro = {
-      stellenweise: 'rechne stellenweise: Zehner und Einer getrennt.',
-      schrittweise: task.op === '+' ? 'rechne schrittweise: erst die Zehner dazu, dann die Einer.'
-        : 'rechne schrittweise: erst die Zehner weg, dann die Einer.',
-      hilfsaufgabe: 'nimm eine Hilfsaufgabe mit einer glatten Zahl.',
-      ergaenzen: 'ergänze von ' + task.b + ' bis ' + task.a + '. Wie weit musst du springen?',
-      zerlegen: task.op === ':' ? 'zerlege ' + task.a + ' in zwei leichte Teile.' : 'zerlege die Malaufgabe in zwei leichte.',
-      kernaufgaben: 'nutze eine leichte Kernaufgabe.'
-    }[task.strategy] || '';
-    if (task.level === 'selbst') intro += ' Schreib jeden Schritt selbst auf. ✏️';
-    say((greet ? greet + intro : intro.charAt(0).toUpperCase() + intro.slice(1)));
+    say(UI.introText(task, state.name && Math.random() < 0.3 ? state.name : ''));
     activateRow(0);
   }
 
-  function tokenHtml(tok, label, n) {
+  function tokenHtml(tok, ariaLabel) {
     if (tok.t === 'txt') return '<span class="tok-op">' + tok.v + '</span>';
     if (tok.t === 'num') return '<span class="tok-num">' + tok.v + '</span>';
     if (tok.t === 'ref') return '<span class="tok-num tok-ref" data-ref="' + tok.id + '">?</span>';
     return '<input class="cell" data-id="' + tok.id + '" type="text" maxlength="3" autocomplete="off" ' +
-      'autocorrect="off" spellcheck="false" enterkeyhint="done" pattern="[0-9]*" aria-label="' +
-      (label ? label + ': ' : '') + n + '. Zahl">';
+      'autocorrect="off" spellcheck="false" enterkeyhint="done" pattern="[0-9]*" aria-label="' + ariaLabel + '">';
   }
 
   function renderTask() {
     var t = cur.task;
-    var lvl = Tasks.LEVELS.filter(function (l) { return l.key === t.level; })[0];
-    $('strategyBadge').textContent = t.strategyName + ' · ' + lvl.name;
+    $('strategyBadge').textContent = UI.badgeText(t);
     $('strategyBadge').title = t.strategyDesc;
     var rest = t.op === ':' && t.rest ? '<span class="final-rest" hidden> R ' + t.rest + '</span>' : '';
     $('equation').innerHTML = '<span>' + Tasks.taskText(t) + ' = </span><span class="final" id="final">?</span>' + rest;
@@ -180,10 +130,10 @@
       var d = document.createElement('div');
       d.className = 'row future';
       d.dataset.i = i;
+      var labels = UI.cellLabels(row), n = 0;
       d.innerHTML = '<span class="row-label">' + row.label + '</span><div class="eq">' +
         row.tokens.map(function (tok) {
-          var n = row.tokens.slice(0, row.tokens.indexOf(tok) + 1).filter(function (x) { return x.t === 'in'; }).length;
-          return tokenHtml(tok, row.label, n);
+          return tokenHtml(tok, tok.t === 'in' ? labels[n++] : '');
         }).join('') + '</div>';
       rows.appendChild(d);
     });
@@ -243,7 +193,7 @@
   function setupInput(inp) {
     inp.addEventListener('input', function () {
       inp.dataset.fresh = '';
-      var clean = inp.value.replace(/[^0-9]/g, '').slice(0, 3);
+      var clean = UI.sanitize(inp.value);
       if (clean !== inp.value) inp.value = clean;
       inp.classList.remove('bad', 'shake');
     });
@@ -271,24 +221,25 @@
     var raw = {};
     ins.forEach(function (inp) { raw[inp.dataset.id] = inp.value; });
     var r = Check.checkRow(row, raw, cur.vals);
+    var out = UI.outcome(r);
 
-    if (!r.complete) {
-      var empty = ins.filter(function (inp, k) { return r.fields[k].status === 'empty'; });
-      if (empty.length < ins.length) { focusInput(empty[0]); return; }
-      say('Trag zuerst eine Zahl ein. ✏️');
-      focusInput(empty[0]);
+    if (out.kind === 'empty' || out.kind === 'incomplete') {
+      // leere Felder zählen nicht als Fehler
+      if (out.kind === 'empty') say('Trag zuerst eine Zahl ein. ✏️');
+      focusInput(ins[out.focus]);
       return;
     }
 
     r.fields.forEach(function (f, k) {
-      var inp = ins[k];
+      var inp = ins[k], fx = UI.fieldEffect(f.status);
       inp.classList.remove('bad', 'shake', 'ok');
-      if (f.status === 'correct') { inp.classList.add('ok'); inp.readOnly = true; }
-      else if (f.status === 'pending') { inp.dataset.fresh = '1'; }
-      else { void inp.offsetWidth; inp.classList.add('bad', 'shake'); inp.dataset.fresh = '1'; }
+      if (fx.shake) { void inp.offsetWidth; inp.classList.add('shake'); }
+      if (fx.cls) inp.classList.add(fx.cls);
+      if (fx.locked) inp.readOnly = true;
+      if (fx.fresh) inp.dataset.fresh = '1';
     });
 
-    if (r.correct) {
+    if (out.kind === 'correct') {
       cur.vals = r.vals;
       var el = rowEl(i);
       el.classList.remove('active');
@@ -299,9 +250,7 @@
       if (Check.isSolved(cur.task, cur.vals)) { finish(); return; }
       Sound.step();
       react('nod', 700);
-      var next = cur.task.rows[i + 1];
-      var advice = row.advice ? row.advice(cur.vals) : null;
-      say(advice || pick(TXT.rowOk) + (next && next.label ? ' Weiter: ' + next.label + '.' : ''));
+      say(UI.rowDoneText(row, cur.task.rows[i + 1], cur.vals));
       activateRow(i + 1);
       return;
     }
@@ -310,12 +259,8 @@
     cur.mistakes++;
     Sound.wrong();
     react('oops', 900);
-    var level = Check.hintLevel(cur.rowMistakes);
-    if (level === 'encourage') say(pick(TXT.oops));
-    else if (level === 'hint') say('Tipp: ' + row.hint);
-    else say(row.hint + ' Die Lösung ist ' + Check.solutionText(row, r) + '.');
-    var firstBad = ins.filter(function (inp, k) { return r.fields[k].status !== 'correct' && r.fields[k].status !== 'pending'; })[0];
-    if (firstBad) focusInput(firstBad);
+    say(UI.wrongText(row, r, cur.rowMistakes));
+    if (out.focus !== null) focusInput(ins[out.focus]);
   }
 
   function hint() {
@@ -432,16 +377,13 @@
   }
 
   // ---------- Zahlenfeld ----------
-  function numpadVisible() {
-    var m = state.settings.numpad;
-    return m === 'on' || (m === 'auto' && coarse.matches);
-  }
+  function numpadVisible() { return Settings.numpadVisible(state.settings.numpad, coarse.matches); }
   function applyInputMode() {
     var vis = numpadVisible();
     $('numpad').hidden = !vis;
     document.body.classList.toggle('has-numpad', vis);
     $('rows').querySelectorAll('.cell').forEach(function (c) {
-      c.setAttribute('inputmode', vis && coarse.matches ? 'none' : 'numeric');
+      c.setAttribute('inputmode', UI.inputMode(vis, coarse.matches));
     });
   }
   function buildNumpad() {
@@ -460,19 +402,16 @@
   }
   function targetInput() {
     if (!cur || cur.done || cur.row < 0) return null;
-    var ins = inputsIn(cur.row).filter(function (c) { return !c.readOnly; });
-    if (lastInput && ins.indexOf(lastInput) >= 0) return lastInput;
-    return ins.filter(function (c) { return !c.value; })[0] || ins[0] || null;
+    return UI.pickTarget(inputsIn(cur.row), lastInput);
   }
   function numKey(k) {
     Sound.tap();
     if (k === '✔') { check(); return; }
     var inp = targetInput();
     if (!inp) return;
-    // Nach dem Fokussieren ist alles markiert: erste Ziffer ersetzt den Inhalt
-    if (inp.dataset.fresh === '1') { inp.value = ''; inp.dataset.fresh = ''; }
-    if (k === '⌫') inp.value = inp.value.slice(0, -1);
-    else if (inp.value.length < 3) inp.value += k;
+    // Nach dem Prüfen ist das Feld "frisch": erste Ziffer ersetzt den Inhalt
+    inp.value = UI.applyKey(inp.value, inp.dataset.fresh === '1', k);
+    inp.dataset.fresh = '';
     inp.classList.remove('bad', 'shake');
     lastInput = inp;
     markCurrent(inp);
@@ -516,24 +455,24 @@
     dlg.querySelectorAll('input[type=checkbox][data-setting]').forEach(function (c) {
       c.checked = !!state.settings[c.dataset.setting];
     });
-    var lvl = Tasks.LEVELS.filter(function (l) { return l.key === state.settings.level; })[0];
+    var lvl = Settings.levelInfo(state.settings.level);
     $('levelNote').textContent = lvl ? lvl.desc : '';
   }
 
   function initDialogs() {
     $('welcomeDlg').addEventListener('close', function () {
-      state.name = $('nameInput').value.trim().slice(0, 20);
+      state.name = UI.cleanName($('nameInput').value);
       state.welcomed = true;
       save();
       renderBuddy();
-      say((state.name ? 'Hallo ' + state.name + '! ' : 'Hallo! ') + 'Ich bin ' + companionName() + '. Lass uns zusammen rechnen! 🌈');
+      say(UI.welcomeText(state.name, companionName()));
       react('happy');
     });
 
     var before = null;
     $('settingsBtn').addEventListener('click', function () {
       Sound.tap();
-      before = JSON.stringify([state.settings.crossing, state.settings.level, state.settings.rest]);
+      before = Settings.taskKey(state.settings);
       syncSettingsUI();
       $('settingsDlg').showModal();
     });
@@ -551,8 +490,7 @@
       });
     });
     $('settingsDlg').addEventListener('close', function () {
-      var now = JSON.stringify([state.settings.crossing, state.settings.level, state.settings.rest]);
-      if (now !== before) newTask();
+      if (Settings.taskKey(state.settings) !== before) newTask();
     });
     $('changeBuddyBtn').addEventListener('click', function () {
       $('settingsDlg').close();
@@ -560,7 +498,7 @@
     });
     $('resetBtn').addEventListener('click', function () {
       if (!window.confirm('Wirklich alle Sterne und Freischaltungen löschen?')) return;
-      state.progress = JSON.parse(JSON.stringify(DEFAULTS.progress));
+      state.progress = Settings.defaults().progress;
       state.companion = Progress.isUnlocked(state.progress, Companion.byKey(state.companion)) ? state.companion : 'luna';
       save(); updateStats(); renderBuddy();
     });

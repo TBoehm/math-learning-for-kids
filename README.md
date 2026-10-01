@@ -48,6 +48,9 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 | `js/tasks.js` | Aufgaben-Generator für alle Rechenwege |
 | `js/check.js` | Prüf-Logik: Eingaben lesen, Zeilen bewerten, Hilfe-Stufen, Lösungstext |
 | `js/progress.js` | Sterne, Serien, Parade, Freischaltungen |
+| `js/settings.js` | Einstellungen: Standardwerte, alte Speicherstände anpassen, Laden/Speichern, Auswahl der Rechenwege |
+| `js/ui-logic.js` | Logik der Oberfläche ohne DOM: Eingaben, Zahlenfeld, Felder nach dem Prüfen, Texte des Begleiters |
+| `js/viz-logic.js` | Inhalte der Anschauungen ohne DOM: Malkreuz, Zerlegungsbaum, Punktefeld, Lage auf dem Rechenstrich |
 | `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |
 | `js/companion.js` | Begleiter als SVG |
 | `js/speech.js` | Text für „Vorlesen“ aufbereiten (84 : 6 → „84 geteilt durch 6“) |
@@ -57,6 +60,8 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 Die Prüf-Logik (`check.js`, `progress.js`, `speech.js`) ist testgetrieben entwickelt und ohne DOM testbar.
 `tests/tasks.test.js` erzeugt zehntausende Aufgaben und prüft, dass jede Zeile rechnerisch stimmt,
 alles im Zahlenraum bis 100 bleibt und falsche Antworten abgelehnt werden.
+Auch die Logik der Oberfläche (`settings.js`, `ui-logic.js`, `viz-logic.js`) steckt in reinen Modulen mit Unit-Tests;
+die Browser-Tests (`tests/e2e/`) prüfen nur, was einen echten Browser braucht: Verdrahtung, Fokus, Layout und Dialoge.
 
 ## Veröffentlichung
 
