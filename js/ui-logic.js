@@ -112,7 +112,8 @@
 
   /** Einleitung des Begleiters; greetName: Name für die Anrede oder ''. */
   function introText(task, greetName) {
-    var intro = {
+    // Knobel-Aufgaben bringen ihre Einleitung selbst mit (task.intro)
+    var intro = task.intro || {
       stellenweise: 'rechne stellenweise: Zehner und Einer getrennt.',
       schrittweise: task.op === '+' ? 'rechne schrittweise: erst die Zehner dazu, dann die Einer.'
         : 'rechne schrittweise: erst die Zehner weg, dann die Einer.',
@@ -121,7 +122,7 @@
       zerlegen: task.op === ':' ? 'zerlege ' + task.a + ' in zwei leichte Teile.' : 'zerlege die Malaufgabe in zwei leichte.',
       kernaufgaben: 'nutze eine leichte Kernaufgabe.'
     }[task.strategy] || '';
-    if (task.level === 'selbst') intro += ' Schreib jeden Schritt selbst auf. ✏️';
+    if (task.level === 'selbst' && !task.intro) intro += ' Schreib jeden Schritt selbst auf. ✏️';
     return greetName ? greetName + ', ' + intro : intro.charAt(0).toUpperCase() + intro.slice(1);
   }
 

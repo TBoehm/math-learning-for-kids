@@ -192,6 +192,11 @@ describe('Texte zur Aufgabe', () => {
     assert.equal(UI.introText(task({ strategy: 'kernaufgaben', op: '·', level: 'selbst' }), ''),
       'Nutze eine leichte Kernaufgabe. Schreib jeden Schritt selbst auf. ✏️');
   });
+  test('eigene Einleitung einer Knobel-Aufgabe (task.intro) geht vor, ohne "Schreib jeden Schritt"', () => {
+    const t = task({ strategy: 'zahlenmauer', level: 'selbst', intro: 'fang unten an! 🧱' });
+    assert.equal(UI.introText(t, ''), 'Fang unten an! 🧱');
+    assert.equal(UI.introText(t, 'Mia'), 'Mia, fang unten an! 🧱');
+  });
   test('jeder Rechenweg hat eine Einleitung', () => {
     for (const op of Tasks.OPS) {
       for (const s of Tasks.STRATEGIES[op]) {

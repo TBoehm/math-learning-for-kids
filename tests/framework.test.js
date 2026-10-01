@@ -63,6 +63,10 @@ describe('Auswahlfelder (z. B. "Welche Zeile ist falsch?")', () => {
   test('noch nichts gewählt', () => {
     assert.equal(Check.checkRow(row, { wahl: '', fix: '77' }, {}).fields[0].status, 'empty');
   });
+  test('Lösungstext nennt die Antwort, nicht ihre Nummer', () => {
+    const r = Check.checkRow(row, { wahl: '2', fix: '76' }, {});
+    assert.equal(Check.solutionText(row, r), 'Zeile 2 und 77');
+  });
   test('zählt für "gelöst" und bekommt eine Beschriftung', () => {
     const task = { answer: 77, rows: [{ tokens: [C('wahl', ['a', 'b'], 0), I('res', 77)] }] };
     assert.equal(Check.isSolved(task, { res: 77 }), false);
