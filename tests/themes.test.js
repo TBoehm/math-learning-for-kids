@@ -32,10 +32,10 @@ describe('Welten', () => {
       assert.equal(typeof w[k], 'string', k);
       assert.doesNotMatch(w[k], /🦄|🐴|🐎|🏇|🌈|💖|Einhorn|Pferd/, k);
     }
-    // Der Welt-Knopf in der Kopfzeile zeigt kein Symbol einer Welt (sonst steht in der Werkstatt ein Einhorn oben)
-    assert.equal(typeof Themes.SWITCH_ICON, 'string');
-    assert.ok(!Themes.THEMES.some((x) => x.icon === Themes.SWITCH_ICON));
-    assert.doesNotMatch(Themes.SWITCH_ICON, /🦄|🐴|🐎|🌈/);
+  });
+  test('Welt-Knopf zeigt die Hauptfigur der anderen Welt und sagt, wohin es geht', () => {
+    assert.deepEqual(Themes.switchButton('werkstatt'), { icon: '🦄', label: 'Zur Einhorn-Ranch wechseln' });
+    assert.deepEqual(Themes.switchButton('ranch'), { icon: '🏎️', label: 'Zur Turbo-Werkstatt wechseln' });
   });
   test('Ranch: eigene Knopftexte', () => {
     const r = Themes.byKey('ranch');

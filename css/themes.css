@@ -9,6 +9,13 @@
 .world-card .wc-icon { font-size: 2.4rem; line-height: 1.1; }
 .world-card.selected { border-color: var(--pink); background: #fff0f8; box-shadow: 0 0 0 4px rgba(255, 111, 191, .2); }
 
+/* Welt-Knopf: Hauptfigur der anderen Welt mit kleinem Wechsel-Zeichen */
+.theme-btn { position: relative; }
+.theme-btn .tb-swap { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--purple); color: #fff; font-size: .72rem; font-weight: 700;
+  line-height: 1; border: 2px solid #fff; }
+.theme-btn:hover .tb-icon { display: inline-block; animation: pop .4s ease; }
+
 /* Kran und Straße gibt es nur in der Werkstatt */
 .crane, .road { display: none; }
 

@@ -42,10 +42,11 @@
     document.title = t.title;
     $('brandIcon').textContent = t.icon;
     $('brandText').innerHTML = t.title.replace('-', '-<wbr>');
-    var other = Themes.byKey(Themes.next(t.key));
-    $('themeBtn').textContent = Themes.SWITCH_ICON;
-    $('themeBtn').setAttribute('aria-label', 'Welt wechseln: ' + other.name);
-    $('themeBtn').title = 'Welt wechseln: ' + other.name;
+    // Welt-Knopf: Hauptfigur der anderen Welt, mit Wechsel-Zeichen
+    var sw = Themes.switchButton(t.key);
+    $('themeBtn').innerHTML = '<span class="tb-icon">' + sw.icon + '</span><span class="tb-swap" aria-hidden="true">⇄</span>';
+    $('themeBtn').setAttribute('aria-label', sw.label);
+    $('themeBtn').title = sw.label;
     $('welcomeStart').textContent = t.startLabel;
     $('unlockTake').textContent = t.takeLabel;
     var fav = document.querySelector('link[rel="icon"]');

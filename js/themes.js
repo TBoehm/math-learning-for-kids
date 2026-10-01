@@ -12,9 +12,6 @@
       '"/><text x="32" y="45" font-size="38" text-anchor="middle">' + icon + '</text></svg>';
   }
 
-  // Welt-Knopf in der Kopfzeile: neutrales Symbol, damit keine Welt in der anderen auftaucht
-  var SWITCH_ICON = '🌍';
-
   var THEMES = [
     {
       key: 'ranch',
@@ -93,6 +90,12 @@
     return THEMES[(i + 1) % THEMES.length].key;
   }
 
+  /** Welt-Knopf in der Kopfzeile: Hauptfigur der anderen Welt und wohin der Knopf wechselt. */
+  function switchButton(key) {
+    var other = byKey(next(key));
+    return { icon: other.icon, label: 'Zur ' + other.name + ' wechseln' };
+  }
+
   /** Zu welcher Welt gehört ein Begleiter? */
   function themeOfCompanion(companionKey) {
     var t = THEMES.filter(function (x) { return x.companions.indexOf(companionKey) >= 0; })[0];
@@ -123,7 +126,7 @@
   }
 
   var api = {
-    THEMES: THEMES, SWITCH_ICON: SWITCH_ICON, byKey: byKey, isTheme: isTheme, next: next,
+    THEMES: THEMES, byKey: byKey, isTheme: isTheme, next: next, switchButton: switchButton,
     themeOfCompanion: themeOfCompanion, defaultCompanions: defaultCompanions, switchTheme: switchTheme
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

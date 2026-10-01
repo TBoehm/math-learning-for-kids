@@ -40,7 +40,7 @@ Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; je
 - **Über der Aufgabe:** Rechenart, ein aufklappbares Menü mit allen Rechenwegen (gruppiert in Rechenwege, Knobeln,
   Schriftlich) und der Schalter für den Zahlenraum bis 100 (Wiederholung) / bis 1000 (Stoff der 3. Klasse).
 - **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Hilfe-Stufe, Geteilt mit Rest, Töne, Zahlenfeld.
-- **Zwei Welten:** Einhorn-Ranch und Turbo-Rechenwerkstatt (Fahrzeuge), umschaltbar mit dem 🌍-Knopf in der Kopfzeile.
+- **Zwei Welten:** Einhorn-Ranch und Turbo-Rechenwerkstatt (Fahrzeuge), umschaltbar mit dem Knopf in der Kopfzeile (zeigt die Hauptfigur der anderen Welt mit ⇄).
   Jede Welt bringt ihre eigenen Texte, Knöpfe, Klänge und ihr Tab-Symbol mit.
 - **Belohnungen:** Sterne, Serie ohne Fehler, Galopp-Parade nach 5 fehlerfreien Aufgaben in Folge,
   neue Begleiter ab 10, 25, 50 und 100 Sternen (Ranch: Pony, Sternen-Einhorn, Pegasus, Regenbogen-Flügeleinhorn;

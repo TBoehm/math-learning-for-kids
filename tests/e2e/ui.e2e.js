@@ -394,8 +394,11 @@ describe('Welten', () => {
     await page.click('#themeBtn');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'werkstatt');
     assert.equal(await page.title(), 'Turbo-Rechenwerkstatt');
-    // nirgends mehr Einhörner, Pferde oder Regenbogen zu sehen (auch nicht auf dem Welt-Knopf oder in der Sprechblase)
-    assert.doesNotMatch(await page.evaluate(() => document.body.innerText), /🦄|🐴|🐎|🏇|🌈|💖/);
+    // nirgends Einhörner, Pferde oder Regenbogen (auch nicht in der Sprechblase) – nur der Welt-Knopf zeigt den Weg zurück
+    assert.equal(await page.getAttribute('#themeBtn', 'aria-label'), 'Zur Einhorn-Ranch wechseln');
+    assert.match(await page.textContent('#themeBtn'), /🦄/);
+    assert.doesNotMatch(await page.evaluate(() => document.body.innerText.replace(document.getElementById('themeBtn').innerText, '')),
+      /🦄|🐴|🐎|🏇|🌈|💖/);
     assert.doesNotMatch(await page.evaluate(() => decodeURIComponent(document.querySelector('link[rel=icon]').href)), /🦄/);
     assert.equal(await page.evaluate(() => window.RR.app.state.companion), 'v-bruno');
     assert.equal(await page.locator('#buddyFigure svg.vehicle').count(), 1, 'Fahrzeug als Begleiter');
