@@ -92,8 +92,15 @@
           <button type="button" data-value="mit">mit</button>
         </div>
       </fieldset>
-      <label class="toggle"><input type="checkbox" data-setting="profi">
-        <span><b>Profi-Modus</b><small>Die Zerlegung trägst du selbst ein.</small></span></label>
+      <fieldset class="setting">
+        <legend>Wie viel Hilfe?</legend>
+        <div class="seg" data-setting="level">
+          <button type="button" data-value="hilfe">Mit Hilfe</button>
+          <button type="button" data-value="zerlegen">Zerlegung selbst</button>
+          <button type="button" data-value="selbst">Alles selbst</button>
+        </div>
+        <small class="setting-note" id="levelNote"></small>
+      </fieldset>
       <label class="toggle"><input type="checkbox" data-setting="rest">
         <span><b>Geteilt mit Rest</b><small>z. B. 87 : 6 = 14 Rest 3</small></span></label>
       <label class="toggle"><input type="checkbox" data-setting="sound">

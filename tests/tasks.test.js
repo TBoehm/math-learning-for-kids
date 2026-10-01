@@ -52,10 +52,10 @@ test('alle Rechenwege und Einstellungen liefern korrekte, lösbare Aufgaben', fu
 Tasks.OPS.forEach(function (op) {
   Tasks.STRATEGIES[op].forEach(function (s) {
     ['ohne', 'mit', 'egal'].forEach(function (crossing) {
-      [false, true].forEach(function (profi) {
+      ['hilfe', 'zerlegen', 'selbst'].forEach(function (level) {
         [false, true].forEach(function (rest) {
-          for (var i = 0; i < RUNS / 10; i++) {
-            var t = Tasks.generate({ op: op, strategy: s.key, crossing: crossing, profi: profi, rest: rest });
+          for (var i = 0; i < RUNS / 15; i++) {
+            var t = Tasks.generate({ op: op, strategy: s.key, crossing: crossing, level: level, rest: rest });
             assert.strictEqual(t.strategy, s.key);
             if (op === '+' && s.key !== 'hilfsaufgabe' && crossing !== 'egal') {
               assert.strictEqual(t.a % 10 + t.b % 10 >= 10, crossing === 'mit');
@@ -73,7 +73,7 @@ Tasks.OPS.forEach(function (op) {
 });
 
 test('gemischte Aufgaben', function () {
-  for (var i = 0; i < RUNS; i++) solve(Tasks.generate({ op: 'mix', profi: i % 2 === 0, rest: i % 3 === 0 }));
+  for (var i = 0; i < RUNS; i++) solve(Tasks.generate({ op: 'mix', level: ['hilfe', 'zerlegen', 'selbst'][i % 3], rest: i % 2 === 0 }));
 
 });
 

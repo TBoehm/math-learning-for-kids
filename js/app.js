@@ -11,7 +11,7 @@
   var coarse = window.matchMedia('(pointer: coarse)');
 
   var DEFAULTS = {
-    settings: { op: '+', strategy: 'mix', crossing: 'egal', profi: false, rest: false, sound: true, numpad: 'auto' },
+    settings: { op: '+', strategy: 'mix', crossing: 'egal', level: 'selbst', rest: false, sound: true, numpad: 'auto' },
     progress: { stars: 0, streak: 0, bestStreak: 0, solved: 0 },
     companion: 'luna', name: '', welcomed: false
   };
@@ -23,6 +23,10 @@
       var raw = JSON.parse(localStorage.getItem(STORE) || 'null');
       if (raw) {
         s.settings = Object.assign(s.settings, raw.settings);
+        // früher gab es nur "Profi-Modus" (an = Zerlegung selbst)
+        if (raw.settings && !raw.settings.level && raw.settings.profi) s.settings.level = 'zerlegen';
+        delete s.settings.profi;
+        if (!Tasks.LEVELS.some(function (l) { return l.key === s.settings.level; })) s.settings.level = 'selbst';
         s.progress = Object.assign(s.progress, raw.progress);
         ['companion', 'name', 'welcomed'].forEach(function (k) { if (k in raw) s[k] = raw[k]; });
       }
@@ -136,7 +140,7 @@
   // ---------- Aufgabe aufbauen ----------
   function newTask() {
     var s = state.settings;
-    var task = Tasks.generate({ op: s.op, strategy: s.strategy, crossing: s.crossing, profi: s.profi, rest: s.rest });
+    var task = Tasks.generate({ op: s.op, strategy: s.strategy, crossing: s.crossing, level: s.level, rest: s.rest });
     cur = { task: task, row: -1, vals: {}, rowMistakes: 0, mistakes: 0, hintsUsed: 0, done: false, id: ++taskSeq };
     renderTask();
     var greet = state.name && Math.random() < 0.3 ? state.name + ', ' : '';
@@ -149,6 +153,7 @@
       zerlegen: task.op === ':' ? 'zerlege ' + task.a + ' in zwei leichte Teile.' : 'zerlege die Malaufgabe in zwei leichte.',
       kernaufgaben: 'nutze eine leichte Kernaufgabe.'
     }[task.strategy] || '';
+    if (task.level === 'selbst') intro += ' Schreib jeden Schritt selbst auf. ✏️';
     say((greet ? greet + intro : intro.charAt(0).toUpperCase() + intro.slice(1)));
     activateRow(0);
   }
@@ -164,7 +169,8 @@
 
   function renderTask() {
     var t = cur.task;
-    $('strategyBadge').textContent = t.strategyName + (t.profi ? ' · Profi' : '');
+    var lvl = Tasks.LEVELS.filter(function (l) { return l.key === t.level; })[0];
+    $('strategyBadge').textContent = t.strategyName + ' · ' + lvl.name;
     $('strategyBadge').title = t.strategyDesc;
     var rest = t.op === ':' && t.rest ? '<span class="final-rest" hidden> R ' + t.rest + '</span>' : '';
     $('equation').innerHTML = '<span>' + Tasks.taskText(t) + ' = </span><span class="final" id="final">?</span>' + rest;
@@ -506,6 +512,8 @@
     dlg.querySelectorAll('input[type=checkbox][data-setting]').forEach(function (c) {
       c.checked = !!state.settings[c.dataset.setting];
     });
+    var lvl = Tasks.LEVELS.filter(function (l) { return l.key === state.settings.level; })[0];
+    $('levelNote').textContent = lvl ? lvl.desc : '';
   }
 
   function initDialogs() {
@@ -521,7 +529,7 @@
     var before = null;
     $('settingsBtn').addEventListener('click', function () {
       Sound.tap();
-      before = JSON.stringify([state.settings.crossing, state.settings.profi, state.settings.rest]);
+      before = JSON.stringify([state.settings.crossing, state.settings.level, state.settings.rest]);
       syncSettingsUI();
       $('settingsDlg').showModal();
     });
@@ -539,7 +547,7 @@
       });
     });
     $('settingsDlg').addEventListener('close', function () {
-      var now = JSON.stringify([state.settings.crossing, state.settings.profi, state.settings.rest]);
+      var now = JSON.stringify([state.settings.crossing, state.settings.level, state.settings.rest]);
       if (now !== before) newTask();
     });
     $('changeBuddyBtn').addEventListener('click', function () {

@@ -84,11 +84,11 @@ describe('Aufgaben über die Oberfläche lösen', () => {
     ['−', 'schrittweise'], ['−', 'ergaenzen'], ['−', 'hilfsaufgabe'],
     ['·', 'zerlegen'], ['·', 'kernaufgaben'], [':', 'zerlegen']
   ];
-  for (const profi of [false, true]) {
+  for (const level of ['hilfe', 'zerlegen', 'selbst']) {
     for (const [op, strategy] of combos) {
-      test(`${op} ${strategy}${profi ? ' (Profi)' : ''}`, async () => {
+      test(`${op} ${strategy} (${level})`, async () => {
         const { page, ctx, errors } = await openPage();
-        await setSettings(page, { op, strategy, profi, rest: op === ':' && profi });
+        await setSettings(page, { op, strategy, level, rest: op === ':' && level !== 'hilfe' });
         const answer = await page.evaluate(() => window.RR.app.current.task.answer);
         await solveTask(page);
         assert.equal(await page.locator('#final').textContent(), String(answer));
@@ -104,7 +104,7 @@ describe('Aufgaben über die Oberfläche lösen', () => {
 describe('Rückmeldung', () => {
   test('falsche Antwort: markiert, Zeile bleibt offen, Hilfe wird stärker', async () => {
     const { page, ctx } = await openPage();
-    await setSettings(page, { op: '+', strategy: 'stellenweise', profi: false });
+    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'hilfe' });
     await waitForInputRow(page);
     const [ans] = await activeAnswers(page);
     const cell = page.locator('.row.active .cell').first();
@@ -152,6 +152,7 @@ describe('Rückmeldung', () => {
 
   test('mit Fehler gelöst: Stern ja, Serie nein', async () => {
     const { page, ctx } = await openPage();
+    await setSettings(page, { level: 'hilfe' });
     await waitForInputRow(page);
     const [ans] = await activeAnswers(page);
     const cell = page.locator('.row.active .cell').first();
@@ -235,7 +236,7 @@ describe('Review-Befunde in der Oberfläche', () => {
     const { page, ctx } = await openPage();
     // Aufgabe suchen, bei der "Zehner + Rest" nicht durch den Teiler teilbar ist
     await page.evaluate(() => {
-      Object.assign(window.RR.app.state.settings, { op: ':', profi: true, rest: false });
+      Object.assign(window.RR.app.state.settings, { op: ':', level: 'zerlegen', rest: false });
       do { window.RR.app.newTask(); } while ((Math.floor(window.RR.app.current.task.a / 10) * 10) % window.RR.app.current.task.b === 0);
     });
     await waitForInputRow(page);
@@ -258,7 +259,7 @@ describe('Review-Befunde in der Oberfläche', () => {
 
   test('Eingabefelder haben sprechende Namen', async () => {
     const { page, ctx } = await openPage();
-    await setSettings(page, { op: '+', strategy: 'stellenweise', profi: true });
+    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'zerlegen' });
     await waitForInputRow(page);
     const labels = await page.locator('.row.active .cell').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
     assert.deepEqual(labels, ['Zehner: 1. Zahl', 'Zehner: 2. Zahl', 'Zehner: 3. Zahl']);
@@ -269,7 +270,7 @@ describe('Review-Befunde in der Oberfläche', () => {
 describe('Rat bei umständlicher Zerlegung', () => {
   test('Profi-Division mit "Teiler + Rest": angenommen, ohne Fehler, aber mit Tipp', async () => {
     const { page, ctx } = await openPage();
-    await setSettings(page, { op: ':', profi: true, rest: false });
+    await setSettings(page, { op: ':', level: 'zerlegen', rest: false });
     await waitForInputRow(page);
     const { D, d } = await page.evaluate(() => ({ D: window.RR.app.current.task.a, d: window.RR.app.current.task.b }));
     const cells = page.locator('.row.active .cell');
@@ -279,6 +280,68 @@ describe('Rat bei umständlicher Zerlegung', () => {
     await page.waitForFunction(() => window.RR.app.current.row >= 1);
     assert.match(await page.locator('#bubbleText').textContent(), /leichter/);
     assert.equal(await page.evaluate(() => window.RR.app.current.mistakes), 0);
+    await ctx.close();
+  });
+});
+
+describe('Alles selbst', () => {
+  test('neue Kinder starten mit "Alles selbst": keine Zahl in den Schritten ist vorgegeben', async () => {
+    const { page, ctx } = await openPage();
+    await waitForInputRow(page);
+    assert.equal(await page.evaluate(() => window.RR.app.state.settings.level), 'selbst');
+    assert.match(await page.locator('#strategyBadge').textContent(), /Alles selbst/);
+    const row = page.locator('.row.active');
+    assert.ok(await row.locator('.cell').count() >= 3);
+    assert.equal(await row.locator('.tok-num').count(), 0);
+    assert.equal(await page.locator('.row.info').count(), 0, 'keine vorgegebene Zerlegungszeile');
+    await ctx.close();
+  });
+
+  test('alte Einstellung "Profi-Modus" wird zu "Zerlegung selbst"', async () => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await ctx.newPage();
+    await page.addInitScript(() => localStorage.setItem('rechenranch-v1',
+      JSON.stringify({ welcomed: true, settings: { profi: true, sound: false } })));
+    await page.goto(base);
+    assert.equal(await page.evaluate(() => window.RR.app.state.settings.level), 'zerlegen');
+    await ctx.close();
+  });
+
+  test('Stufe in den Einstellungen umschalten', async () => {
+    const { page, ctx } = await openPage();
+    await page.click('#settingsBtn');
+    await page.click('.seg[data-setting="level"] button[data-value="hilfe"]');
+    await page.click('#settingsDlg button[value=ok]');
+    await page.waitForFunction(() => window.RR.app.current.task.level === 'hilfe');
+    assert.match(await page.locator('#strategyBadge').textContent(), /Mit Hilfe/);
+    await ctx.close();
+  });
+
+  test('Plus: Zahlen in vertauschter Reihenfolge werden angenommen', async () => {
+    const { page, ctx } = await openPage();
+    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'selbst' });
+    await waitForInputRow(page);
+    const [x, y, z] = await activeAnswers(page);
+    const cells = page.locator('.row.active .cell');
+    await cells.nth(0).fill(String(y));
+    await cells.nth(1).fill(String(x));
+    await cells.nth(2).fill(String(z));
+    await cells.nth(2).press('Enter');
+    await page.waitForFunction(() => window.RR.app.current.row === 1);
+    assert.equal(await page.evaluate(() => window.RR.app.current.mistakes), 0);
+    await ctx.close();
+  });
+
+  test('Malkreuz verrät die Zerlegung erst nach dem Rechenschritt', async () => {
+    const { page, ctx } = await openPage();
+    await setSettings(page, { op: '·', strategy: 'zerlegen', level: 'selbst' });
+    await waitForInputRow(page);
+    assert.equal(await page.locator('.malkreuz [data-k="h0"]').textContent(), '?');
+    const answers = await activeAnswers(page);
+    const cells = page.locator('.row.active .cell');
+    for (let i = 0; i < answers.length; i++) await cells.nth(i).fill(String(answers[i]));
+    await cells.last().press('Enter');
+    await page.waitForFunction(() => document.querySelector('.malkreuz [data-k="h0"]').textContent !== '?');
     await ctx.close();
   });
 });

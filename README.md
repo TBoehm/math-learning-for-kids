@@ -17,7 +17,14 @@ gerechnet wird im **halbschriftlichen Verfahren**, Schritt für Schritt, mit Ein
 Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; jede Zeile wird sofort geprüft.
 
 - **Hilfe in Stufen:** 1. Fehler → Ermutigung, 2. Fehler → Tipp zum Rechenschritt, 3. Fehler → Tipp + Lösung.
-- **Profi-Modus:** Die Zerlegung trägt das Kind selbst ein (beim Teilen ist jede gültige Zerlegung erlaubt).
+- **Wie viel Hilfe?** – drei Stufen:
+  - *Mit Hilfe:* Zerlegung und Zwischenschritte sind vorgegeben, nur die Ergebnisse werden eingetragen.
+  - *Zerlegung selbst:* Das Kind zerlegt selbst (z. B. 38 = 30 + 8), die Schritte sind vorgegeben.
+  - *Alles selbst* (Standard): Das Kind erkennt und schreibt jeden Zwischenschritt komplett selbst,
+    wie im Heft: `47 + 30 = 77`, `77 + 8 = 85`. Bei Plus und Mal ist die Reihenfolge egal, beim Teilen
+    ist jede gültige Zerlegung erlaubt; jeder Schritt wird gegen die Zahlen geprüft, die das Kind
+    tatsächlich eingetragen hat. Umständliche Zerlegungen werden angenommen, der Begleiter zeigt dann
+    einen leichteren Weg.
 - **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Geteilt mit Rest, Töne, Zahlenfeld.
 - **Belohnungen:** Sterne, Serie ohne Fehler, Galopp-Parade nach 5 fehlerfreien Aufgaben in Folge,
   neue Begleiter ab 10, 25, 50 und 100 Sternen (Pony, Sternen-Einhorn, Pegasus, Regenbogen-Flügeleinhorn).

@@ -233,6 +233,7 @@ body.has-numpad .numpad { position: sticky; bottom: max(8px, env(safe-area-inset
 .buddy-card.locked .pony * { animation: none !important; }
 .setting { border: 0; padding: 0; margin: 0; }
 .setting legend { font-weight: 600; margin-bottom: 6px; }
+.setting-note { display: block; margin-top: 6px; color: var(--ink-soft); text-align: center; min-height: 1.2em; }
 .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: #f3ecff; border-radius: 999px; padding: 4px; gap: 4px; }
 .seg button { border: 0; background: transparent; border-radius: 999px; padding: 8px 4px; min-height: 42px; }
 .seg button.active { background: #fff; color: var(--purple); font-weight: 600; box-shadow: 0 2px 6px rgba(90, 50, 140, .15); }

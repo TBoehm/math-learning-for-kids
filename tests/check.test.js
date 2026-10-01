@@ -128,10 +128,10 @@ describe('ganze Aufgaben lösen', () => {
   test('jede Aufgabe ist mit den hinterlegten Lösungen lösbar und endet beim richtigen Ergebnis', () => {
     for (const op of Tasks.OPS) {
       for (const s of Tasks.STRATEGIES[op]) {
-        for (const profi of [false, true]) {
+        for (const level of ['hilfe', 'zerlegen', 'selbst']) {
           for (const rest of [false, true]) {
-            for (let k = 0; k < 150; k++) {
-              const t = Tasks.generate({ op, strategy: s.key, profi, rest });
+            for (let k = 0; k < 100; k++) {
+              const t = Tasks.generate({ op, strategy: s.key, level, rest });
               const vals = solveAll(t, k % t.rows.length);
               assert.equal(Check.isSolved(t, vals), true);
               assert.equal(vals.res, t.answer);

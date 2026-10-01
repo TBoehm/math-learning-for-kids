@@ -136,8 +136,14 @@
       }
     }
     function render(vals) {
-      set('h0', v.partIds ? vals[v.partIds[0]] : v.parts[0]);
-      set('h1', v.partIds ? vals[v.partIds[1]] : v.parts[1]);
+      // partsAfter: Zerlegung erst zeigen, wenn das Kind den Schritt gerechnet hat
+      var part = function (i) {
+        if (v.partIds) return vals[v.partIds[i]];
+        if (v.partsAfter && vals[v.partsAfter[i]] === undefined) return null;
+        return v.parts[i];
+      };
+      set('h0', part(0));
+      set('h1', part(1));
       set('c0', vals[v.cells[0]]);
       set('c1', vals[v.cells[1]]);
       set('sum', vals.res !== undefined ? '= ' + vals.res : '= ?');
