@@ -265,3 +265,20 @@ describe('Review-Befunde in der Oberfläche', () => {
     await ctx.close();
   });
 });
+
+describe('Rat bei umständlicher Zerlegung', () => {
+  test('Profi-Division mit "Teiler + Rest": angenommen, ohne Fehler, aber mit Tipp', async () => {
+    const { page, ctx } = await openPage();
+    await setSettings(page, { op: ':', profi: true, rest: false });
+    await waitForInputRow(page);
+    const { D, d } = await page.evaluate(() => ({ D: window.RR.app.current.task.a, d: window.RR.app.current.task.b }));
+    const cells = page.locator('.row.active .cell');
+    await cells.nth(0).fill(String(d));
+    await cells.nth(1).fill(String(D - d));
+    await cells.nth(1).press('Enter');
+    await page.waitForFunction(() => window.RR.app.current.row >= 1);
+    assert.match(await page.locator('#bubbleText').textContent(), /leichter/);
+    assert.equal(await page.evaluate(() => window.RR.app.current.mistakes), 0);
+    await ctx.close();
+  });
+});

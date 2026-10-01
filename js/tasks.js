@@ -323,6 +323,14 @@
   }
 
   // ---------- Geteilt ----------
+  // Ein Teil ist leicht zu teilen, wenn das Ergebnis eine Zehnerzahl ist (60 : 6 = 10)
+  // oder aus dem Einmaleins kommt (24 : 6 = 4, auch mit Rest: 27 : 6 = 4 R 3).
+  function easyPart(part, d) {
+    var qq = Math.floor(part / d);
+    return (part % d === 0 && qq % 10 === 0) || qq <= 10;
+  }
+  function isEasySplit(p1, p2, d) { return easyPart(p1, d) && easyPart(p2, d); }
+
   function divZerlegen(opt) {
     var withRest = !!opt.rest, p = opt.profi;
     var n = attempt(function () {
@@ -344,6 +352,12 @@
         label: 'Zerlegen',
         hint: 'Suche eine leichte Zahl aus der ' + d + 'er-Reihe, z. B. ' + p1 + ' (' + tens(q) + ' · ' + d + '). Dann: Was bleibt übrig?'
       });
+      // Richtige, aber umständliche Zerlegung: annehmen und freundlich einen leichteren Weg zeigen
+      splitRow.advice = function (vals) {
+        if (isEasySplit(vals.p1, vals.p2, d)) return null;
+        return 'Stimmt! Tipp fürs nächste Mal: ' + p1 + ' + ' + p2 + ' ist leichter, denn ' +
+          p1 + ' : ' + d + ' = ' + tens(q) + ' weißt du sofort. 💡';
+      };
     } else {
       splitRow = row([N(D), T('='), N(p1), T('+'), N(p2)], {
         label: 'Zerlegen', hint: 'Wir zerlegen ' + D + ' in zwei leichte Zahlen.'
@@ -429,7 +443,7 @@
   /** Text der Aufgabe, z. B. "47 + 38" */
   function taskText(task) { return task.a + ' ' + task.op + ' ' + task.b; }
 
-  var api = { generate: generate, taskText: taskText, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX };
+  var api = { generate: generate, taskText: taskText, isEasySplit: isEasySplit, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RR = Object.assign(root.RR || {}, { Tasks: api });
 })(typeof window !== 'undefined' ? window : this);

@@ -130,3 +130,37 @@ test('Hinweise: "zusammen rechnen" statt "zählen", "dazugerechnet" statt "dazug
     assert(!/Zähle [^|.!]*zusammen|dazugetan/.test(h), h);
   }
 });
+
+test('isEasySplit: beide Teile lassen sich leicht teilen (Zehnerzahl oder Einmaleins)', function () {
+  assert.strictEqual(Tasks.isEasySplit(60, 24, 6), true, '60 : 6 = 10, 24 : 6 = 4');
+  assert.strictEqual(Tasks.isEasySplit(42, 42, 6), true, 'zweimal Einmaleins');
+  assert.strictEqual(Tasks.isEasySplit(80, 16, 4), true);
+  assert.strictEqual(Tasks.isEasySplit(48, 48, 8), true, '48 : 8 = 6');
+  assert.strictEqual(Tasks.isEasySplit(60, 27, 6), true, 'mit Rest: 27 : 6 = 4 R 3');
+  assert.strictEqual(Tasks.isEasySplit(3, 65, 3), false, '65 : 3 ist so schwer wie die Aufgabe');
+  assert.strictEqual(Tasks.isEasySplit(48, 48, 4), false, '48 : 4 = 12 ist nicht leicht');
+  assert.strictEqual(Tasks.isEasySplit(66, 2, 3), false, '66 : 3 = 22 ist nicht leicht');
+});
+
+test('Profi-Division: Rat nur bei umständlicher Zerlegung, mit einem leichten Vorschlag', function () {
+  for (var i = 0; i < 500; i++) {
+    var t = Tasks.generate({ op: ':', profi: true, rest: i % 2 === 0 });
+    var row = t.rows[0], D = t.a, d = t.b;
+    var c1 = row.tokens.filter(function (x) { return x.id === 'p1'; })[0].answer;
+    assert.strictEqual(typeof row.advice, 'function');
+    assert.strictEqual(row.advice({ p1: c1, p2: D - c1 }), null, 'Musterzerlegung braucht keinen Rat');
+    // d + (D - d): (D - d) : d = Ergebnis − 1 (Rest bleibt). Leicht nur, wenn das
+    // höchstens 10 oder (ohne Rest) eine Zehnerzahl ist – z. B. 42 = 2 + 40.
+    if (t.answer - 1 <= 10 || (!t.rest && (t.answer - 1) % 10 === 0)) {
+      assert.strictEqual(row.advice({ p1: d, p2: D - d }), null, Tasks.taskText(t));
+      continue;
+    }
+    var msg = row.advice({ p1: d, p2: D - d });
+    assert.strictEqual(typeof msg, 'string', Tasks.taskText(t));
+    assert(msg.indexOf(c1 + ' + ' + (D - c1)) >= 0, msg);
+    assert(/leichter/.test(msg), msg);
+  }
+  // andere Rechenwege haben keinen Rat
+  var p = Tasks.generate({ op: '+', profi: true });
+  p.rows.forEach(function (r) { assert.strictEqual(r.advice, undefined); });
+});

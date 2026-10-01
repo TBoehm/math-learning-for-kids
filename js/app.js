@@ -290,7 +290,8 @@
       Sound.step();
       react('nod', 700);
       var next = cur.task.rows[i + 1];
-      say(pick(TXT.rowOk) + (next && next.label ? ' Weiter: ' + next.label + '.' : ''));
+      var advice = row.advice ? row.advice(cur.vals) : null;
+      say(advice || pick(TXT.rowOk) + (next && next.label ? ' Weiter: ' + next.label + '.' : ''));
       activateRow(i + 1);
       return;
     }
