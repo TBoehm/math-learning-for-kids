@@ -1,4 +1,6 @@
 // Ende-zu-Ende-Tests: die echte Seite im Browser bedienen (npm run test:e2e).
+// Nur, was sich ohne Browser nicht prüfen lässt: Verdrahtung, Fokus, Layout, Dialoge, keine JS-Fehler.
+// Die Logik dahinter steckt in reinen Modulen und hat Unit-Tests (tests/*.test.js).
 'use strict';
 const { test, before, after, describe } = require('node:test');
 const assert = require('node:assert/strict');
@@ -9,6 +11,8 @@ const { chromium } = require('playwright');
 
 const ROOT = path.join(__dirname, '..', '..');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+const STORE = 'rechenranch-v1';
+const WELCOMED = { welcomed: true, name: 'Test', settings: { sound: false } };
 let server, base, browser;
 
 before(async () => {
@@ -27,19 +31,18 @@ before(async () => {
 });
 after(async () => { await browser.close(); server.close(); });
 
+// saved: Speicherstand vor dem ersten Laden (null = erster Besuch); init: Skript vor dem Laden
 async function openPage(opts = {}) {
-  const { init, welcomed, ...ctxOpts } = opts;
+  const { saved = WELCOMED, init, ...ctxOpts } = opts;
   const ctx = await browser.newContext(Object.assign({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' }, ctxOpts));
   const page = await ctx.newPage();
   if (init) await page.addInitScript(init);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  if (welcomed !== false) {
-    await page.addInitScript(() => {
-      if (!localStorage.getItem('rechenranch-v1')) {
-        localStorage.setItem('rechenranch-v1', JSON.stringify({ welcomed: true, name: 'Test', settings: { sound: false } }));
-      }
-    });
+  if (saved) {
+    await page.addInitScript(([key, data]) => {
+      if (!localStorage.getItem(key)) localStorage.setItem(key, data);
+    }, [STORE, JSON.stringify(saved)]);
   }
   await page.goto(base);
   return { page, ctx, errors };
@@ -80,105 +83,73 @@ async function setSettings(page, settings) {
   }, settings);
 }
 
+// Rauchtest: jeder Rechenweg mit seiner Anschauung lässt sich bedienen, ohne JS-Fehler.
+// Ob die Rechenschritte stimmen, prüfen die Unit-Tests für alle Stufen.
 describe('Aufgaben über die Oberfläche lösen', () => {
   const combos = [
     ['+', 'stellenweise'], ['+', 'schrittweise'], ['+', 'hilfsaufgabe'],
     ['−', 'schrittweise'], ['−', 'ergaenzen'], ['−', 'hilfsaufgabe'],
     ['·', 'zerlegen'], ['·', 'kernaufgaben'], [':', 'zerlegen']
   ];
-  for (const level of ['hilfe', 'zerlegen', 'selbst']) {
-    for (const [op, strategy] of combos) {
-      test(`${op} ${strategy} (${level})`, async () => {
-        const { page, ctx, errors } = await openPage();
-        await setSettings(page, { op, strategy, level, rest: op === ':' && level !== 'hilfe' });
-        const answer = await page.evaluate(() => window.RR.app.current.task.answer);
-        await solveTask(page);
-        assert.equal(await page.locator('#final').textContent(), String(answer));
-        await assert.doesNotReject(page.locator('#checkBtn', { hasText: 'Weiter' }).waitFor());
-        await page.waitForFunction(() => document.getElementById('starCount').textContent === '1');
-        assert.deepEqual(errors, []);
-        await ctx.close();
-      });
-    }
+  for (const level of ['hilfe', 'selbst']) {
+    describe(`Stufe "${level}"`, () => {
+      let page, ctx, errors;
+      before(async () => { ({ page, ctx, errors } = await openPage()); });
+      after(async () => { await ctx.close(); });
+      for (const [op, strategy] of combos) {
+        test(`${op} ${strategy}`, async () => {
+          await setSettings(page, { op, strategy, level, rest: op === ':' && level !== 'hilfe' });
+          const answer = await page.evaluate(() => window.RR.app.current.task.answer);
+          await solveTask(page);
+          assert.equal(await page.locator('#final').textContent(), String(answer));
+          await assert.doesNotReject(page.locator('#checkBtn', { hasText: 'Weiter' }).waitFor());
+          assert.deepEqual(errors, []);
+        });
+      }
+    });
   }
 });
 
 describe('Rückmeldung', () => {
-  test('falsche Antwort: markiert, Zeile bleibt offen, Hilfe wird stärker', async () => {
+  test('falsche Antwort: Feld rot, Begleiter antwortet, Zeile bleibt offen', async () => {
     const { page, ctx } = await openPage();
     await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'hilfe' });
     await waitForInputRow(page);
     const [ans] = await activeAnswers(page);
     const cell = page.locator('.row.active .cell').first();
     const bubble = page.locator('#bubbleText');
+    const intro = await bubble.textContent();
 
-    await cell.fill(String(ans + 1));
+    // Eingabe wird gesäubert (Buchstaben fliegen raus)
+    await cell.focus();
+    await page.keyboard.type('x' + (ans + 1));
+    assert.equal(await cell.inputValue(), String(ans + 1));
+
     await cell.press('Enter');
     await assert.doesNotReject(page.locator('.row.active .cell.bad').waitFor());
+    assert.notEqual(await bubble.textContent(), intro);
     assert.equal(await page.evaluate(() => window.RR.app.current.row), 0);
-    assert.doesNotMatch(await bubble.textContent(), /Tipp|Lösung/);
 
-    await cell.fill(String(ans + 2));
-    await cell.press('Enter');
-    assert.match(await bubble.textContent(), /^Tipp:/);
-
-    await cell.fill(String(ans + 3));
-    await cell.press('Enter');
-    assert.match(await bubble.textContent(), new RegExp('Die Lösung ist ' + ans + '\\.'));
-
-    await cell.fill(String(ans));
-    await cell.press('Enter');
-    await page.waitForFunction(() => window.RR.app.current.row === 1);
-    assert.equal(await page.locator('.row[data-i="0"]').getAttribute('class'), 'row done');
-    await ctx.close();
-  });
-
-  test('leeres Feld zählt nicht als Fehler', async () => {
-    const { page, ctx } = await openPage();
-    await waitForInputRow(page);
-    await page.click('#checkBtn');
-    assert.equal(await page.evaluate(() => window.RR.app.current.mistakes), 0);
-    assert.equal(await page.locator('.cell.bad').count(), 0);
-    await ctx.close();
-  });
-
-  test('Buchstaben werden nicht angenommen', async () => {
-    const { page, ctx } = await openPage();
-    await waitForInputRow(page);
-    const cell = page.locator('.row.active .cell').first();
-    await cell.focus();
-    await page.keyboard.type('a7b');
-    assert.equal(await cell.inputValue(), '7');
-    await ctx.close();
-  });
-
-  test('mit Fehler gelöst: Stern ja, Serie nein', async () => {
-    const { page, ctx } = await openPage();
-    await setSettings(page, { level: 'hilfe' });
-    await waitForInputRow(page);
-    const [ans] = await activeAnswers(page);
-    const cell = page.locator('.row.active .cell').first();
-    await cell.fill(String(ans + 1));
-    await cell.press('Enter');
-    await solveTask(page);
-    await page.waitForFunction(() => document.getElementById('starCount').textContent === '1');
-    assert.equal(await page.locator('#streakCount').textContent(), '0');
+    // neue Eingabe nimmt die Markierung weg
+    await page.keyboard.type(String(ans));
+    assert.equal(await page.locator('.row.active .cell.bad').count(), 0);
     await ctx.close();
   });
 
   test('5 fehlerfrei hintereinander: Galopp-Parade', async () => {
-    const { page, ctx } = await openPage();
-    for (let k = 0; k < 5; k++) {
-      await solveTask(page);
-      if (k < 4) await page.click('#checkBtn'); // Weiter
-    }
+    // 4 fehlerfreie Aufgaben sind schon gespeichert, die 5. löst die Parade aus
+    const { page, ctx } = await openPage({ saved: Object.assign({}, WELCOMED, {
+      progress: { stars: 4, streak: 4, bestStreak: 4, solved: 4 }
+    }) });
+    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'hilfe' });
+    await solveTask(page);
     await assert.doesNotReject(page.locator('.parade').waitFor({ timeout: 3000 }));
     assert.equal(await page.locator('#streakCount').textContent(), '5');
     await ctx.close();
   });
 });
 
-describe('Zahlenfeld und Speichern', () => {
+describe('Zahlenfeld, Dialoge und Speichern', () => {
   test('Zahlenfeld auf dem Handy: tippen und prüfen', async () => {
     const { page, ctx } = await openPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     assert.equal(await page.locator('#numpad').isVisible(), true);
@@ -196,7 +167,7 @@ describe('Zahlenfeld und Speichern', () => {
   });
 
   test('Begrüßung beim ersten Besuch, Name und Sterne bleiben gespeichert', async () => {
-    const { page, ctx } = await openPage({ welcomed: false });
+    const { page, ctx } = await openPage({ saved: null });
     await assert.doesNotReject(page.locator('#welcomeDlg[open]').waitFor());
     await page.fill('#nameInput', 'Mia');
     await page.click('.buddy-card >> text=Blitz');
@@ -209,6 +180,16 @@ describe('Zahlenfeld und Speichern', () => {
     assert.equal(await page.locator('#welcomeDlg[open]').count(), 0);
     assert.equal(await page.locator('#starCount').textContent(), '1');
     assert.equal(await page.evaluate(() => window.RR.app.state.companion), 'blitz');
+    await ctx.close();
+  });
+
+  test('Stufe in den Einstellungen umschalten', async () => {
+    const { page, ctx } = await openPage();
+    await page.click('#settingsBtn');
+    await page.click('.seg[data-setting="level"] button[data-value="hilfe"]');
+    await page.click('#settingsDlg button[value=ok]');
+    await page.waitForFunction(() => window.RR.app.current.task.level === 'hilfe');
+    assert.match(await page.locator('#strategyBadge').textContent(), /Mit Hilfe/);
     await ctx.close();
   });
 });
@@ -231,126 +212,6 @@ describe('Responsives Layout', () => {
       await ctx.close();
     });
   }
-});
-
-describe('Review-Befunde in der Oberfläche', () => {
-  test('Profi-Division: falsche Zerlegung sperrt das zweite Feld nicht', async () => {
-    const { page, ctx } = await openPage();
-    // Aufgabe suchen, bei der "Zehner + Rest" nicht durch den Teiler teilbar ist
-    await page.evaluate(() => {
-      Object.assign(window.RR.app.state.settings, { op: ':', level: 'zerlegen', rest: false });
-      do { window.RR.app.newTask(); } while ((Math.floor(window.RR.app.current.task.a / 10) * 10) % window.RR.app.current.task.b === 0);
-    });
-    await waitForInputRow(page);
-    const { D } = await page.evaluate(() => ({ D: window.RR.app.current.task.a }));
-    const cells = page.locator('.row.active .cell');
-    const t = Math.floor(D / 10) * 10;
-    await cells.nth(0).fill(String(t));
-    await cells.nth(1).fill(String(D - t));
-    await cells.nth(1).press('Enter');
-    assert.equal(await cells.nth(0).evaluate((e) => e.classList.contains('bad')), true);
-    assert.equal(await cells.nth(1).evaluate((e) => e.readOnly), false, 'zweites Feld bleibt änderbar');
-    // jetzt richtig lösen
-    const answers = await activeAnswers(page);
-    await cells.nth(0).fill(String(answers[0]));
-    await cells.nth(1).fill(String(answers[1]));
-    await cells.nth(1).press('Enter');
-    await page.waitForFunction(() => window.RR.app.current.row >= 1);
-    await ctx.close();
-  });
-
-  test('Eingabefelder haben sprechende Namen', async () => {
-    const { page, ctx } = await openPage();
-    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'zerlegen' });
-    await waitForInputRow(page);
-    const labels = await page.locator('.row.active .cell').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
-    assert.deepEqual(labels, ['Zehner: 1. Zahl', 'Zehner: 2. Zahl', 'Zehner: 3. Zahl']);
-    await ctx.close();
-  });
-});
-
-describe('Rat bei umständlicher Zerlegung', () => {
-  test('Profi-Division mit "Teiler + Rest": angenommen, ohne Fehler, aber mit Tipp', async () => {
-    const { page, ctx } = await openPage();
-    // Aufgabe wählen, bei der "Teiler + Rest" sicher umständlich ist (nicht z. B. 42 = 2 + 40)
-    await page.evaluate(() => {
-      Object.assign(window.RR.app.state.settings, { op: ':', level: 'zerlegen', rest: false });
-      const t = () => window.RR.app.current.task;
-      do { window.RR.app.newTask(); } while (window.RR.Tasks.isEasySplit(t().b, t().a - t().b, t().b));
-    });
-    await waitForInputRow(page);
-    const { D, d } = await page.evaluate(() => ({ D: window.RR.app.current.task.a, d: window.RR.app.current.task.b }));
-    const cells = page.locator('.row.active .cell');
-    await cells.nth(0).fill(String(d));
-    await cells.nth(1).fill(String(D - d));
-    await cells.nth(1).press('Enter');
-    await page.waitForFunction(() => window.RR.app.current.row >= 1);
-    assert.match(await page.locator('#bubbleText').textContent(), /leichter/);
-    assert.equal(await page.evaluate(() => window.RR.app.current.mistakes), 0);
-    await ctx.close();
-  });
-});
-
-describe('Alles selbst', () => {
-  test('neue Kinder starten mit "Alles selbst": keine Zahl in den Schritten ist vorgegeben', async () => {
-    const { page, ctx } = await openPage();
-    await waitForInputRow(page);
-    assert.equal(await page.evaluate(() => window.RR.app.state.settings.level), 'selbst');
-    assert.match(await page.locator('#strategyBadge').textContent(), /Alles selbst/);
-    const row = page.locator('.row.active');
-    assert.ok(await row.locator('.cell').count() >= 3);
-    assert.equal(await row.locator('.tok-num').count(), 0);
-    assert.equal(await page.locator('.row.info').count(), 0, 'keine vorgegebene Zerlegungszeile');
-    await ctx.close();
-  });
-
-  test('alte Einstellung "Profi-Modus" wird zu "Zerlegung selbst"', async () => {
-    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
-    const page = await ctx.newPage();
-    await page.addInitScript(() => localStorage.setItem('rechenranch-v1',
-      JSON.stringify({ welcomed: true, settings: { profi: true, sound: false } })));
-    await page.goto(base);
-    assert.equal(await page.evaluate(() => window.RR.app.state.settings.level), 'zerlegen');
-    await ctx.close();
-  });
-
-  test('Stufe in den Einstellungen umschalten', async () => {
-    const { page, ctx } = await openPage();
-    await page.click('#settingsBtn');
-    await page.click('.seg[data-setting="level"] button[data-value="hilfe"]');
-    await page.click('#settingsDlg button[value=ok]');
-    await page.waitForFunction(() => window.RR.app.current.task.level === 'hilfe');
-    assert.match(await page.locator('#strategyBadge').textContent(), /Mit Hilfe/);
-    await ctx.close();
-  });
-
-  test('Plus: Zahlen in vertauschter Reihenfolge werden angenommen', async () => {
-    const { page, ctx } = await openPage();
-    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'selbst' });
-    await waitForInputRow(page);
-    const [x, y, z] = await activeAnswers(page);
-    const cells = page.locator('.row.active .cell');
-    await cells.nth(0).fill(String(y));
-    await cells.nth(1).fill(String(x));
-    await cells.nth(2).fill(String(z));
-    await cells.nth(2).press('Enter');
-    await page.waitForFunction(() => window.RR.app.current.row === 1);
-    assert.equal(await page.evaluate(() => window.RR.app.current.mistakes), 0);
-    await ctx.close();
-  });
-
-  test('Malkreuz verrät die Zerlegung erst nach dem Rechenschritt', async () => {
-    const { page, ctx } = await openPage();
-    await setSettings(page, { op: '·', strategy: 'zerlegen', level: 'selbst' });
-    await waitForInputRow(page);
-    assert.equal(await page.locator('.malkreuz [data-k="h0"]').textContent(), '?');
-    const answers = await activeAnswers(page);
-    const cells = page.locator('.row.active .cell');
-    for (let i = 0; i < answers.length; i++) await cells.nth(i).fill(String(answers[i]));
-    await cells.last().press('Enter');
-    await page.waitForFunction(() => document.querySelector('.malkreuz [data-k="h0"]').textContent !== '?');
-    await ctx.close();
-  });
 });
 
 describe('Fokus', () => {

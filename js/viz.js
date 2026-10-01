@@ -10,6 +10,7 @@
   'use strict';
 
   var NS = 'http://www.w3.org/2000/svg';
+  var Logic = root.RR.VizLogic, q = Logic.show;
   var reduced = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function el(tag, attrs, text) {
@@ -18,37 +19,15 @@
     if (text !== undefined) e.textContent = text;
     return e;
   }
-  function q(v) { return v === undefined || v === null ? '?' : v; }
 
   // ---------- Rechenstrich ----------
   function rechenstrich(box, task, companionKey) {
     // Breite an den Platz anpassen, damit die Schrift auf dem Handy groß bleibt
     // (die Box selbst ist noch leer und damit unsichtbar – darum die Karte messen)
-    var avail0 = box.parentNode ? box.parentNode.clientWidth - 60 : 640;
-    var W = Math.round(Math.max(320, Math.min(640, avail0 > 0 ? avail0 : 640)));
-    var H = 160, Y = 100, PAD = 30, GAP = 44;
-    var jumps = [];
-    task.rows.forEach(function (row, i) { if (row.jump) jumps.push({ row: i, j: row.jump }); });
-
+    var W = Logic.lineWidth(box.parentNode ? box.parentNode.clientWidth - 60 : 640);
+    var H = 160, Y = 100;
     // Positionen: proportional, aber mit Mindestabstand, damit nichts überlappt
-    var values = [task.line.start];
-    jumps.forEach(function (x) { values.push(x.j.to); });
-    var sorted = values.slice().sort(function (a, b) { return a - b; })
-      .filter(function (v, i, arr) { return i === 0 || v !== arr[i - 1]; });
-    var avail = W - 2 * PAD;
-    function layout(k) {
-      var pos = [0];
-      for (var i = 1; i < sorted.length; i++) pos.push(pos[i - 1] + Math.max(GAP, (sorted[i] - sorted[i - 1]) * k));
-      return pos;
-    }
-    var lo = 0, hi = 100;
-    for (var it = 0; it < 40; it++) {
-      var mid = (lo + hi) / 2, p = layout(mid);
-      if (p[p.length - 1] > avail) hi = mid; else lo = mid;
-    }
-    var pos = layout(lo), total = pos[pos.length - 1] || 1;
-    var offset = PAD + (avail - total) / 2;
-    function x(v) { return offset + pos[sorted.indexOf(v)]; }
+    var lay = Logic.lineLayout(task, W), jumps = lay.jumps, x = lay.x;
 
     var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'rechenstrich', role: 'img',
       'aria-label': 'Rechenstrich' });
@@ -136,17 +115,8 @@
       }
     }
     function render(vals) {
-      // partsAfter: Zerlegung erst zeigen, wenn das Kind den Schritt gerechnet hat
-      var part = function (i) {
-        if (v.partIds) return vals[v.partIds[i]];
-        if (v.partsAfter && vals[v.partsAfter[i]] === undefined) return null;
-        return v.parts[i];
-      };
-      set('h0', part(0));
-      set('h1', part(1));
-      set('c0', vals[v.cells[0]]);
-      set('c1', vals[v.cells[1]]);
-      set('sum', vals.res !== undefined ? '= ' + vals.res : '= ?');
+      var m = Logic.malkreuz(v, vals);
+      ['h0', 'h1', 'c0', 'c1', 'sum'].forEach(function (k) { set(k, m[k]); });
     }
     render({});
     return { update: render };
@@ -178,14 +148,9 @@
     box.appendChild(svg);
     return {
       update: function (vals) {
-        if (v.minus) {
-          // 10 Reihen insgesamt, die letzten sind zu viel
-          if (vals.p1 !== undefined) l1.textContent = '10 · ' + v.cols;
-          if (vals.p2 !== undefined) l2.textContent = '− ' + vals.p2;
-        } else {
-          if (vals.p1 !== undefined) l1.textContent = vals.p1;
-          if (vals.p2 !== undefined) l2.textContent = vals.p2;
-        }
+        var l = Logic.punktefeld(v, vals);
+        if (l[0] !== null) l1.textContent = l[0];
+        if (l[1] !== null) l2.textContent = l[1];
       }
     };
   }
@@ -206,17 +171,11 @@
       var c = wrap.querySelector('[data-k="' + k + '"]');
       if (c.textContent !== text) { c.textContent = text; c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); }
     }
-    function part(vals, i) {
-      var p = typeof v.parts[i] === 'number' ? v.parts[i] : vals[v.parts[i]];
-      var qq = vals[v.quots[i]];
-      var s = q(p) + ' : ' + v.d + ' = ' + q(qq);
-      if (i === 1 && task.rest && vals.r !== undefined) s += ' R ' + vals.r;
-      return s;
-    }
     function render(vals) {
-      set('a', part(vals, 0));
-      set('b', part(vals, 1));
-      set('s', vals.res !== undefined ? 'zusammen: ' + vals.res + (task.rest ? ' R ' + task.rest : '') : '');
+      var b = Logic.baum(task, vals);
+      set('a', b.a);
+      set('b', b.b);
+      set('s', b.s);
     }
     render({});
     return { update: render };
