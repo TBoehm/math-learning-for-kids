@@ -137,6 +137,8 @@
     }
     return {
       op: op, strategy: 'ueberschlag', a: a, b: b, answer: exact, variant: variant, other: other, rows: rows,
+      // layout 'ueberschlag' ohne eigene Darstellung: nur die Klasse layout-ueberschlag an #rows (css/formats.css)
+      layout: 'ueberschlag',
       intro: 'überschlage zuerst: Runde die Zahlen und rechne grob. Dann rechne genau! 🎯'
     };
   }

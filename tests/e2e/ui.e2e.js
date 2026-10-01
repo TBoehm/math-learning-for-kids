@@ -389,14 +389,33 @@ describe('Knobeln im Browser', () => {
   test('jede Knobel-Aufgabe lässt sich über die Oberfläche lösen (Felder, Auswahl-Knöpfe, angehängte Zeilen)', async () => {
     const { page, ctx, errors } = await openPage();
     const combos = [['+', 'zahlenmauer'], ['−', 'zahlenmauer'], ['+', 'fehler'], [':', 'fehler'], ['+', 'welcherweg'],
-      ['−', 'welcherweg'], ['+', 'ueberschlag'], ['·', 'ueberschlag']];
-    for (const [op, strategy] of combos) {
-      await setSettings(page, { op, strategy, level: 'selbst' });
+      ['−', 'welcherweg'], ['+', 'ueberschlag'], ['·', 'ueberschlag'], ['−', 'welcherweg', 'hilfe'], ['+', 'welcherweg', 'zerlegen']];
+    for (const [op, strategy, level = 'selbst'] of combos) {
+      await setSettings(page, { op, strategy, level });
       await solveKnobel(page);
       await assert.doesNotReject(page.locator('#checkBtn', { hasText: 'Weiter' }).waitFor());
       if (strategy === 'zahlenmauer') assert.equal(await page.locator('#equation').textContent(), 'Zahlenmauer');
       else assert.equal(await page.locator('#final').textContent(), String(await page.evaluate(() => window.RR.app.current.task.answer)));
     }
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('Stellenweise, alles selbst: die gelöste Zeile heißt danach wie die gerechnete Stelle', async () => {
+    const { page, ctx, errors } = await openPage();
+    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'selbst', range: 100 });
+    await waitForInputRow(page);
+    const row0 = page.locator('#rows .row[data-i="0"]');
+    assert.equal(await row0.locator('.row-label').textContent(), 'Eine Stelle');
+    // zuerst die Einer (bis 100 haben beide Zahlen Einer)
+    const [x, y] = await page.evaluate(() => [window.RR.app.current.task.a % 10, window.RR.app.current.task.b % 10]);
+    const cells = row0.locator('.cell');
+    await cells.nth(0).fill(String(x));
+    await cells.nth(1).fill(String(y));
+    await cells.nth(2).fill(String(x + y));
+    await cells.nth(2).press('Enter');
+    await page.waitForFunction(() => window.RR.app.current.row === 1);
+    assert.equal(await row0.locator('.row-label').textContent(), 'Einer');
     assert.deepEqual(errors, []);
     await ctx.close();
   });
@@ -448,6 +467,12 @@ describe('Knobeln im Browser', () => {
             .map((e) => e.textContent.trim().slice(0, 20));
         });
         assert.deepEqual(out, [], strategy + ': ragt über den Rand');
+        if (strategy === 'ueberschlag') {
+          // die Ü-Zeile "Ü: [ ] + [ ] = [ ]" bricht nicht um
+          const mids = await page.evaluate(() => [...document.querySelectorAll('#rows .row:first-child .eq > *')]
+            .map((e) => { const r = e.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; }));
+          assert.ok(mids.every((m) => m.top < mids[0].bottom && m.bottom > mids[0].top), 'Ü-Zeile bricht um bei ' + w);
+        }
       }
       assert.deepEqual(errors, []);
       await ctx.close();
