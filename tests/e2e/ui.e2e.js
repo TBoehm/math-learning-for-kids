@@ -354,6 +354,21 @@ describe('Erweiterungs-Gerüst im Browser', () => {
     await ctx.close();
   });
 
+  test('Handy: Rechenweg-Menü klappt per Tippen auf, ganz sichtbar, Zahlenfeld macht Platz', async () => {
+    const { page, ctx, errors } = await openPage({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
+    await page.locator('#numpad').waitFor();
+    await page.tap('#stratSummary');
+    assert.equal(await page.getAttribute('#stratSummary', 'aria-expanded'), 'true');
+    assert.equal(await page.isVisible('.strat-chip'), true);
+    assert.equal(await page.isVisible('#numpad'), false, 'Zahlenfeld weg, solange das Menü offen ist');
+    await page.locator('.strat-chip').last().scrollIntoViewIfNeeded();
+    await page.locator('.strat-chip').last().tap();
+    await page.waitForFunction(() => document.getElementById('stratChips').hidden);
+    assert.equal(await page.isVisible('#numpad'), true);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   test('Rechenweg-Menü: zugeklappt, aufklappen, wählen klappt zu, Tippen daneben auch', async () => {
     const { page, ctx, errors } = await openPage();
     await page.evaluate(() => {

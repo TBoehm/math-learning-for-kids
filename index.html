@@ -7,11 +7,11 @@
   <meta name="description" content="Halbschriftlich und schriftlich rechnen üben mit Einhörnern oder Fahrzeugen – Plus, Minus, Mal und Geteilt bis 1000 für die 3. Klasse.">
   <meta name="theme-color" content="#b9e4ff">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=32e05e67bb">
-  <link rel="stylesheet" href="css/themes.css?v=32e05e67bb">
-  <link rel="stylesheet" href="css/vehicles.css?v=32e05e67bb">
-  <link rel="stylesheet" href="css/column.css?v=32e05e67bb">
-  <link rel="stylesheet" href="css/formats.css?v=32e05e67bb">
+  <link rel="stylesheet" href="css/style.css?v=3a7dfa2cd7">
+  <link rel="stylesheet" href="css/themes.css?v=3a7dfa2cd7">
+  <link rel="stylesheet" href="css/vehicles.css?v=3a7dfa2cd7">
+  <link rel="stylesheet" href="css/column.css?v=3a7dfa2cd7">
+  <link rel="stylesheet" href="css/formats.css?v=3a7dfa2cd7">
 </head>
 <body>
   <!-- Hintergrund-Szene -->
@@ -56,15 +56,16 @@
     <nav class="ops" aria-label="Rechenart wählen">
       <div class="op-chips" id="opChips"></div>
       <div class="ops-bar">
-        <details class="strat-menu" id="stratMenu">
-          <summary class="strat-summary" id="stratSummary" aria-label="Rechenweg wählen"></summary>
-          <div class="strat-chips" id="stratChips"></div>
-        </details>
+        <div class="strat-menu" id="stratMenu">
+          <button type="button" class="strat-summary" id="stratSummary" aria-expanded="false" aria-controls="stratChips"
+            aria-label="Rechenweg wählen"></button>
+        </div>
         <div class="range-toggle" id="rangeToggle" role="group" aria-label="Zahlenraum">
           <button type="button" data-range="100">bis 100</button>
           <button type="button" data-range="1000">bis 1000</button>
         </div>
       </div>
+      <div class="strat-chips" id="stratChips" role="group" aria-label="Rechenwege" hidden></div>
     </nav>
 
     <section class="stage">
@@ -172,24 +173,24 @@
   <div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
   <div class="toast" id="toast" role="status"></div>
 
-  <script src="js/tasks.js?v=32e05e67bb"></script>
-  <script src="js/formats/zahlenmauer.js?v=32e05e67bb"></script>
-  <script src="js/formats/fehler.js?v=32e05e67bb"></script>
-  <script src="js/formats/welcherweg.js?v=32e05e67bb"></script>
-  <script src="js/formats/ueberschlag.js?v=32e05e67bb"></script>
-  <script src="js/layouts/wall.js?v=32e05e67bb"></script>
-  <script src="js/check.js?v=32e05e67bb"></script>
-  <script src="js/progress.js?v=32e05e67bb"></script>
-  <script src="js/companion.js?v=32e05e67bb"></script>
-  <script src="js/vehicles.js?v=32e05e67bb"></script>
-  <script src="js/sound.js?v=32e05e67bb"></script>
-  <script src="js/themes.js?v=32e05e67bb"></script>
-  <script src="js/settings.js?v=32e05e67bb"></script>
-  <script src="js/ui-logic.js?v=32e05e67bb"></script>
-  <script src="js/viz-logic.js?v=32e05e67bb"></script>
-  <script src="js/viz.js?v=32e05e67bb"></script>
-  <script src="js/formats/schriftlich.js?v=32e05e67bb"></script>
-  <script src="js/layouts/column.js?v=32e05e67bb"></script>
-  <script src="js/app.js?v=32e05e67bb"></script>
+  <script src="js/tasks.js?v=3a7dfa2cd7"></script>
+  <script src="js/formats/zahlenmauer.js?v=3a7dfa2cd7"></script>
+  <script src="js/formats/fehler.js?v=3a7dfa2cd7"></script>
+  <script src="js/formats/welcherweg.js?v=3a7dfa2cd7"></script>
+  <script src="js/formats/ueberschlag.js?v=3a7dfa2cd7"></script>
+  <script src="js/layouts/wall.js?v=3a7dfa2cd7"></script>
+  <script src="js/check.js?v=3a7dfa2cd7"></script>
+  <script src="js/progress.js?v=3a7dfa2cd7"></script>
+  <script src="js/companion.js?v=3a7dfa2cd7"></script>
+  <script src="js/vehicles.js?v=3a7dfa2cd7"></script>
+  <script src="js/sound.js?v=3a7dfa2cd7"></script>
+  <script src="js/themes.js?v=3a7dfa2cd7"></script>
+  <script src="js/settings.js?v=3a7dfa2cd7"></script>
+  <script src="js/ui-logic.js?v=3a7dfa2cd7"></script>
+  <script src="js/viz-logic.js?v=3a7dfa2cd7"></script>
+  <script src="js/viz.js?v=3a7dfa2cd7"></script>
+  <script src="js/formats/schriftlich.js?v=3a7dfa2cd7"></script>
+  <script src="js/layouts/column.js?v=3a7dfa2cd7"></script>
+  <script src="js/app.js?v=3a7dfa2cd7"></script>
 </body>
 </html>

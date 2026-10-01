@@ -98,27 +98,29 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--purple); ou
   font-size: .95rem; color: var(--ink-soft); white-space: nowrap; }
 .range-toggle button.active { background: var(--grad); color: #fff; font-weight: 700; }
 
-/* Rechenweg-Menü: zugeklappt nur ein Knopf mit dem gewählten Weg, aufgeklappt eine Tafel darüber */
+/* Rechenweg-Menü: zugeklappt nur ein Knopf mit dem gewählten Weg, aufgeklappt eine Tafel darunter */
 .strat-menu { display: block; flex: 0 1 auto; min-width: 0; }
-.strat-summary { min-width: 0; overflow: hidden; list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; max-width: 100%;
+.strat-summary { min-width: 0; overflow: hidden; cursor: pointer; display: flex; align-items: center; gap: 8px; max-width: 100%;
   border: 2px solid #fff; background: rgba(255, 255, 255, .85); border-radius: 999px; padding: 6px 10px 6px 16px;
-  min-height: 42px; font-size: 1rem; box-shadow: 0 3px 10px rgba(90, 50, 140, .1); user-select: none; }
-.strat-summary::-webkit-details-marker { display: none; }
+  min-height: 42px; font: inherit; font-size: 1rem; color: var(--ink); box-shadow: 0 3px 10px rgba(90, 50, 140, .1);
+  user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 .strat-summary:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
 .strat-summary .sm-group { font-size: .78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
 .strat-summary .sm-name { min-width: 0; font-weight: 700; color: var(--purple); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .strat-summary .sm-caret { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
   background: var(--row); color: var(--purple); font-size: .8rem; transition: transform .2s; }
-.strat-menu[open] .sm-caret { transform: rotate(180deg); }
-.strat-menu .strat-chips { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-  width: min(600px, calc(100vw - 24px)); background: #fff; border-radius: 22px; padding: 12px;
+.strat-menu.open .sm-caret { transform: rotate(180deg); }
+/* Aufgeklappt: Tafel mit allen Wegen direkt unter der Leiste (schiebt die Aufgabe nach unten, nichts wird verdeckt) */
+.ops > .strat-chips { justify-self: center; width: min(640px, 100%); background: #fff; border-radius: 22px; padding: 12px;
   box-shadow: var(--shadow); animation: menuIn .18s ease-out; }
+.ops > .strat-chips[hidden] { display: none; }
+body.menu-open .numpad { display: none; }
 @media (max-width: 520px) {
   .strat-summary { padding-left: 12px; gap: 6px; }
   .strat-summary .sm-group { display: none; }
   .range-toggle button { padding: 6px 9px; font-size: .9rem; }
 }
-@keyframes menuIn { from { opacity: 0; transform: translate(-50%, -6px); } }
+@keyframes menuIn { from { opacity: 0; transform: translateY(-6px); } }
 .strat-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .strat-chip { border: 2px solid var(--row); background: #fbf8ff; border-radius: 999px; padding: 6px 14px;
   font-size: .95rem; min-height: 38px; }

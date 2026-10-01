@@ -22,6 +22,15 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var pick = UI.pick;
+  // Rechenweg-Menü auf- oder zuklappen (Knopf + Tafel statt <details>: verhält sich in allen Browsern gleich)
+  function menuOpen() { return !$('stratChips').hidden; }
+  function setMenu(open) {
+    $('stratChips').hidden = !open;
+    $('stratMenu').classList.toggle('open', open);
+    $('stratSummary').setAttribute('aria-expanded', open);
+    document.body.classList.toggle('menu-open', open); // Zahlenfeld weg, solange das Menü offen ist
+  }
+
   // Zahlenraum-Schalter neben dem Rechenweg-Menü
   function renderRange() {
     $('rangeToggle').querySelectorAll('button').forEach(function (b) {
@@ -110,7 +119,7 @@
     renderRange();
     var sbox = $('stratChips'), menu = $('stratMenu');
     sbox.innerHTML = '';
-    menu.open = false;
+    setMenu(false);
     var label = Settings.strategyLabel(state.settings.op, state.settings.strategy);
     if (!label) { menu.hidden = true; return; }
     menu.hidden = false;
@@ -694,13 +703,16 @@
       });
     });
     // Rechenweg-Menü: Tippen daneben oder Escape klappt es wieder zu
+    $('stratSummary').addEventListener('click', function () {
+      setMenu(!menuOpen());
+      if (menuOpen()) Sound.tap();
+    });
     document.addEventListener('click', function (e) {
-      if ($('stratMenu').open && !$('stratMenu').contains(e.target)) $('stratMenu').open = false;
+      if (menuOpen() && !$('stratMenu').contains(e.target) && !$('stratChips').contains(e.target)) setMenu(false);
     });
-    $('stratMenu').addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && $('stratMenu').open) { $('stratMenu').open = false; $('stratSummary').focus(); }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menuOpen()) { setMenu(false); $('stratSummary').focus(); }
     });
-    $('stratMenu').addEventListener('toggle', function () { if ($('stratMenu').open) Sound.tap(); });
     $('themeBtn').addEventListener('click', function () {
       switchWorld(Themes.next(state.theme));
       react('happy', 1000);
