@@ -20,6 +20,9 @@ Veröffentlicht über GitHub Pages ("Deploy from a branch: main"): jeder Push au
 
 ## Sonstiges
 
+- **Keine Lehrwerks- oder Verlagsnamen** (z. B. Schulbuchreihen, Verlage) in der App oder in
+  öffentlichen Texten des Repos. Inhaltlich darf sich die App an gängigen Lehrwerken und den
+  Fachanforderungen Schleswig-Holstein orientieren, aber ohne sie zu nennen.
 - Texte für Kinder: kindgerechtes Deutsch, Fachbegriffe wie in der Grundschule (Zehner, Einer,
   Malpunkt `·`, Geteilt `:`, Rest `R`).
 - Keine externen Server zur Laufzeit ohne guten Grund (Datenschutz an Schulen); Schrift liegt lokal.
