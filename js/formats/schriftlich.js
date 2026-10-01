@@ -5,16 +5,20 @@
  *
  * Aufbau einer Aufgabe – jede Zeile (row) ist ein Rechenschritt, gelöst wird nacheinander:
  *   0. Überschlag:  [440] + [250] = [690]
- *   1. Einer, 2. Zehner, 3. Hunderter – von rechts nach links, je Spalte ein Schritt (row.col = Stelle).
+ *   1. Einer, 2. Zehner, 3. Hunderter (4. Tausender bei 1000 − x) – von rechts nach links, je Spalte ein Schritt (row.col = Stelle).
+ *   Danach normale Zeilen (ohne col, unter dem Raster):
+ *   Vergleich: Überschlag 690  Ergebnis 692  [passt] [passt nicht]
+ *   Probe (nur Minus): Umkehraufgabe [574] + [278] = [852], Reihenfolge der Zahlen egal
  * Die Felder eines Schritts tragen place: { line, col } = ihr Platz im Raster:
  *   line 'res'   Ergebnis-Ziffer         (id d0, d1, … – d0 = Einer)
  *        'carry' Übertrag in Spalte col  (id u1, u2, …)
  *        'n1'/'n2' neue Zahl über der oberen Zahl nach dem Umwechseln (Entbündeln):
  *              l<col> = nach dem Abgeben (1 weniger), b<col> = nach dem Bekommen (10 mehr)
  *        'hidden' das Gesamtergebnis 'res'
- * 'res' ist ein verstecktes Feld im letzten Schritt: Es bleibt leer, sein Wert wird aus den schon
- * richtigen Ziffern zusammengesetzt (blank als Funktion, siehe js/check.js). So gilt die Aufgabe als
- * gelöst, wenn alle Ziffern stimmen – und vals.res === task.answer.
+ * 'res' ist ein verstecktes Feld im letzten Spalten-Schritt: Es bleibt leer, sein Wert wird aus den schon
+ * richtigen Ziffern zusammengesetzt (blank als Funktion, siehe js/check.js). So gilt die Rechnung als
+ * richtig, wenn alle Ziffern stimmen – und vals.res === task.answer. Gelöst ist die Aufgabe erst nach Vergleich
+ * (und Probe), weil Check.isSolved alle Felder braucht.
  * Felder mit blank: 0 dürfen leer bleiben, das heißt „kein Übertrag“, „nicht umgewechselt“ oder
  * „keine 0 ganz vorne“.
  *
@@ -55,6 +59,7 @@
 
   var T = function (v) { return { t: 'txt', v: v }; };
   var N = function (v, place) { return { t: 'num', v: v, place: place }; };
+  var R = function (id) { return { t: 'ref', id: id }; };
   function I(id, answer, place, aria, blank) {
     var tok = { t: 'in', id: id, answer: answer, check: function (v) { return v === answer; }, place: place, aria: aria };
     if (blank !== undefined) tok.blank = blank;
@@ -80,6 +85,7 @@
    * Minus durch Abziehen mit Entbündeln. Geht es in einer Spalte nicht, wird 1 von links
    * umgewechselt (über Nullen hinweg: aus 503 wird 4 | 9 | 13).
    * changes: [{ col, v, kind: 'L' (gibt ab) | 'B' (bekommt 10) }], from: alte Werte dazu.
+   * orig: Ziffer der oberen Zahl, before: vor dem Umwechseln in dieser Spalte, top: danach.
    */
   function subPlan(a, b) {
     var n = len(a), cur = [], cols = [];
@@ -93,7 +99,7 @@
         for (var j = k - 1; j > c; j--) { from.push(cur[j]); cur[j] = 9; changes.push({ col: j, v: 9, kind: 'L' }); }
         from.push(cur[c]); cur[c] += 10; changes.push({ col: c, v: cur[c], kind: 'B' });
       }
-      cols.push({ c: c, before: before, top: cur[c], bottom: bottom, changes: changes, from: from, digit: cur[c] - bv });
+      cols.push({ c: c, orig: digitAt(a, c), before: before, top: cur[c], bottom: bottom, changes: changes, from: from, digit: cur[c] - bv });
     }
     return { n: n, cols: cols, result: cols.map(function (x) { return x.digit; }) };
   }
@@ -133,8 +139,10 @@
   function subHint(col, answer) {
     var c = col.c, P = PLACE[c] + ': ';
     if (col.bottom === null && !col.changes.length) {
-      if (col.digit === 0 && answer < Math.pow(10, c)) return P + 'Unten steht nichts. Eine 0 ganz vorne schreibst du nicht hin.';
-      return P + 'Unten steht nichts. Schreibe die ' + col.top + ' ab.';
+      // 1000 − x: aus der 1 bei den Tausendern ist beim Umwechseln eine 0 geworden
+      var gone = col.orig !== col.top && col.top === 0 ? ', und aus der ' + col.orig + ' ist eine 0 geworden' : '';
+      if (col.digit === 0 && answer < Math.pow(10, c)) return P + 'Unten steht nichts' + gone + '. Eine 0 ganz vorne schreibst du nicht hin.';
+      return P + 'Unten steht nichts' + gone + '. Schreibe die ' + col.top + ' ab.';
     }
     var bottom = col.bottom || 0, s = P;
     if (col.changes.length) {
@@ -143,8 +151,13 @@
       if (k === c + 1) {
         s += col.before + ' − ' + bottom + ' geht nicht. Wechsle 1 ' + PLACE[k] + ' in 10 ' + PLACE[c] + ' um: ' + aus + '. ';
       } else {
-        s += col.before + ' − ' + bottom + ' geht nicht, und bei den ' + PLACE_DAT[c + 1] + ' ist nichts. Wechsle 1 ' + PLACE[k] +
-          ' in 10 ' + PLACE[k - 1] + ' um und davon 1 ' + PLACE[c + 1] + ' in 10 ' + PLACE[c] + ': ' + aus + '. ';
+        // über Nullen hinweg (503 − 278, 1000 − 374): Schritt für Schritt nach rechts umwechseln
+        var empty = PLACE_DAT.slice(c + 1, k).join(' und ');
+        var chain = [];
+        for (var j = k - 1; j > c; j--) chain.push('1 ' + PLACE[j] + ' in 10 ' + PLACE[j - 1]);
+        s += col.before + ' − ' + bottom + ' geht nicht, und bei den ' + empty + ' ist nichts. Wechsle 1 ' + PLACE[k] +
+          ' in 10 ' + PLACE[k - 1] + ' um' + chain.map(function (x, i) { return (i === chain.length - 1 ? ' und davon ' : ', davon ') + x; }).join('') +
+          ': ' + aus + '. ';
       }
     }
     return s + col.top + ' − ' + bottom + ' = ' + col.digit + '. ' + writeText(c, col.digit, answer);
@@ -207,6 +220,40 @@
     return { label: 'Überschlag', tokens: tokens, hint: hint };
   }
 
+  // ---------- Nach dem Rechnen: Vergleich und Probe ----------
+  /** Überschlag und Ergebnis vergleichen. gs: fester Überschlag (Stufe hilfe) oder null (das Kind hat selbst gerundet). */
+  function vergleichRow(answer, gs) {
+    var choice = { t: 'choice', id: 'cmp', answer: 0, options: ['passt', 'passt nicht'], aria: 'Vergleich: passt das Ergebnis?',
+      check: function (v) { return v === 0; } };
+    return {
+      label: 'Vergleich',
+      tokens: [T('Überschlag'), R('gs'), T('Ergebnis'), R('res'), choice],
+      hint: gs !== null
+        ? 'Überschlag ' + gs + ' und Ergebnis ' + answer + ' liegen nah beieinander – das passt.'
+        : 'Vergleiche dein Ergebnis ' + answer + ' mit deinem Überschlag: Sie sind ungefähr gleich groß – das passt.'
+    };
+  }
+
+  /**
+   * Probe bei Minus mit der Umkehraufgabe: Ergebnis + abgezogene Zahl = Ausgangszahl.
+   * hilfe: Zahlen stehen da, nur die Summe; sonst beide Zahlen selbst (Reihenfolge egal), Summe aus den eingetragenen Zahlen.
+   */
+  function probeRow(a, b, answer, level) {
+    var aria = 'Probe: Ergebnis', tokens;
+    if (level === 'hilfe') {
+      tokens = [N(answer), T('+'), N(b), T('='), I('pa', a, undefined, aria)];
+    } else {
+      var xs = Tasks.freeFields([{ id: 'px', v: answer }, { id: 'py', v: b }]);
+      var calc = function (vals) { return vals.px + vals.py; };
+      var pa = I('pa', a, undefined, aria);
+      pa.check = function (v, vals) { return v === calc(vals); };
+      pa.expected = calc;
+      pa.deps = ['px', 'py'];
+      tokens = [xs[0], T('+'), xs[1], T('='), pa];
+    }
+    return { label: 'Probe', tokens: tokens, hint: 'Probe mit der Umkehraufgabe: ' + answer + ' + ' + b + ' muss wieder ' + a + ' ergeben.' };
+  }
+
   // ---------- Aufgabe aufbauen ----------
   /**
    * kind: 'add' | 'sub' (Abziehen mit Entbündeln) | 'erg' (Ergänzen)
@@ -261,7 +308,11 @@
         var v = used[kindLB][c];
         if (level === 'hilfe') return N(v, place);
         var aria = PLACE[c] + ': neue Zahl nach dem Umwechseln';
-        return I(kindLB.toLowerCase() + c, v || 0, place, aria, level === 'selbst' ? 0 : undefined);
+        // ganz vorne wird aus der 1 eine 0 (1000 − 374): die 0 darf man weglassen
+        var lead = kindLB === 'L' && c === n - 1 && v === 0;
+        var tok = I(kindLB.toLowerCase() + c, v || 0, place, aria, level === 'selbst' || lead ? 0 : undefined);
+        if (lead) tok.lead = true; // fürs Raster: die alte Ziffer wird auch durchgestrichen, wenn das Feld leer bleibt
+        return tok;
       };
       plan.cols.forEach(function (col) {
         var c = col.c, small = [];
@@ -291,9 +342,14 @@
       }
     });
 
-    var rows = [ueberschlagRow(kind, terms, level, max)].concat(steps.map(function (s) {
+    var ueRow = ueberschlagRow(kind, terms, level, max);
+    var rows = [ueRow].concat(steps.map(function (s) {
       return { label: PLACE[s.col], col: s.col, tokens: s.tokens, hint: s.hint };
     }));
+    // nach den Spalten (normale Zeilen unter dem Raster): Vergleich mit dem Überschlag, bei Minus die Probe
+    var gs = ueRow.tokens.filter(function (x) { return x.id === 'gs'; })[0].answer;
+    rows.push(vergleichRow(answer, level === 'hilfe' ? gs : null));
+    if (kind !== 'add') rows.push(probeRow(a, b, answer, level));
 
     // Zeilen des Rasters
     var lineUsed = {};
@@ -336,11 +392,16 @@
 
   function genSub(opt) {
     var big = opt.max === 1000;
+    // manchmal 1000 − x: umwechseln über mehrere Nullen (1000 − 374)
+    var top = big && opt.crossing !== 'ohne' && Math.random() < 0.12;
     // manchmal eine Null in der Mitte, über die hinweg umgewechselt wird (503 − 278)
-    var zero = big && opt.crossing !== 'ohne' && Math.random() < 0.25;
+    var zero = big && !top && opt.crossing !== 'ohne' && Math.random() < 0.25;
     return attempt(function () {
       var a, b;
-      if (big) {
+      if (top) {
+        a = 1000;
+        b = Math.random() < 0.2 ? rnd(10, 99) : rnd(100, 990);
+      } else if (big) {
         a = zero ? rnd(2, 9) * 100 + rnd(0, 8) : rnd(200, 999);
         b = Math.random() < 0.2 ? rnd(10, 99) : rnd(100, a - 10);
         if (zero && b % 10 <= a % 10) return null;

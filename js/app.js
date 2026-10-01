@@ -231,12 +231,14 @@
     });
   }
 
-  // Zeile ins Bild holen – über dem Zahlenfeld, falls es eingeblendet ist.
+  // Zeile ins Bild holen – über dem Zahlenfeld, falls es eingeblendet ist, und mit dem Rand darunter,
+  // den das CSS als scroll-margin-bottom freihält (z. B. für den Prüfen-Knopf unter dem Rechenraster).
   // Zeilen ohne eigene Box (Spalten im Rechenraster, display: contents) zeigen das ganze Raster.
   function reveal(el) {
     var box = el.getClientRects().length ? el : el.closest('.cpaper') || el.parentNode;
     var r = box.getBoundingClientRect(), np = $('numpad');
-    var bottom = document.body.classList.contains('has-numpad') && np.offsetParent ? np.getBoundingClientRect().top : window.innerHeight;
+    var bottom = window.innerHeight - (parseFloat(getComputedStyle(box).scrollMarginBottom) || 0);
+    if (document.body.classList.contains('has-numpad') && np.offsetParent) bottom = Math.min(bottom, np.getBoundingClientRect().top);
     var dy = UI.revealDelta(r.top, r.bottom, 8, bottom - 8);
     if (dy) window.scrollBy({ top: dy, behavior: reducedMotion ? 'auto' : 'smooth' });
   }

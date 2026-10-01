@@ -4,14 +4,16 @@
  *
  * Aufbau in #rows:
  *   .row[data-i=0]            Überschlag – eine normale Rechenzeile über dem Raster
- *   .cgrid                    das Raster (CSS-Grid): Stellen-Köpfe, Zahlen, Rechenzeichen, Strich
+ *   .cpaper > .cgrid          das Raster (CSS-Grid): Stellen-Köpfe, Zahlen, Rechenzeichen, Strich
  *     .row.col-step[data-i]   je Spalten-Schritt; display: contents – seine Kinder liegen direkt im Raster:
  *       .k-band               Leuchtstreifen über die ganze Spalte (aktive Spalte hervorgehoben)
  *       .k-head               Stellen-Kopf (E, Z, H)
  *       .k-slot               Platz für ein Feld oder eine vorgegebene Zahl (place: line + col)
  *       input[type=hidden]    das Gesamtergebnis 'res' (wird aus den Ziffern zusammengesetzt)
- * Spätere Spalten bleiben sichtbar, aber blass (css/column.css). Weil die Spalten-Zeilen keine eigene
- * Box haben, leiten sie scrollIntoView an das Raster weiter.
+ *   .row.after-paper          Zeilen ohne Spalte nach den Spalten-Schritten (Vergleich, Probe): normale
+ *                             Rechenzeilen unter dem Raster
+ * Spätere Spalten bleiben sichtbar, aber blass (css/column.css). Die Spalten-Zeilen haben keine eigene
+ * Box – beim Weiterschalten holt die App deshalb das ganze Raster ins Bild (reveal in js/app.js).
  */
 (function (root) {
   'use strict';
@@ -31,16 +33,20 @@
     return e;
   }
 
-  // Normale Rechenzeile (Überschlag), aufgebaut wie im Rest der App
-  function plainRow(row, i, h) {
-    var d = el('div', 'row future');
+  // Normale Rechenzeile (Überschlag, Vergleich, Probe), aufgebaut wie im Rest der App
+  function plainRow(row, i, h, cls) {
+    var d = el('div', 'row future' + (cls ? ' ' + cls : ''));
     d.dataset.i = i;
     var labels = h.cellLabels(row), n = 0;
     d.appendChild(el('span', 'row-label', row.label));
     var eq = el('div', 'eq');
     eq.innerHTML = row.tokens.map(function (tok) {
-      return h.tokenHtml(tok, tok.t === 'in' || tok.t === 'choice' ? tok.aria || labels[n++] : '');
+      if (tok.t !== 'in' && tok.t !== 'choice') return h.tokenHtml(tok, '');
+      var label = labels[n++];
+      return h.tokenHtml(tok, tok.aria || label);
     }).join('');
+    // Wörter in der Zeile (Vergleich: „Überschlag“, „Ergebnis“) kleiner als Rechenzeichen
+    eq.querySelectorAll('.tok-op').forEach(function (o) { if (o.textContent.length > 1) o.classList.add('tok-word'); });
     d.appendChild(eq);
     return d;
   }
@@ -50,10 +56,16 @@
     var line = {};
     col.lines.forEach(function (l, k) { line[l] = k + 1; });
     var gcol = function (c) { return 2 + (ncols - 1 - c); }; // Spalte 1: Rechenzeichen
-    var stepCols = {};
-    task.rows.forEach(function (row) { if (row.col !== undefined) stepCols[row.col] = true; });
+    var stepCols = {}, firstStep = -1;
+    task.rows.forEach(function (row, i) {
+      if (row.col === undefined) return;
+      stepCols[row.col] = true;
+      if (firstStep < 0) firstStep = i;
+    });
+    // Zeilen ohne Spalte: vor den Spalten-Schritten über dem Raster, danach darunter
+    var after = function (i) { return firstStep >= 0 && i > firstStep; };
 
-    task.rows.forEach(function (row, i) { if (row.col === undefined) box.appendChild(plainRow(row, i, h)); });
+    task.rows.forEach(function (row, i) { if (row.col === undefined && !after(i)) box.appendChild(plainRow(row, i, h)); });
 
     var paper = el('div', 'cpaper');
     var grid = el('div', 'cgrid cgrid-' + col.kind);
@@ -86,9 +98,6 @@
       var d = el('div', 'row future col-step');
       d.dataset.i = i;
       d.dataset.col = row.col;
-      // display: contents hat keine Box – die App scrollt beim Weiterschalten die Zeile ins Bild,
-      // hier also das ganze Raster (damit es z. B. nicht hinter dem Zahlenfeld verschwindet)
-      d.scrollIntoView = function (o) { paper.scrollIntoView(o); };
       var band = put(el('div', 'k-band'), 1, gcol(row.col));
       band.style.gridRow = '1 / -1';
       d.appendChild(band);
@@ -117,6 +126,7 @@
           inp.placeholder = ' ';
           inp.maxLength = MAXLEN[tok.place.line] || 4;
           if (tok.blank !== undefined) slot.classList.add('may-blank');
+          if (tok.lead) slot.classList.add('k-lead');
         }
         d.appendChild(slot);
       });
@@ -125,6 +135,9 @@
 
     paper.appendChild(grid);
     box.appendChild(paper);
+    task.rows.forEach(function (row, i) {
+      if (row.col === undefined && after(i)) box.appendChild(plainRow(row, i, h, 'after-paper'));
+    });
   }
 
   root.RR = root.RR || {};

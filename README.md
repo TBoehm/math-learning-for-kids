@@ -13,13 +13,16 @@ gerechnet wird im **halbschriftlichen Verfahren**, Schritt für Schritt, mit Ein
 | **−** Minus | Schrittweise · Ergänzen, wenn die Zahlen nah beieinander liegen (590 → 600 → 900 → 930, Probe mit der Umkehraufgabe) · Hilfsaufgabe (82 − 39 → 82 − 40 + 1 oder 80 − 39 + 2) · Vereinfachen (73 − 29 = 74 − 30) | Rechenstrich |
 | **·** Mal | Zerlegen (4 · 23 = 4 · 20 + 4 · 3, auch 7 · 48 = 5 · 48 + 2 · 48) · Kernaufgaben mit 1 ·, 2 ·, 5 ·, 10 · (7 · 8 = 5 · 8 + 2 · 8, 8 · 6 = 10 · 6 − 2 · 6) · Hilfsaufgabe (9 · 15 = 10 · 15 − 15, 6 · 39 = 6 · 40 − 6) | Malkreuz, Punktefeld |
 | **:** Geteilt | Zerlegen in leichte Teile (852 : 4 = 800 : 4 + 40 : 4 + 12 : 4), Ergebniszeile `852 : 4 = 213`, Probe `213 · 4 = 852`, optional mit Rest | Zerlegungsbaum |
-| **Schriftlich** | Addieren (auch mit drei Zahlen, Übertrag bis 1000) · Subtrahieren durch Abziehen mit Entbündeln (503 − 278: aus 5 wird 4, aus 0 wird 9, aus 3 wird 13) · Subtrahieren durch Ergänzen mit Übertrag | Rechenraster auf Karopapier |
+| **Schriftlich** | Addieren (auch mit drei Zahlen, Übertrag bis 1000) · Subtrahieren durch Abziehen mit Entbündeln (503 − 278: aus 5 wird 4, aus 0 wird 9, aus 3 wird 13; auch 1000 − 374) · Subtrahieren durch Ergänzen mit Übertrag · Vergleich mit dem Überschlag, bei Minus Probe | Rechenraster auf Karopapier |
 
 **Schriftlich rechnen:** erst ein Überschlag (Ü: 440 + 250 = 690), dann Spalte für Spalte von rechts nach links –
 Einer, Zehner, Hunderter. Die ganze Rechnung steht im Raster (H | Z | E), die aktive Spalte leuchtet.
 *Mit Hilfe* stehen Überträge und umgewechselte Zahlen schon da, bei *Zerlegung selbst* gibt es Felder nur dort,
 wo etwas hingehört, bei *Alles selbst* überall – das Kind entscheidet selbst, wo es überträgt oder umwechselt
-(leer lassen heißt „nichts“). Im Zahlenraum bis 100 wird zweistellig gerechnet.
+(leer lassen heißt „nichts“). Danach, unter dem Raster: **Vergleich** – passt das Ergebnis zum Überschlag?
+Bei Minus noch die **Probe** mit der Umkehraufgabe (574 + 278 = 852, die Reihenfolge der Zahlen ist egal).
+Bis 1000 kommt beim Minus ab und zu 1000 − x vor: Umwechseln über mehrere Nullen (aus 1 wird 0, aus 0 wird 9, …).
+Im Zahlenraum bis 100 wird zweistellig gerechnet.
 
 Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; jede Zeile wird sofort geprüft.
 

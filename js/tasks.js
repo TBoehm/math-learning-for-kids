@@ -1426,7 +1426,7 @@
   function taskText(task) { return (task.terms || [task.a, task.b]).join(' ' + task.op + ' '); }
 
   var api = {
-    generate: generate, build: build, canBuild: canBuild, taskText: taskText, isEasySplit: isEasySplit, isGlatt: isGlatt, placeParts: placeParts,
+    generate: generate, build: build, canBuild: canBuild, taskText: taskText, isEasySplit: isEasySplit, isGlatt: isGlatt, placeParts: placeParts, freeFields: freeFields,
     LEVELS: LEVELS, GROUPS: GROUPS, register: register, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
