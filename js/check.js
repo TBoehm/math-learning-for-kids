@@ -40,6 +40,11 @@
     var complete = true, allOk = true, inRow = {};
     inputsOf(row).forEach(function (tok) {
       var v = parseNumber(raw[tok.id]);
+      // leer gelassen und das bedeutet etwas (z. B. kein Übertrag): blank ist der Wert,
+      // als Funktion aus den schon richtigen Werten berechnet (z. B. Ergebnis aus seinen Ziffern)
+      if (v === null && tok.blank !== undefined && tok.blank !== null) {
+        v = typeof tok.blank === 'function' ? tok.blank(tmp) : tok.blank;
+      }
       var blocked = (tok.deps || []).some(function (d) { return d in inRow && inRow[d] !== 'correct'; });
       var status;
       if (v === null) { status = 'empty'; complete = false; }
@@ -71,7 +76,10 @@
     return 'solution';
   }
 
-  /** Lösungen der noch nicht richtigen Felder als Text, z. B. "40 und 30". */
+  /**
+   * Lösungen der noch nicht richtigen Felder als Text, z. B. "40 und 30".
+   * Nicht genannt werden versteckte Felder (silent) und Felder, die leer bleiben sollen (blank).
+   */
   function solutionText(row, result) {
     var known = {}, ok = true;
     Object.keys(result.vals).forEach(function (k) { known[k] = result.vals[k]; });
@@ -81,7 +89,7 @@
       if (f.status === 'correct') { known[tok.id] = f.value; return; }
       // Hängt das Feld von einem falschen Feld ab, nehmen wir die Musterlösung.
       var exp = ok ? expectedOf(tok, known) : tok.answer;
-      parts.push(String(exp));
+      if (!tok.silent && !(typeof tok.blank === 'number' && exp === tok.blank)) parts.push(String(exp));
       known[tok.id] = exp;
       ok = false;
     });

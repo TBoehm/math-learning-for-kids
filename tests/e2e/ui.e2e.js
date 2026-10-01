@@ -333,7 +333,7 @@ describe('Erweiterungs-Gerüst im Browser', () => {
       Object.assign(window.RR.app.state.settings, { op: '+', strategy: 'mix' });
       window.RR.app.renderOps();
     });
-    assert.deepEqual(await page.locator('#stratChips .strat-group').allTextContents(), ['Rechenwege', 'Knobeln']);
+    assert.deepEqual(await page.locator('#stratChips .strat-group').allTextContents(), ['Rechenwege', 'Knobeln', 'Schriftlich']);
     await ctx.close();
   });
 });
