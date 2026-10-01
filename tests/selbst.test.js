@@ -4,27 +4,25 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const Tasks = require('../js/tasks.js');
 const Check = require('../js/check.js');
+const { fresh, play, expectedValues, opsOf } = require('./helfer.js');
 
 const ALL = [];
 for (const op of Tasks.OPS) for (const s of Tasks.STRATEGIES[op]) ALL.push([op, s.key]);
 const gen = (op, strategy, extra) => Tasks.generate(Object.assign({ op, strategy, level: 'selbst' }, extra));
 const inputs = (row) => row.tokens.filter((t) => t.t === 'in');
-const opOf = (row) => (row.tokens.find((t) => t.t === 'txt' && t.v !== '=' && t.v !== 'R') || {}).v;
+const opOf = (row) => opsOf(row)[0];
 
-// Löst eine Aufgabe mit den hinterlegten Antworten; raw(row, answers) darf sie verändern.
+// Löst eine Aufgabe auf dem erwarteten Weg; tweak(row, werte, i, vals) darf die Eingaben verändern.
 function solve(task, tweak) {
-  let vals = {};
-  task.rows.forEach((row, i) => {
-    const answers = inputs(row).map((t) => t.answer);
-    const used = tweak ? tweak(row, answers.slice(), i, vals) : answers;
-    const raw = {};
-    inputs(row).forEach((t, k) => { raw[t.id] = String(used[k]); });
-    const r = Check.checkRow(row, raw, vals);
-    assert.equal(r.correct, true, Tasks.taskText(task) + ' Zeile ' + i + ' (' + row.label + '): ' + used.join(','));
-    vals = r.vals;
+  const played = fresh(task);
+  const r = play(played, (row, i, vals) => {
+    const answers = expectedValues(row, vals);
+    return tweak ? tweak(row, answers.slice(), i, vals) : answers;
   });
-  assert.equal(Check.isSolved(task, vals), true, Tasks.taskText(task));
-  return vals;
+  assert.equal(r.ok, true, Tasks.taskText(task) + ' Zeile ' + r.row + ': ' + JSON.stringify(r.used));
+  assert.equal(Check.isSolved(played, r.vals), true, Tasks.taskText(task));
+  played.vals = r.vals;
+  return played;
 }
 
 describe('Stufen', () => {
@@ -41,15 +39,17 @@ describe('Alles selbst', () => {
   for (const [op, strategy] of ALL) {
     test(`${op} ${strategy}: jede Zahl in jedem Schritt trägt das Kind ein`, () => {
       for (let k = 0; k < 300; k++) {
-        const t = gen(op, strategy, { rest: k % 2 === 0 });
-        for (const row of t.rows) {
+        const t = gen(op, strategy, { rest: k % 2 === 0, max: k % 2 ? 100 : 1000 });
+        const played = solve(t);
+        for (const row of played.rows) {
+          // nur die Ergebniszeile beim Teilen wiederholt die Aufgabe (52 : 4 = …)
+          if (row.label === 'Ergebnis') continue;
           for (const tok of row.tokens) {
             assert.ok(tok.t === 'in' || tok.t === 'txt', Tasks.taskText(t) + ' ' + row.label + ': vorgegebene Zahl ' + JSON.stringify(tok));
           }
           assert.ok(inputs(row).length >= 3, row.label + ': mindestens zwei Zahlen und ein Ergebnis');
           assert.ok(!/Zerlegen|Hilfszahl/.test(row.label), 'keine vorgegebene Zerlegungszeile');
         }
-        solve(t);
       }
     });
   }
@@ -57,16 +57,14 @@ describe('Alles selbst', () => {
   test('falsche Zahl wird abgelehnt (jede Zeile)', () => {
     for (const [op, strategy] of ALL) {
       for (let k = 0; k < 80; k++) {
-        const t = gen(op, strategy);
-        let vals = {};
-        t.rows.forEach((row) => {
+        const t = gen(op, strategy, { rest: k % 2 === 0, max: k % 2 ? 100 : 1000 });
+        play(fresh(t), (row, i, vals) => {
           const ins = inputs(row);
+          const exp = expectedValues(row, vals);
           const raw = {};
-          ins.forEach((x) => { raw[x.id] = String(x.answer); });
-          const last = ins[ins.length - 1];
-          const wrong = Object.assign({}, raw, { [last.id]: String(last.answer + 1) });
-          assert.equal(Check.checkRow(row, wrong, vals).correct, false, Tasks.taskText(t) + ' ' + row.label);
-          vals = Check.checkRow(row, raw, vals).vals;
+          ins.forEach((x, n) => { raw[x.id] = String(n === ins.length - 1 ? exp[n] + 1 : exp[n]); });
+          assert.equal(Check.checkRow(row, raw, vals).correct, false, Tasks.taskText(t) + ' ' + row.label);
+          return exp;
         });
       }
     }
@@ -75,11 +73,12 @@ describe('Alles selbst', () => {
   test('bei Plus und Mal ist die Reihenfolge egal (außer beim Ergänzen: Startzahl zuerst)', () => {
     for (const [op, strategy] of ALL) {
       for (let k = 0; k < 80; k++) {
-        const t = gen(op, strategy);
+        const t = gen(op, strategy, { max: k % 2 ? 100 : 1000 });
         solve(t, (row, answers) => {
-          const o = opOf(row);
-          if ((o === '+' || o === '·') && !row.fixedOrder) {
-            const n = inputs(row).length - 1 - (row.tokens.some((x) => x.v === 'R') ? 1 : 0);
+          const ops = opsOf(row);
+          const same = ops.length && ops.every((o) => o === ops[0]);
+          if (same && (ops[0] === '+' || ops[0] === '·') && !row.fixedOrder && inputs(row).length === ops.length + 2) {
+            const n = ops.length + 1;
             return answers.slice(0, n).reverse().concat(answers.slice(n));
           }
           return answers;
@@ -91,30 +90,31 @@ describe('Alles selbst', () => {
   test('bei Minus und Geteilt ist die Reihenfolge fest', () => {
     for (const [op, strategy] of ALL) {
       for (let k = 0; k < 60; k++) {
-        const t = gen(op, strategy);
-        let vals = {};
-        for (const row of t.rows) {
+        const t = gen(op, strategy, { rest: k % 2 === 0, max: k % 2 ? 100 : 1000 });
+        play(fresh(t), (row, i, vals) => {
           const ins = inputs(row);
-          const raw = {};
-          ins.forEach((x) => { raw[x.id] = String(x.answer); });
+          const exp = expectedValues(row, vals);
           const o = opOf(row);
-          if ((o === '−' || o === ':' || row.fixedOrder) && ins[0].answer !== ins[1].answer) {
+          if ((o === '−' || o === ':' || row.fixedOrder) && ins.length >= 2 && exp[0] !== exp[1]) {
+            const raw = {};
+            ins.forEach((x, n) => { raw[x.id] = String(exp[n]); });
             const swapped = Object.assign({}, raw, { [ins[0].id]: raw[ins[1].id], [ins[1].id]: raw[ins[0].id] });
             assert.equal(Check.checkRow(row, swapped, vals).correct, false, Tasks.taskText(t) + ' ' + row.label);
           }
-          vals = Check.checkRow(row, raw, vals).vals;
-        }
+          return exp;
+        });
       }
     }
   });
 
   test('Zwischenergebnis muss selbst übernommen werden – und zwar das richtige', () => {
-    const t = gen('+', 'schrittweise');
-    const [r1, r2] = t.rows;
+    const t = fresh(gen('+', 'schrittweise'));
+    const r1 = t.rows[0];
     const v1 = Check.checkRow(r1, Object.fromEntries(inputs(r1).map((x) => [x.id, String(x.answer)])), {}).vals;
-    const s1 = inputs(r1)[2].answer;
+    const r2 = t.nextRow(v1);
     const ins = inputs(r2);
-    const bad = Check.checkRow(r2, { [ins[0].id]: String(s1 + 10), [ins[1].id]: String(ins[1].answer), [ins[2].id]: String(t.answer + 10) }, v1);
+    const exp = expectedValues(r2, v1);
+    const bad = Check.checkRow(r2, { [ins[0].id]: String(exp[0] + 10), [ins[1].id]: String(exp[1]), [ins[2].id]: String(exp[2] + 10) }, v1);
     assert.deepEqual(bad.fields.map((f) => f.status), ['wrong', 'correct', 'pending']);
   });
 
@@ -127,25 +127,25 @@ describe('Alles selbst', () => {
     assert.equal(r.fields[2].status, 'pending');
   });
 
-  test('Geteilt: freie Zerlegung, die zweite Zeile richtet sich nach der ersten', () => {
+  test('Geteilt: freie Zerlegung, die nächsten Zeilen richten sich nach den eingetragenen Zahlen', () => {
     for (let k = 0; k < 300; k++) {
-      const t = gen(':', 'zerlegen', { rest: k % 2 === 0 });
-      const D = t.a, d = t.b;
-      if (t.answer < 13) continue;
-      const vals = solve(t, (row, answers, i, v) => {
-        if (i === 0) return [d, d, 1];                       // 6 : 6 = 1
-        if (i === 1) return [D - d, d, Math.floor((D - d) / d)].concat(t.rest ? [(D - d) % d] : []);
-        if (i === 2) return [1, v.q2, t.answer].concat(t.rest ? [t.rest] : []);
+      const t = gen(':', 'zerlegen', { rest: k % 2 === 0, max: k % 2 ? 100 : 1000 });
+      const D = t.a, d = t.b, q = t.answer;
+      if (q < 13) continue;
+      const played = solve(t, (row, answers, i) => {
+        if (i === 0) return [d, d, 1];                          // 6 : 6 = 1
+        if (i === 1) return [(q - 1) * d, d, q - 1];             // der Rest der Reihe
         return answers;
       });
-      assert.equal(vals.res, t.answer);
+      assert.equal(played.vals.res, q);
       // umständliche Zerlegung: Rat nach der zweiten Zeile
-      const adv = t.rows[1].advice(vals);
-      if (!Tasks.isEasySplit(d, D - d, d)) assert.match(adv, /leichter/);
+      const adv = played.rows[1].advice ? played.rows[1].advice(played.vals) : null;
+      if ((q - 1) > 10 && (q - 1) % 10 !== 0) assert.match(adv, /leichter/, Tasks.taskText(t));
+      assert.ok(D >= q * d);
     }
   });
 
-  test('Geteilt: Teiler und Rest müssen stimmen', () => {
+  test('Geteilt: Teiler muss stimmen', () => {
     const t = gen(':', 'zerlegen', { rest: true });
     const [p1, d1, q1] = inputs(t.rows[0]);
     const r = Check.checkRow(t.rows[0], { [p1.id]: String(p1.answer), [d1.id]: String(d1.answer + 1), [q1.id]: String(q1.answer) }, {});
@@ -154,7 +154,7 @@ describe('Alles selbst', () => {
 
   test('Ergänzen: Sprünge in beliebiger Reihenfolge zusammenrechnen', () => {
     for (let k = 0; k < 200; k++) {
-      const t = gen('−', 'ergaenzen');
+      const t = gen('−', 'ergaenzen', { max: k % 2 ? 100 : 1000 });
       solve(t, (row, answers) => (row.label === 'Zusammen' ? answers.slice(0, -1).reverse().concat(answers.slice(-1)) : answers));
     }
   });

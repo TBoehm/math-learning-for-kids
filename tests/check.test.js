@@ -4,6 +4,7 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const Check = require('../js/check.js');
 const Tasks = require('../js/tasks.js');
+const UI = require('../js/ui-logic.js');
 
 // kleine Bausteine wie im Generator
 const T = (v) => ({ t: 'txt', v });
@@ -108,9 +109,12 @@ describe('checkRow', () => {
 });
 
 describe('ganze Aufgaben lösen', () => {
+  // Löst eine Aufgabe mit den hinterlegten Lösungen – auch Zeilen, die das Kind selbst anhängt (task.nextRow)
   function solveAll(task, wrongAt) {
     let vals = {};
-    task.rows.forEach((row, i) => {
+    for (let i = 0; i < 40; i++) {
+      if (i >= task.rows.length) task.rows.push(task.nextRow(vals));
+      const row = task.rows[i];
       const raw = {};
       row.tokens.filter((t) => t.t === 'in').forEach((t) => { raw[t.id] = String(t.answer); });
       if (i === wrongAt && Object.keys(raw).length) {
@@ -121,8 +125,10 @@ describe('ganze Aufgaben lösen', () => {
       const r = Check.checkRow(row, raw, vals);
       assert.equal(r.correct, true, Tasks.taskText(task) + ' Zeile ' + i);
       vals = r.vals;
-    });
-    return vals;
+      if (!Object.keys(raw).length) continue;
+      if (UI.afterCorrect(task, vals, i) === 'finish') return vals;
+    }
+    throw new Error('nicht fertig geworden');
   }
 
   test('jede Aufgabe ist mit den hinterlegten Lösungen lösbar und endet beim richtigen Ergebnis', () => {
@@ -132,7 +138,7 @@ describe('ganze Aufgaben lösen', () => {
           for (const rest of [false, true]) {
             for (let k = 0; k < 100; k++) {
               const t = Tasks.generate({ op, strategy: s.key, level, rest });
-              const vals = solveAll(t, k % t.rows.length);
+              const vals = solveAll(t, k % (t.rows.length + 1));
               assert.equal(Check.isSolved(t, vals), true);
               assert.equal(vals.res, t.answer);
             }

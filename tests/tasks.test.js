@@ -4,47 +4,43 @@ var { test } = require('node:test');
 var Tasks = require('../js/tasks.js');
 var assert = require('assert');
 
+var H = require('./helfer.js');
 var RUNS = 3000, checked = 0;
 
+// Löst eine Aufgabe auf dem erwarteten Weg (auch mit Zeilen, die das Kind selbst anhängt) und prüft
+// jede Zeile: Gleichung stimmt, alle Zahlen im Zahlenraum, Musterlösungen werden angenommen.
 function solve(task) {
-  var vals = {};
-  task.rows.forEach(function (row, ri) {
+  var max = task.max || Tasks.MAX;
+  var played = H.fresh(task);
+  var r = H.play(played, null, function (row, ri, vals) {
     row.tokens.forEach(function (tok) {
-      if (tok.t === 'num') {
-        assert(Number.isInteger(tok.v) && tok.v >= 0 && tok.v <= Tasks.MAX, 'Zahl außerhalb: ' + tok.v);
-      }
-      if (tok.t === 'ref') assert(tok.id in vals, 'Referenz vor Eingabe: ' + tok.id);
+      if (tok.t === 'num') assert(Number.isInteger(tok.v) && tok.v >= 0 && tok.v <= max, 'Zahl außerhalb: ' + tok.v);
       if (tok.t === 'in') {
-        assert(Number.isInteger(tok.answer) && tok.answer >= 0 && tok.answer <= Tasks.MAX,
+        assert(Number.isInteger(tok.answer) && tok.answer >= 0 && tok.answer <= max,
           Tasks.taskText(task) + ' Zeile ' + ri + ': Lösung ' + tok.answer);
-        assert(tok.check(tok.answer, vals), Tasks.taskText(task) + ' Zeile ' + ri + ' ' + tok.id + ' lehnt eigene Lösung ab');
-        assert(!tok.check(tok.answer + 1, vals) || task.profi, 'Falsche Antwort akzeptiert: ' + tok.id);
-        vals[tok.id] = tok.answer;
+        // auf dem Musterweg ist die hinterlegte Lösung genau das, was erwartet wird
+        assert.strictEqual(vals[tok.id], tok.answer, Tasks.taskText(task) + ' Zeile ' + ri + ' ' + tok.id);
       }
     });
-    // Zeilen mit Gleichung prüfen: linke Seite rechnet sich zur rechten aus
-    var toks = row.tokens.map(function (t) { return t.t === 'txt' ? t.v : (t.t === 'num' ? t.v : vals[t.id]); });
-    var eq = toks.indexOf('=');
-    var restIdx = toks.indexOf('R');
-    var left = toks.slice(0, eq), right = toks.slice(eq + 1, restIdx < 0 ? undefined : restIdx);
-    function ev(xs) {
-      var v = xs[0];
-      for (var i = 1; i < xs.length; i += 2) {
-        var o = xs[i], n = xs[i + 1];
-        if (o === '+') v += n; else if (o === '−') v -= n; else if (o === '·') v *= n;
-        else if (o === ':') v = Math.floor(v / n); else throw new Error('Op ' + o);
-      }
-      return v;
-    }
-    assert.strictEqual(ev(left), ev(right), Tasks.taskText(task) + ' Zeile ' + ri + ': ' + toks.join(' '));
-    if (row.jump) assert.strictEqual(row.jump.to, (row.jump.text[0] === '+' ? 1 : -1) * parseInt(row.jump.text.slice(1), 10) + row.jump.from);
+    H.assertTrueEquation(played, row, vals, ri).forEach(function (n) {
+      assert(n >= 0 && n <= max, Tasks.taskText(task) + ' Zeile ' + ri + ': ' + n);
+    });
+    var j = typeof row.jump === 'function' ? row.jump(vals) : row.jump;
+    if (j) assert.strictEqual(j.to, (j.text[0] === '+' ? 1 : -1) * parseInt(j.text.slice(1), 10) + j.from);
+  });
+  assert(r.ok, Tasks.taskText(task) + ' ' + task.strategy + ' ' + task.level + ': Musterweg abgelehnt in Zeile ' + r.row);
+  var vals = r.vals;
+  // Musterlösungen der vorgegebenen Zeilen werden angenommen, eine falsche Zahl nicht
+  task.rows.forEach(function (row) {
+    row.tokens.forEach(function (tok) {
+      if (tok.t === 'in' && !tok.expected) assert(!tok.check(tok.answer + 1, vals) || task.profi, 'Falsche Antwort akzeptiert: ' + tok.id);
+    });
   });
   assert.strictEqual(vals.res, task.answer, Tasks.taskText(task) + ': Endergebnis');
-  if (task.rest) assert.strictEqual(vals.r, task.rest);
   var exact = { '+': task.a + task.b, '−': task.a - task.b, '·': task.a * task.b }[task.op];
   if (task.op === ':') { exact = Math.floor(task.a / task.b); assert.strictEqual(task.a % task.b, task.rest || 0); }
   assert.strictEqual(task.answer, exact, Tasks.taskText(task) + ' falsches Ergebnis');
-  assert(task.a <= Tasks.MAX && task.answer <= Tasks.MAX);
+  assert(task.a <= max && task.answer <= max);
   checked++;
 }
 
@@ -116,10 +112,12 @@ test('Hilfsaufgabe beachtet die Einstellung Zehnerübergang', function () {
 
 test('Ergänzen: die Zusammen-Zeile hat immer mindestens zwei Sprünge', function () {
   for (var i = 0; i < 3000; i++) {
-    var t = Tasks.generate({ op: '−', strategy: 'ergaenzen' });
-    var last = t.rows[t.rows.length - 1];
-    var refs = last.tokens.filter(function (x) { return x.t === 'ref'; }).length;
-    assert(refs === 0 || refs >= 2, Tasks.taskText(t) + ' hat eine Zusammen-Zeile mit ' + refs + ' Sprung');
+    var t = Tasks.generate({ op: '−', strategy: 'ergaenzen', max: i % 2 ? 100 : 1000 });
+    var sum = t.rows.filter(function (r) { return r.label === 'Zusammen'; })[0];
+    if (sum) {
+      var refs = sum.tokens.filter(function (x) { return x.t === 'ref'; }).length;
+      assert(refs >= 2, Tasks.taskText(t) + ' hat eine Zusammen-Zeile mit ' + refs + ' Sprung');
+    }
     assert(t.rows.some(function (r) { return r.tokens.some(function (x) { return x.id === 'res'; }); }));
   }
 });

@@ -115,14 +115,13 @@ describe('Welcher Weg ist angemeldet', () => {
       assert.equal(s.group, 'knobeln');
       const t = Tasks.generate({ op, strategy: 'welcherweg', max: 1000 });
       assert.ok(t.intro);
-      assert.ok(!t.offered.includes('vereinfachen'), 'Vereinfachen gibt es (noch) nicht');
       assert.ok(t.offered.every((k) => Tasks.STRATEGIES[op].some((x) => x.key === k && x.group === 'weg')));
       solve(t);
     }
   });
-  test('sobald es den Rechenweg "Vereinfachen" gibt, wird er angeboten', () => {
-    Tasks.register('+', { key: 'vereinfachen', name: 'Vereinfachen', group: 'weg', gen: () => null });
+  test('Vereinfachen ist ein eigener Rechenweg und wird bei Plus und Minus angeboten', () => {
+    assert.ok(Tasks.STRATEGIES['+'].some((x) => x.key === 'vereinfachen' && x.group === 'weg'));
     assert.deepEqual(WW.offeredKeys('+'), ['stellenweise', 'schrittweise', 'hilfsaufgabe', 'vereinfachen']);
-    assert.deepEqual(WW.offeredKeys('−'), ['schrittweise', 'ergaenzen', 'hilfsaufgabe']);
+    assert.deepEqual(WW.offeredKeys('−'), ['schrittweise', 'ergaenzen', 'hilfsaufgabe', 'vereinfachen']);
   });
 });

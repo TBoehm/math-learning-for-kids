@@ -87,9 +87,9 @@ async function setSettings(page, settings) {
 // Ob die Rechenschritte stimmen, prüfen die Unit-Tests für alle Stufen.
 describe('Aufgaben über die Oberfläche lösen', () => {
   const combos = [
-    ['+', 'stellenweise'], ['+', 'schrittweise'], ['+', 'hilfsaufgabe'],
-    ['−', 'schrittweise'], ['−', 'ergaenzen'], ['−', 'hilfsaufgabe'],
-    ['·', 'zerlegen'], ['·', 'kernaufgaben'], [':', 'zerlegen']
+    ['+', 'stellenweise'], ['+', 'schrittweise'], ['+', 'hilfsaufgabe'], ['+', 'vereinfachen'],
+    ['−', 'schrittweise'], ['−', 'ergaenzen'], ['−', 'hilfsaufgabe'], ['−', 'vereinfachen'],
+    ['·', 'zerlegen'], ['·', 'kernaufgaben'], ['·', 'hilfsaufgabe'], [':', 'zerlegen']
   ];
   for (const level of ['hilfe', 'selbst']) {
     describe(`Stufe "${level}"`, () => {

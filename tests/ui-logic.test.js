@@ -181,9 +181,16 @@ describe('Texte zur Aufgabe', () => {
     assert.equal(UI.introText(task({ strategy: 'schrittweise', op: '−' }), ''), 'Rechne schrittweise: erst die Zehner weg, dann die Einer.');
     assert.equal(UI.introText(task({ strategy: 'hilfsaufgabe' }), ''), 'Nimm eine Hilfsaufgabe mit einer glatten Zahl.');
     assert.equal(UI.introText(task({ strategy: 'ergaenzen', op: '−', a: 82, b: 37 }), ''), 'Ergänze von 37 bis 82. Wie weit musst du springen?');
-    assert.equal(UI.introText(task({ strategy: 'zerlegen', op: ':', a: 84, b: 6 }), ''), 'Zerlege 84 in zwei leichte Teile.');
+    assert.equal(UI.introText(task({ strategy: 'zerlegen', op: ':', a: 84, b: 6 }), ''), 'Zerlege 84 in leichte Teile.');
     assert.equal(UI.introText(task({ strategy: 'zerlegen', op: '·' }), ''), 'Zerlege die Malaufgabe in zwei leichte.');
     assert.equal(UI.introText(task({ strategy: 'kernaufgaben', op: '·' }), ''), 'Nutze eine leichte Kernaufgabe.');
+    assert.equal(UI.introText(task({ strategy: 'vereinfachen' }), ''), 'Vereinfache: Eine Zahl gibt der anderen etwas ab, bis eine glatt ist.');
+    assert.equal(UI.introText(task({ strategy: 'vereinfachen', op: '−' }), ''), 'Vereinfache: Verändere beide Zahlen um gleich viel, bis eine glatt ist.');
+  });
+  test('bis 1000: auch die Hunderter', () => {
+    assert.equal(UI.introText(task({ strategy: 'stellenweise', max: 1000, a: 346, b: 228 }), ''), 'Rechne stellenweise: Hunderter, Zehner und Einer getrennt.');
+    assert.equal(UI.introText(task({ strategy: 'schrittweise', max: 1000, a: 346, b: 228 }), ''), 'Rechne schrittweise: erst die Hunderter dazu, dann die Zehner, dann die Einer.');
+    assert.equal(UI.introText(task({ strategy: 'schrittweise', op: '−', max: 1000, a: 685, b: 47 }), ''), 'Rechne schrittweise: erst die Zehner weg, dann die Einer.');
   });
   test('mit Namen: "Mia, rechne …"', () => {
     assert.equal(UI.introText(task({ strategy: 'stellenweise' }), 'Mia'), 'Mia, rechne stellenweise: Zehner und Einer getrennt.');
