@@ -30,3 +30,6 @@ Veröffentlicht über GitHub Pages ("Deploy from a branch: main"): jeder Push au
   Malpunkt `·`, Geteilt `:`, Rest `R`).
 - Keine externen Server zur Laufzeit ohne guten Grund (Datenschutz an Schulen); Schrift liegt lokal.
 - Responsiv für Handy, Tablet und Desktop.
+- **Cache-Sperre:** Nach Änderungen an `css/` oder `js/` `npm run stamp` ausführen (setzt `?v=<Hash>` in
+  `index.html`); `tests/assets.test.js` schlägt sonst fehl. So mischen Browser nach einem Update keine alten
+  und neuen Dateien.

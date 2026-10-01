@@ -78,6 +78,7 @@ npm start            # lokaler Server auf http://localhost:8080
 npm test             # Unit-Tests (Node, ohne Abhängigkeiten)
 npm ci && npx playwright install chromium
 npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
+npm run stamp        # nach Änderungen an css/ oder js/: Cache-Sperre (?v=<Hash>) in index.html setzen
 ```
 
 | Datei | Inhalt |
