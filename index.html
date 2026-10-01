@@ -103,6 +103,14 @@
       </fieldset>
       <label class="toggle"><input type="checkbox" data-setting="rest">
         <span><b>Geteilt mit Rest</b><small>z. B. 87 : 6 = 14 Rest 3</small></span></label>
+      <fieldset class="setting">
+        <legend>Vorlese-Stimme 🔊</legend>
+        <div class="voice-row">
+          <select id="voiceSelect" aria-label="Stimme zum Vorlesen"></select>
+          <button type="button" class="btn btn-ghost" id="voiceTest">▶ Probe</button>
+        </div>
+        <small class="setting-note" id="voiceNote"></small>
+      </fieldset>
       <label class="toggle"><input type="checkbox" data-setting="sound">
         <span><b>Töne</b><small>Klänge und Hufgetrappel</small></span></label>
       <fieldset class="setting">
@@ -141,6 +149,7 @@
   <script src="js/check.js"></script>
   <script src="js/progress.js"></script>
   <script src="js/speech.js"></script>
+  <script src="js/voice.js"></script>
   <script src="js/companion.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/viz.js"></script>

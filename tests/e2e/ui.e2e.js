@@ -28,11 +28,13 @@ before(async () => {
 after(async () => { await browser.close(); server.close(); });
 
 async function openPage(opts = {}) {
-  const ctx = await browser.newContext(Object.assign({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' }, opts));
+  const { init, welcomed, ...ctxOpts } = opts;
+  const ctx = await browser.newContext(Object.assign({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' }, ctxOpts));
   const page = await ctx.newPage();
+  if (init) await page.addInitScript(init);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  if (opts.welcomed !== false) {
+  if (welcomed !== false) {
     await page.addInitScript(() => {
       if (!localStorage.getItem('rechenranch-v1')) {
         localStorage.setItem('rechenranch-v1', JSON.stringify({ welcomed: true, name: 'Test', settings: { sound: false } }));
@@ -367,4 +369,29 @@ describe('Fokus', () => {
     assert.equal(values, true, 'Fokus bleibt im zuletzt gewählten Feld');
     await ctx.close();
   });
+});
+
+describe('Dialoge auf kleinen Bildschirmen', () => {
+  for (const [w, h] of [[320, 640], [390, 844]]) {
+    test(`Einstellungen ${w}×${h}: nichts ragt über den Rand`, async () => {
+      // realistische Stimmenliste mit langen Namen (Headless-Chromium hat keine Stimmen)
+      const init = () => {
+        const names = ['Microsoft Katja Online (Natural) - German (Germany)', 'Microsoft Hedda - German (Germany)', 'Google Deutsch'];
+        speechSynthesis.getVoices = () => names.map((name) => ({ name, lang: 'de-DE', voiceURI: name, localService: false }));
+      };
+      const { page, ctx } = await openPage({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true, init });
+      await page.click('#settingsBtn');
+      await page.locator('#settingsDlg[open]').waitFor();
+      const over = await page.evaluate(() => {
+        const dlg = document.getElementById('settingsDlg');
+        const box = dlg.querySelector('.sheet-inner').getBoundingClientRect();
+        return [...dlg.querySelectorAll('button, select, legend, label')]
+          .filter((e) => e.getBoundingClientRect().width > 0)
+          .filter((e) => { const r = e.getBoundingClientRect(); return r.right > box.right + 1 || r.right > document.documentElement.clientWidth; })
+          .map((e) => e.textContent.trim().slice(0, 20));
+      });
+      assert.deepEqual(over, []);
+      await ctx.close();
+    });
+  }
 });

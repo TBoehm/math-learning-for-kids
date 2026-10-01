@@ -25,7 +25,9 @@ Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; je
     ist jede gültige Zerlegung erlaubt; jeder Schritt wird gegen die Zahlen geprüft, die das Kind
     tatsächlich eingetragen hat. Umständliche Zerlegungen werden angenommen, der Begleiter zeigt dann
     einen leichteren Weg.
-- **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Geteilt mit Rest, Töne, Zahlenfeld.
+- **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Geteilt mit Rest, Töne, Zahlenfeld, Vorlese-Stimme.
+- **Vorlesen:** nimmt automatisch die beste deutsche Stimme des Geräts (z. B. „Katja (Natural)“ in Edge,
+  „Google Deutsch“ in Chrome, „Anna (Premium)“ auf dem iPad); in den Einstellungen wählbar mit Hörprobe.
 - **Belohnungen:** Sterne, Serie ohne Fehler, Galopp-Parade nach 5 fehlerfreien Aufgaben in Folge,
   neue Begleiter ab 10, 25, 50 und 100 Sternen (Pony, Sternen-Einhorn, Pegasus, Regenbogen-Flügeleinhorn).
 - **Responsiv:** Handy, Tablet und Desktop; auf Touch-Geräten gibt es ein großes Zahlenfeld.
@@ -50,6 +52,7 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 | `js/progress.js` | Sterne, Serien, Parade, Freischaltungen |
 | `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |
 | `js/companion.js` | Begleiter als SVG |
+| `js/voice.js` | Beste deutsche Vorlese-Stimme des Geräts finden (Edge „Natural“, Google, Apple Premium …) |
 | `js/speech.js` | Text für „Vorlesen“ aufbereiten (84 : 6 → „84 geteilt durch 6“) |
 | `js/sound.js` | Klänge per Web-Audio (keine Sounddateien) |
 | `js/app.js` | Oberfläche und Ablauf |
