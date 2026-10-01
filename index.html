@@ -91,12 +91,14 @@
     </section>
 
     <div class="numpad" id="numpad" aria-label="Zahlenfeld"></div>
-    <footer class="parents-note">
-      Für Eltern: Diese App hat Tobias Boehm mit KI-Coding-Agenten gebaut.
-      Soll Ihr Software-Team auch so arbeiten?
-      <a href="https://toboehm.de/agentic-engineering" target="_blank" rel="noopener">Workshop „Agentic Engineering für Teams“ →</a>
-    </footer>
   </main>
+
+  <!-- Dezenter Hinweis für Eltern: Chip am rechten Rand -->
+  <a class="ae-chip" href="https://toboehm.de/agentic-engineering" target="_blank" rel="noopener"
+     title="Für Eltern: Workshop „Agentic Engineering for Teams“ von Tobias Boehm – diese App ist so entstanden.">
+    <img src="img/tobias-boehm.jpg" alt="" width="28" height="28">
+    <span><b>Agentic Engineering for Teams</b><small>Tobias Boehm</small></span>
+  </a>
 
   <!-- Begrüßung / Begleiter wählen -->
   <dialog class="sheet" id="welcomeDlg">
@@ -150,10 +152,6 @@
         <button type="button" class="btn btn-ghost" id="changeBuddyBtn">🎨 Welt, Begleiter &amp; Name</button>
         <button type="button" class="btn btn-ghost btn-danger" id="resetBtn">Fortschritt löschen</button>
       </div>
-      <p class="parents-note in-sheet">
-        Für Eltern: gebaut von Tobias Boehm mit KI-Coding-Agenten –
-        <a href="https://toboehm.de/agentic-engineering" target="_blank" rel="noopener">Workshop „Agentic Engineering für Teams“ für Ihr Software-Team →</a>
-      </p>
       <button class="btn btn-primary btn-big" value="ok">Fertig</button>
     </form>
   </dialog>

@@ -45,7 +45,10 @@ Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; je
 - **Belohnungen:** Sterne, Serie ohne Fehler, Galopp-Parade nach 5 fehlerfreien Aufgaben in Folge,
   neue Begleiter ab 10, 25, 50 und 100 Sternen (Ranch: Pony, Sternen-Einhorn, Pegasus, Regenbogen-Flügeleinhorn;
   Werkstatt: Feuerwehrauto, Kipplaster, Monstertruck, Helden-Auto).
-- **Responsiv:** Handy, Tablet und Desktop; auf Touch-Geräten gibt es ein großes Zahlenfeld.
+- **Responsiv:** Handy, Tablet und Desktop; auf Touch-Geräten gibt es ein großes Zahlenfeld (Tablet hochkant: unten,
+  Tablet quer: links unter dem Begleiter).
+- **Für Eltern:** Ein kleiner Chip am rechten Rand verweist auf den Workshop „Agentic Engineering for Teams“
+  (Bild liegt lokal in `img/`, es wird nichts von fremden Servern geladen).
 - **Datenschutz:** keine externen Server, keine Cookies, keine Tracker. Schrift (Fredoka, OFL) liegt im Projekt,
   Fortschritt nur im `localStorage` des Geräts.
 

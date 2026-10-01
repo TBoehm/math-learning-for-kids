@@ -377,6 +377,45 @@ body.has-numpad .numpad { position: sticky; bottom: max(8px, env(safe-area-inset
   .card { padding: 26px 34px; }
 }
 
+/* ============ Tablet hochkant ============
+   Viel Höhe: Begleiter oben quer wie auf dem Handy, die Karte füllt den Platz bis zum Zahlenfeld,
+   Schrift und Felder werden größer, das Zahlenfeld steht unten am Bildschirmrand. */
+@media (min-width: 700px) and (orientation: portrait) {
+  .layout { min-height: calc(100vh - 64px); min-height: calc(100dvh - 64px); grid-template-rows: auto 1fr auto; }
+  .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .buddy { grid-template-columns: 150px 1fr; position: static; }
+  .buddy-figure { order: -1; width: 150px; }
+  .bubble { font-size: 1.2rem; }
+  .bubble::before { left: -10px; top: 50%; bottom: auto; margin: -10px 0 0; border: 10px solid transparent;
+    border-left: 0; border-right-color: #fff; }
+  .task-card { display: flex; flex-direction: column; }
+  .task-card .actions { margin-top: auto; padding-top: 18px; }
+  .equation { font-size: 4rem; margin: 14px 0 20px; }
+  .rows { gap: 12px; }
+  .eq { font-size: 2.6rem; }
+  .row { grid-template-columns: 150px 1fr; padding: 12px 16px; }
+  .row-label { font-size: 1.05rem; }
+  .viz { margin-top: 18px; }
+  .btn { font-size: 1.2rem; min-height: 58px; }
+  .numpad { max-width: 720px; gap: 8px; padding: 10px; }
+  .np-key { min-height: 66px; font-size: 2rem; }
+}
+
+/* ============ Tablet quer (und Desktop mit Zahlenfeld) ============
+   Das Zahlenfeld steht links unter dem Begleiter (3 × 4 Tasten wie am Telefon) statt unten über der Aufgabe. */
+@media (min-width: 900px) and (orientation: landscape) and (min-height: 600px) {
+  body.has-numpad .layout { grid-template-columns: 250px minmax(0, 1fr); grid-template-rows: auto auto 1fr;
+    grid-template-areas: "ops ops" "buddy card" "pad card"; column-gap: 22px; align-items: start; }
+  body.has-numpad .ops { grid-area: ops; }
+  body.has-numpad .stage { display: contents; }
+  body.has-numpad .buddy { grid-area: buddy; position: static; }
+  body.has-numpad .buddy-figure { width: 150px; justify-self: center; }
+  body.has-numpad .task-card { grid-area: card; }
+  body.has-numpad .numpad { grid-area: pad; grid-template-columns: repeat(3, 1fr); max-width: none; margin: 0;
+    position: sticky; top: 12px; bottom: auto; }
+  body.has-numpad .np-key { min-height: 60px; }
+}
+
 /* Handys: in der Kopfzeile nur das Welt-Symbol, damit alle Knöpfe Platz haben */
 @media (max-width: 520px) {
   .brand-text { display: none; }
@@ -410,10 +449,18 @@ body.has-numpad .numpad { position: sticky; bottom: max(8px, env(safe-area-inset
   .cloud { display: none; }
 }
 
-/* Dezenter Hinweis für Eltern (ganz unten und in den Einstellungen) */
-.parents-note { justify-self: center; max-width: 640px; margin-top: 8px; padding: 8px 14px; border-radius: 14px;
-  background: rgba(255, 255, 255, .72); color: var(--ink-soft); font-size: .78rem; line-height: 1.45; text-align: center; }
-.parents-note a { color: var(--purple); font-weight: 600; text-decoration: none; white-space: nowrap; }
-.parents-note a:hover, .parents-note a:focus-visible { text-decoration: underline; }
-.parents-note.in-sheet { margin: 0; background: var(--row); white-space: normal; }
-.parents-note.in-sheet a { white-space: normal; }
+/* Dezenter Hinweis für Eltern: Chip am rechten Rand, Farben wie toboehm.de */
+.ae-chip { position: fixed; right: 0; bottom: 14px; z-index: 4; display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 6px; border-radius: 999px 0 0 999px; background: #263B4F; color: #fff; text-decoration: none;
+  border: 1px solid #A2B5CE; border-right: 0; box-shadow: 0 4px 16px rgba(38, 59, 79, .3);
+  font-size: .68rem; line-height: 1.2; transition: padding .2s; }
+.ae-chip:hover, .ae-chip:focus-visible { padding-right: 16px; }
+.ae-chip img { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #A2B5CE; object-fit: cover; flex: none; }
+.ae-chip span { display: grid; }
+.ae-chip b { font-weight: 600; letter-spacing: .01em; }
+.ae-chip small { font-size: .62rem; color: #A2B5CE; }
+/* Mit Zahlenfeld (Handy, Tablet) oder schmal: nicht über der Aufgabe schweben, sondern am Ende der Seite stehen */
+@media (max-width: 699px) {
+  .ae-chip { position: static; width: max-content; margin: 4px 0 18px auto; }
+}
+body.has-numpad .ae-chip { position: static; width: max-content; margin: 4px 0 18px auto; }

@@ -238,7 +238,9 @@
     var box = el.getClientRects().length ? el : el.closest('.cpaper') || el.parentNode;
     var r = box.getBoundingClientRect(), np = $('numpad');
     var bottom = window.innerHeight - (parseFloat(getComputedStyle(box).scrollMarginBottom) || 0);
-    if (document.body.classList.contains('has-numpad') && np.offsetParent) bottom = Math.min(bottom, np.getBoundingClientRect().top);
+    // nur wenn das Zahlenfeld unter der Zeile liegt (auf dem Tablet quer steht es daneben)
+    var p = np.getBoundingClientRect();
+    if (document.body.classList.contains('has-numpad') && np.offsetParent && p.left < r.right && p.right > r.left) bottom = Math.min(bottom, p.top);
     var dy = UI.revealDelta(r.top, r.bottom, 8, bottom - 8);
     if (dy) window.scrollBy({ top: dy, behavior: reducedMotion ? 'auto' : 'smooth' });
   }

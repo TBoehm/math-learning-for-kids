@@ -327,9 +327,27 @@ describe('Erweiterungs-Gerüst im Browser', () => {
     await ctx.close();
   });
 
-  test('Hinweis für Eltern: Link öffnet in neuem Tab', async () => {
+  for (const [name, viewport] of [['Tablet quer', { width: 1180, height: 820 }], ['Tablet hochkant', { width: 820, height: 1180 }]]) {
+    test(name + ': Zahlenfeld verdeckt die Aufgabe nicht, Karte nutzt die Höhe', async () => {
+      const { page, ctx, errors } = await openPage({ viewport, hasTouch: true, isMobile: true });
+      await page.locator('#numpad').waitFor();
+      const r = await page.evaluate(() => {
+        const box = (sel) => document.querySelector(sel).getBoundingClientRect().toJSON();
+        return { pad: box('#numpad'), card: box('#taskCard'), vh: innerHeight, sw: document.documentElement.scrollWidth, w: innerWidth };
+      });
+      const overlap = r.pad.left < r.card.right && r.pad.right > r.card.left && r.pad.top < r.card.bottom && r.pad.bottom > r.card.top;
+      assert.equal(overlap, false, JSON.stringify(r));
+      assert.ok(r.sw <= r.w, 'kein waagerechtes Scrollen');
+      if (viewport.height > viewport.width) assert.ok(r.pad.bottom > r.vh * 0.85, 'Zahlenfeld unten am Rand');
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    });
+  }
+
+  test('Hinweis für Eltern: Chip, Link öffnet in neuem Tab, Bild liegt lokal', async () => {
     const { page, ctx } = await openPage();
-    const a = page.locator('footer.parents-note a');
+    const a = page.locator('a.ae-chip');
+    assert.equal(await page.evaluate(() => document.querySelector('.ae-chip img').naturalWidth > 0), true);
     assert.equal(await a.getAttribute('href'), 'https://toboehm.de/agentic-engineering');
     assert.equal(await a.getAttribute('target'), '_blank');
     assert.match(await a.getAttribute('rel'), /noopener/);

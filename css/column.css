@@ -90,3 +90,6 @@ body.has-numpad .layout-column .row.after-paper { scroll-margin-bottom: 170px; }
 @media (min-width: 700px) and (max-height: 960px) {
   .layout-column { --sq: 2.75rem; }
 }
+@media (min-width: 700px) and (orientation: portrait) {
+  .layout-column { --sq: 3.6rem; }
+}
