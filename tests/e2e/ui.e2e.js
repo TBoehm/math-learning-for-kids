@@ -316,13 +316,44 @@ describe('Erweiterungs-Gerüst im Browser', () => {
     await ctx.close();
   });
 
-  test('Zahlenraum in den Einstellungen umschalten', async () => {
+  test('Zahlenraum: Schalter direkt über der Aufgabe', async () => {
     const { page, ctx } = await openPage();
     assert.equal(await page.evaluate(() => window.RR.app.current.task.max), 1000);
-    await page.click('#settingsBtn');
-    await page.click('.seg[data-setting="range"] button[data-value="100"]');
-    await page.click('#settingsDlg button[value=ok]');
+    assert.equal(await page.isVisible('#rangeToggle button[data-range="100"]'), true);
+    await page.click('#rangeToggle button[data-range="100"]');
     await page.waitForFunction(() => window.RR.app.current.task.max === 100);
+    assert.equal(await page.getAttribute('#rangeToggle button[data-range="100"]', 'aria-pressed'), 'true');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('rechenranch-v1')).settings.range), 100);
+    await ctx.close();
+  });
+
+  test('Hinweis für Eltern: Link öffnet in neuem Tab', async () => {
+    const { page, ctx } = await openPage();
+    const a = page.locator('footer.parents-note a');
+    assert.equal(await a.getAttribute('href'), 'https://toboehm.de/agentic-engineering');
+    assert.equal(await a.getAttribute('target'), '_blank');
+    assert.match(await a.getAttribute('rel'), /noopener/);
+    await ctx.close();
+  });
+
+  test('Rechenweg-Menü: zugeklappt, aufklappen, wählen klappt zu, Tippen daneben auch', async () => {
+    const { page, ctx, errors } = await openPage();
+    await page.evaluate(() => {
+      Object.assign(window.RR.app.state.settings, { op: '+', strategy: 'mix' });
+      window.RR.app.renderOps();
+    });
+    assert.equal(await page.isVisible('.strat-chip'), false, 'zugeklappt');
+    assert.match(await page.textContent('#stratSummary'), /Alle Wege/);
+    await page.click('#stratSummary');
+    await page.locator('.strat-chip', { hasText: 'Schrittweise' }).click();
+    await page.waitForFunction(() => window.RR.app.current.task.strategy === 'schrittweise');
+    assert.equal(await page.isVisible('.strat-chip'), false, 'nach dem Wählen wieder zu');
+    assert.match(await page.textContent('#stratSummary'), /Schrittweise/);
+    await page.click('#stratSummary');
+    assert.equal(await page.isVisible('.strat-chip'), true);
+    await page.mouse.click(5, 400);
+    assert.equal(await page.isVisible('.strat-chip'), false, 'Tippen daneben klappt zu');
+    assert.deepEqual(errors, []);
     await ctx.close();
   });
 
@@ -345,6 +376,9 @@ describe('Welten', () => {
     await page.click('#themeBtn');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'werkstatt');
     assert.equal(await page.title(), 'Turbo-Rechenwerkstatt');
+    // nirgends mehr Einhörner, Pferde oder Regenbogen zu sehen (auch nicht auf dem Welt-Knopf oder in der Sprechblase)
+    assert.doesNotMatch(await page.evaluate(() => document.body.innerText), /🦄|🐴|🐎|🏇|🌈|💖/);
+    assert.doesNotMatch(await page.evaluate(() => decodeURIComponent(document.querySelector('link[rel=icon]').href)), /🦄/);
     assert.equal(await page.evaluate(() => window.RR.app.state.companion), 'v-bruno');
     assert.equal(await page.locator('#buddyFigure svg.vehicle').count(), 1, 'Fahrzeug als Begleiter');
     await page.click('#themeBtn');

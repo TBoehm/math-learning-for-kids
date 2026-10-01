@@ -32,9 +32,11 @@ Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; je
     angenommen (welche Zahl gerundet wird, welche Stelle zuerst kommt, wie viele Schritte, Sprünge oder
     Teile); jeder weitere Schritt wird gegen die Zahlen geprüft, die das Kind tatsächlich eingetragen hat,
     und die Rechnung wächst mit. Umständliche Wege werden angenommen, der Begleiter zeigt dann einen leichteren.
-- **Einstellungen:** Zahlenraum bis 100 (Wiederholung) / bis 1000 (Stoff der 3. Klasse), Zehnerübergang ohne / gemischt / mit,
-  Geteilt mit Rest, Töne, Zahlenfeld.
-- **Zwei Welten:** Einhorn-Ranch und Turbo-Rechenwerkstatt (Fahrzeuge), umschaltbar in der Kopfzeile.
+- **Über der Aufgabe:** Rechenart, ein aufklappbares Menü mit allen Rechenwegen (gruppiert in Rechenwege, Knobeln,
+  Schriftlich) und der Schalter für den Zahlenraum bis 100 (Wiederholung) / bis 1000 (Stoff der 3. Klasse).
+- **Einstellungen:** Zehnerübergang ohne / gemischt / mit, Hilfe-Stufe, Geteilt mit Rest, Töne, Zahlenfeld.
+- **Zwei Welten:** Einhorn-Ranch und Turbo-Rechenwerkstatt (Fahrzeuge), umschaltbar mit dem 🌍-Knopf in der Kopfzeile.
+  Jede Welt bringt ihre eigenen Texte, Knöpfe, Klänge und ihr Tab-Symbol mit.
 - **Belohnungen:** Sterne, Serie ohne Fehler, Galopp-Parade nach 5 fehlerfreien Aufgaben in Folge,
   neue Begleiter ab 10, 25, 50 und 100 Sternen (Ranch: Pony, Sternen-Einhorn, Pegasus, Regenbogen-Flügeleinhorn;
   Werkstatt: Feuerwehrauto, Kipplaster, Monstertruck, Helden-Auto).

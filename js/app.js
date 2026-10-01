@@ -22,6 +22,15 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var pick = UI.pick;
+  // Zahlenraum-Schalter neben dem Rechenweg-Menü
+  function renderRange() {
+    $('rangeToggle').querySelectorAll('button').forEach(function (b) {
+      var on = Number(b.dataset.range) === Number(state.settings.range);
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on);
+    });
+  }
+
   // aktuelle Welt und ihre Texte
   function theme() { return Themes.byKey(state.theme); }
   function txt() { return theme().texts; }
@@ -34,9 +43,13 @@
     $('brandIcon').textContent = t.icon;
     $('brandText').innerHTML = t.title.replace('-', '-<wbr>');
     var other = Themes.byKey(Themes.next(t.key));
-    $('themeBtn').textContent = other.icon;
+    $('themeBtn').textContent = Themes.SWITCH_ICON;
     $('themeBtn').setAttribute('aria-label', 'Welt wechseln: ' + other.name);
     $('themeBtn').title = 'Welt wechseln: ' + other.name;
+    $('welcomeStart').textContent = t.startLabel;
+    $('unlockTake').textContent = t.takeLabel;
+    var fav = document.querySelector('link[rel="icon"]');
+    if (fav) fav.href = 'data:image/svg+xml,' + encodeURIComponent(t.favicon);
     decorate();
     renderBuddy();
   }
@@ -93,10 +106,15 @@
       });
       box.appendChild(b);
     });
-    var sbox = $('stratChips');
+    renderRange();
+    var sbox = $('stratChips'), menu = $('stratMenu');
     sbox.innerHTML = '';
-    if (state.settings.op === 'mix') { sbox.hidden = true; return; }
-    sbox.hidden = false;
+    menu.open = false;
+    var label = Settings.strategyLabel(state.settings.op, state.settings.strategy);
+    if (!label) { menu.hidden = true; return; }
+    menu.hidden = false;
+    $('stratSummary').innerHTML = '<span class="sm-group">' + label.group + '</span><span class="sm-name">' + label.name +
+      '</span><span class="sm-caret" aria-hidden="true">▼</span>';
     var list = Settings.strategyChoices(state.settings.op);
     state.settings.strategy = Settings.validStrategy(state.settings.op, state.settings.strategy);
     var groups = list.map(function (s) { return s.group; }).filter(function (g, i, a) { return a.indexOf(g) === i; });
@@ -213,6 +231,16 @@
     });
   }
 
+  // Zeile ins Bild holen – über dem Zahlenfeld, falls es eingeblendet ist.
+  // Zeilen ohne eigene Box (Spalten im Rechenraster, display: contents) zeigen das ganze Raster.
+  function reveal(el) {
+    var box = el.getClientRects().length ? el : el.closest('.cpaper') || el.parentNode;
+    var r = box.getBoundingClientRect(), np = $('numpad');
+    var bottom = document.body.classList.contains('has-numpad') && np.offsetParent ? np.getBoundingClientRect().top : window.innerHeight;
+    var dy = UI.revealDelta(r.top, r.bottom, 8, bottom - 8);
+    if (dy) window.scrollBy({ top: dy, behavior: reducedMotion ? 'auto' : 'smooth' });
+  }
+
   function activateRow(i) {
     cur.row = i;
     cur.rowMistakes = 0;
@@ -220,7 +248,7 @@
     el.classList.remove('future');
     el.classList.add('active');
     fillRefs();
-    if (i > 0 && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
+    if (i > 0) reveal(el);
     var ins = inputsIn(i);
     if (!ins.length) {
       // Info-Zeile: kurz zeigen, dann weiter
@@ -326,7 +354,7 @@
       }
       Sound.step();
       react('nod', 700);
-      say(UI.rowDoneText(row, cur.task.rows[i + 1], cur.vals));
+      say(UI.rowDoneText(row, cur.task.rows[i + 1], cur.vals, null, txt()));
       activateRow(i + 1);
       return;
     }
@@ -335,7 +363,7 @@
     cur.mistakes++;
     Sound.wrong();
     react('oops', 900);
-    say(UI.wrongText(row, r, cur.rowMistakes));
+    say(UI.wrongText(row, r, cur.rowMistakes, null, txt()));
     if (out.focus !== null) focusInput(ins[out.focus]);
   }
 
@@ -533,6 +561,7 @@
     state = Themes.switchTheme(state, key);
     save();
     applyTheme();
+    say(UI.welcomeText(state.name, companionName(), theme().hello));
     if (theme().sound === 'engine') Sound.engine(); else Sound.hop();
   }
 
@@ -566,7 +595,7 @@
       state.welcomed = true;
       save();
       renderBuddy();
-      say(UI.welcomeText(state.name, companionName()));
+      say(UI.welcomeText(state.name, companionName(), theme().hello));
       react('happy');
     });
 
@@ -648,6 +677,22 @@
       react('happy', 1000); say(pick(txt().poke));
     });
     if (coarse.addEventListener) coarse.addEventListener('change', applyInputMode);
+    $('rangeToggle').querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (Number(b.dataset.range) === Number(state.settings.range)) return;
+        Sound.tap();
+        state.settings = Settings.withRange(state.settings, b.dataset.range);
+        save(); renderRange(); newTask();
+      });
+    });
+    // Rechenweg-Menü: Tippen daneben oder Escape klappt es wieder zu
+    document.addEventListener('click', function (e) {
+      if ($('stratMenu').open && !$('stratMenu').contains(e.target)) $('stratMenu').open = false;
+    });
+    $('stratMenu').addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && $('stratMenu').open) { $('stratMenu').open = false; $('stratSummary').focus(); }
+    });
+    $('stratMenu').addEventListener('toggle', function () { if ($('stratMenu').open) Sound.tap(); });
     $('themeBtn').addEventListener('click', function () {
       switchWorld(Themes.next(state.theme));
       react('happy', 1000);

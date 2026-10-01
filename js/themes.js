@@ -6,6 +6,15 @@
 (function (root) {
   'use strict';
 
+  /** Tab-Symbol der Welt als SVG */
+  function favicon(bg, icon) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="' + bg +
+      '"/><text x="32" y="45" font-size="38" text-anchor="middle">' + icon + '</text></svg>';
+  }
+
+  // Welt-Knopf in der Kopfzeile: neutrales Symbol, damit keine Welt in der anderen auftaucht
+  var SWITCH_ICON = '🌍';
+
   var THEMES = [
     {
       key: 'ranch',
@@ -14,6 +23,10 @@
       icon: '🦄',
       welcome: 'Willkommen auf der Rechenranch! 🌈',
       doneHint: 'Das hast du super gemacht! Drück auf „Weiter“. 🐴',
+      hello: '🌈',
+      startLabel: "Los geht's! 🐎",
+      takeLabel: 'Mitnehmen! 💖',
+      favicon: favicon('#ffd9f0', '🦄'),
       companions: ['luna', 'blitz', 'karamell', 'nebula', 'wolke', 'aurora'],
       defaultCompanion: 'luna',
       sound: 'gallop',
@@ -41,6 +54,10 @@
       icon: '🏎️',
       welcome: 'Willkommen in der Rechenwerkstatt! 🔧',
       doneHint: 'Saubere Arbeit! Drück auf „Weiter“. 🏁',
+      hello: '🔧',
+      startLabel: "Los geht's! 🏁",
+      takeLabel: 'Einsteigen! 🔑',
+      favicon: favicon('#ffe2c2', '🏎️'),
       companions: ['v-bruno', 'v-flitz', 'v-funke', 'v-kalle', 'v-rumms', 'v-turbomax'],
       defaultCompanion: 'v-bruno',
       sound: 'engine',
@@ -106,7 +123,7 @@
   }
 
   var api = {
-    THEMES: THEMES, byKey: byKey, isTheme: isTheme, next: next,
+    THEMES: THEMES, SWITCH_ICON: SWITCH_ICON, byKey: byKey, isTheme: isTheme, next: next,
     themeOfCompanion: themeOfCompanion, defaultCompanions: defaultCompanions, switchTheme: switchTheme
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

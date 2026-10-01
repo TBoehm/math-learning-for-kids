@@ -179,6 +179,7 @@ describe('Schriftlich rechnen im Raster', () => {
       window.RR.app.renderOps();
     });
     assert.deepEqual(await page.locator('#stratChips .strat-group').allTextContents(), ['Rechenwege', 'Knobeln', 'Schriftlich']);
+    await page.click('#stratSummary');
     await page.locator('.strat-chip', { hasText: 'Ergänzen)' }).click();
     await page.waitForFunction(() => window.RR.app.current.task.strategy === 'schriftlich-erg');
     assert.equal(await page.locator('.cgrid').count(), 1);

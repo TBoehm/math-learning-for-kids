@@ -78,7 +78,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--purple); ou
 /* ============ Layout ============ */
 .layout { max-width: 1180px; margin: 0 auto; padding: 4px 16px 24px; display: grid; gap: 12px; }
 
-.ops { display: grid; gap: 8px; }
+.ops { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
 .op-chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .op-chip { border: 3px solid #fff; background: rgba(255, 255, 255, .85); border-radius: 20px; padding: 6px 4px;
   display: flex; flex-direction: column; align-items: center; line-height: 1; box-shadow: var(--shadow);
@@ -90,8 +90,37 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--purple); ou
 .op-name { font-size: .78rem; margin-top: 2px; color: var(--ink-soft); }
 .op-chip.active { background: var(--grad); color: #fff; }
 .op-chip.active .op-name { color: #fff; }
+/* Leiste unter den Rechenarten: Rechenweg-Menü und Zahlenraum */
+.ops-bar { min-width: 0; display: flex; flex-wrap: nowrap; gap: 8px; justify-content: center; align-items: center; position: relative; z-index: 20; }
+.range-toggle { flex: none; display: inline-flex; background: rgba(255, 255, 255, .85); border: 2px solid #fff; border-radius: 999px; padding: 3px;
+  box-shadow: 0 3px 10px rgba(90, 50, 140, .1); }
+.range-toggle button { border: 0; background: transparent; border-radius: 999px; padding: 6px 12px; min-height: 34px;
+  font-size: .95rem; color: var(--ink-soft); white-space: nowrap; }
+.range-toggle button.active { background: var(--grad); color: #fff; font-weight: 700; }
+
+/* Rechenweg-Menü: zugeklappt nur ein Knopf mit dem gewählten Weg, aufgeklappt eine Tafel darüber */
+.strat-menu { display: block; flex: 0 1 auto; min-width: 0; }
+.strat-summary { min-width: 0; overflow: hidden; list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; max-width: 100%;
+  border: 2px solid #fff; background: rgba(255, 255, 255, .85); border-radius: 999px; padding: 6px 10px 6px 16px;
+  min-height: 42px; font-size: 1rem; box-shadow: 0 3px 10px rgba(90, 50, 140, .1); user-select: none; }
+.strat-summary::-webkit-details-marker { display: none; }
+.strat-summary:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+.strat-summary .sm-group { font-size: .78rem; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
+.strat-summary .sm-name { min-width: 0; font-weight: 700; color: var(--purple); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strat-summary .sm-caret { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--row); color: var(--purple); font-size: .8rem; transition: transform .2s; }
+.strat-menu[open] .sm-caret { transform: rotate(180deg); }
+.strat-menu .strat-chips { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: min(600px, calc(100vw - 24px)); background: #fff; border-radius: 22px; padding: 12px;
+  box-shadow: var(--shadow); animation: menuIn .18s ease-out; }
+@media (max-width: 520px) {
+  .strat-summary { padding-left: 12px; gap: 6px; }
+  .strat-summary .sm-group { display: none; }
+  .range-toggle button { padding: 6px 9px; font-size: .9rem; }
+}
+@keyframes menuIn { from { opacity: 0; transform: translate(-50%, -6px); } }
 .strat-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-.strat-chip { border: 2px solid #fff; background: rgba(255, 255, 255, .7); border-radius: 999px; padding: 6px 14px;
+.strat-chip { border: 2px solid var(--row); background: #fbf8ff; border-radius: 999px; padding: 6px 14px;
   font-size: .95rem; min-height: 38px; }
 .strat-group { flex-basis: 100%; text-align: center; font-size: .8rem; font-weight: 600; color: var(--ink-soft);
   text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
@@ -380,3 +409,11 @@ body.has-numpad .numpad { position: sticky; bottom: max(8px, env(safe-area-inset
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .cloud { display: none; }
 }
+
+/* Dezenter Hinweis für Eltern (ganz unten und in den Einstellungen) */
+.parents-note { justify-self: center; max-width: 640px; margin-top: 8px; padding: 8px 14px; border-radius: 14px;
+  background: rgba(255, 255, 255, .72); color: var(--ink-soft); font-size: .78rem; line-height: 1.45; text-align: center; }
+.parents-note a { color: var(--purple); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.parents-note a:hover, .parents-note a:focus-visible { text-decoration: underline; }
+.parents-note.in-sheet { margin: 0; background: var(--row); white-space: normal; }
+.parents-note.in-sheet a { white-space: normal; }

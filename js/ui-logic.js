@@ -11,17 +11,15 @@
   var Check = node ? require('./check.js') : root.RR.Check;
 
   // ---------- Texte ----------
+  // Ersatztexte, falls keine Welt ihre eigenen mitgibt – neutral, passen zu jeder Welt (js/themes.js)
   var TEXTS = {
-    rowOk: ['Richtig!', 'Genau!', 'Super!', 'Prima!', 'Stimmt!', 'Klasse!', 'Jawoll!', 'Toll!'],
-    perfect: ['Wieherrrvorragend! 🐴', 'Zauberhaft gerechnet! ✨', 'Du bist ein Rechen-Star! ⭐',
-      'Galoppierend gut! 🏇', 'Einhorn-mäßig super! 🦄', 'Volltreffer! 🎯', 'Regenbogen-stark! 🌈'],
-    solved: ['Geschafft! Fehler machen schlau. 💪', 'Super, du hast nicht aufgegeben! 🌈',
+    rowOk: ['Richtig!', 'Genau!', 'Super!', 'Prima!', 'Stimmt!', 'Klasse!', 'Toll!'],
+    perfect: ['Volltreffer! 🎯', 'Du bist ein Rechen-Star! ⭐', 'Super gerechnet! 🎉', 'Spitze! 💪'],
+    solved: ['Geschafft! Fehler machen schlau. 💪', 'Super, du hast nicht aufgegeben! ⭐',
       'Richtig! Übung macht den Meister. ⭐', 'Juhu, gelöst! 🎉'],
-    oops: ['Fast! Schau noch mal genau hin. 🔍', "Hoppla! Probier's noch einmal. 🐎",
+    oops: ['Fast! Schau noch mal genau hin. 🔍', "Hoppla! Probier's noch einmal. 🙂",
       'Nicht ganz – du schaffst das! 💪', 'Hmm, rechne noch mal nach. 🤔'],
-    poke: ['Hihi, das kitzelt! 🦄', 'Ich mag Zahlen fast so gern wie Möhren! 🥕',
-      'Zusammen rechnen macht Spaß! 💖', 'Wiehern ist meine Lieblingssprache! 🐴',
-      'Ich glaub an dich! ⭐', 'Jede Aufgabe macht dich stärker! 💪']
+    poke: ['Zusammen rechnen macht Spaß! 🎉', 'Ich glaub an dich! ⭐', 'Jede Aufgabe macht dich stärker! 💪']
   };
 
   /** Zufälliges Element; rnd ist austauschbar (Standard: Math.random). */
@@ -132,8 +130,9 @@
   }
 
   /** Begrüßung nach dem Willkommens-Dialog. */
-  function welcomeText(name, companionName) {
-    return (name ? 'Hallo ' + name + '! ' : 'Hallo! ') + 'Ich bin ' + companionName + '. Lass uns zusammen rechnen! 🌈';
+  /** Begrüßung des Begleiters; hello: Symbol der Welt (z. B. 🌈 oder 🔧) */
+  function welcomeText(name, companionName, hello) {
+    return (name ? 'Hallo ' + name + '! ' : 'Hallo! ') + 'Ich bin ' + companionName + '. Lass uns zusammen rechnen!' + (hello ? ' ' + hello : '');
   }
   function cleanName(value) { return String(value).trim().slice(0, 20); }
 
@@ -151,8 +150,19 @@
     return 'stuck';
   }
 
+  /**
+   * Wie weit muss gescrollt werden, damit eine Zeile (top..bottom) im sichtbaren Bereich
+   * (viewTop..viewBottom, unten z. B. bis zum Zahlenfeld) steht? Positiv = nach unten scrollen.
+   * Passt die Zeile nicht ganz hinein, steht ihr Anfang oben.
+   */
+  function revealDelta(top, bottom, viewTop, viewBottom) {
+    if (top < viewTop) return top - viewTop;
+    if (bottom > viewBottom) return Math.min(bottom - viewBottom, top - viewTop);
+    return 0;
+  }
+
   var api = {
-    afterCorrect: afterCorrect,
+    afterCorrect: afterCorrect, revealDelta: revealDelta,
     TEXTS: TEXTS, pick: pick, sanitize: sanitize, applyKey: applyKey, pickTarget: pickTarget, inputMode: inputMode,
     fieldEffect: fieldEffect, outcome: outcome, wrongText: wrongText, rowDoneText: rowDoneText,
     cellLabels: cellLabels, badgeText: badgeText, introText: introText, welcomeText: welcomeText, cleanName: cleanName

@@ -41,7 +41,7 @@
     delete s.settings.profi;
     if (!levelInfo(s.settings.level)) s.settings.level = 'selbst';
     // Zahlenraum: bis 100 (Wiederholung) oder bis 1000 (Stoff der 3. Klasse)
-    s.settings.range = Number(s.settings.range) === 100 ? 100 : 1000;
+    s.settings.range = normalRange(s.settings.range);
     s.progress = Object.assign(s.progress, raw.progress);
     ['companion', 'name', 'welcomed'].forEach(function (k) { if (k in raw) s[k] = raw[k]; });
     // Welt: unbekannt -> Ranch; Begleiter gehört zur Welt, sonst deren gemerkter/Standard-Begleiter
@@ -75,6 +75,19 @@
     var list = [{ key: 'mix', name: 'Alle Wege', group: 'weg' }].concat(sorted);
     return list.length === 2 ? list.slice(1) : list;
   }
+  function normalRange(v) { return Number(v) === 100 ? 100 : 1000; }
+  /** Zahlenraum umschalten (Schalter über der Aufgabe): neue Einstellungen, die alten bleiben unverändert. */
+  function withRange(settings, v) { return Object.assign({}, settings, { range: normalRange(v) }); }
+
+  /** Aufschrift des Menü-Knopfs: Gruppe und Name des gewählten Wegs (null bei gemischten Rechenarten). */
+  function strategyLabel(op, strategy) {
+    var list = strategyChoices(op);
+    if (!list.length) return null;
+    var key = validStrategy(op, strategy);
+    var s = list.filter(function (x) { return x.key === key; })[0] || list[0];
+    var group = Tasks.GROUPS.filter(function (g) { return g.key === s.group; })[0];
+    return { group: group ? group.name : '', name: s.name };
+  }
   /** Gibt es den Rechenweg bei dieser Rechenart nicht, gilt "mix". */
   function validStrategy(op, strategy) {
     if (op === 'mix') return strategy;
@@ -93,7 +106,7 @@
 
   var api = {
     STORE: STORE, defaults: defaults, fromSaved: fromSaved, load: load, save: save, levelInfo: levelInfo,
-    strategyChoices: strategyChoices, validStrategy: validStrategy, taskKey: taskKey, numpadVisible: numpadVisible
+    strategyChoices: strategyChoices, strategyLabel: strategyLabel, withRange: withRange, validStrategy: validStrategy, taskKey: taskKey, numpadVisible: numpadVisible
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RR = Object.assign(root.RR || {}, { Settings: api });

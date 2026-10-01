@@ -26,6 +26,23 @@ describe('Welten', () => {
     const w = JSON.stringify(Themes.byKey('werkstatt').texts) + Themes.byKey('werkstatt').welcome + Themes.byKey('werkstatt').doneHint;
     assert.doesNotMatch(w, /🦄|🐴|🐎|Wieher|Galopp|Einhorn|Regenbogen|Möhren|Pony/);
   });
+  test('Werkstatt: auch Knöpfe, Begrüßung und Tab-Symbol ohne Einhorn oder Pferd', () => {
+    const w = Themes.byKey('werkstatt');
+    for (const k of ['startLabel', 'takeLabel', 'hello', 'favicon']) {
+      assert.equal(typeof w[k], 'string', k);
+      assert.doesNotMatch(w[k], /🦄|🐴|🐎|🏇|🌈|💖|Einhorn|Pferd/, k);
+    }
+    // Der Welt-Knopf in der Kopfzeile zeigt kein Symbol einer Welt (sonst steht in der Werkstatt ein Einhorn oben)
+    assert.equal(typeof Themes.SWITCH_ICON, 'string');
+    assert.ok(!Themes.THEMES.some((x) => x.icon === Themes.SWITCH_ICON));
+    assert.doesNotMatch(Themes.SWITCH_ICON, /🦄|🐴|🐎|🌈/);
+  });
+  test('Ranch: eigene Knopftexte', () => {
+    const r = Themes.byKey('ranch');
+    assert.match(r.startLabel, /Los geht/);
+    assert.match(r.hello, /🌈/);
+    assert.match(r.favicon, /^<svg/);
+  });
   test('Werkstatt: Fahrzeuge als Begleiter', () => {
     assert.deepEqual(Themes.byKey('werkstatt').companions, ['v-bruno', 'v-flitz', 'v-funke', 'v-kalle', 'v-rumms', 'v-turbomax']);
   });

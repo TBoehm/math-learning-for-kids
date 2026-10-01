@@ -215,8 +215,11 @@ describe('Texte zur Aufgabe', () => {
 
 describe('Begrüßung', () => {
   test('mit und ohne Namen', () => {
-    assert.equal(UI.welcomeText('Mia', 'Blitz'), 'Hallo Mia! Ich bin Blitz. Lass uns zusammen rechnen! 🌈');
-    assert.equal(UI.welcomeText('', 'Luna'), 'Hallo! Ich bin Luna. Lass uns zusammen rechnen! 🌈');
+    assert.equal(UI.welcomeText('Mia', 'Blitz', '🌈'), 'Hallo Mia! Ich bin Blitz. Lass uns zusammen rechnen! 🌈');
+    assert.equal(UI.welcomeText('', 'Luna', '🌈'), 'Hallo! Ich bin Luna. Lass uns zusammen rechnen! 🌈');
+    // das Symbol kommt aus der Welt – in der Werkstatt kein Regenbogen
+    assert.equal(UI.welcomeText('Tom', 'Bruno', '🔧'), 'Hallo Tom! Ich bin Bruno. Lass uns zusammen rechnen! 🔧');
+    assert.equal(UI.welcomeText('Tom', 'Bruno'), 'Hallo Tom! Ich bin Bruno. Lass uns zusammen rechnen!');
   });
   test('Name: ohne Leerzeichen am Rand, höchstens 20 Zeichen', () => {
     assert.equal(UI.cleanName('  Mia '), 'Mia');
@@ -229,5 +232,27 @@ describe('Zufallsauswahl', () => {
     assert.equal(UI.pick(['a', 'b', 'c'], () => 0), 'a');
     assert.equal(UI.pick(['a', 'b', 'c'], () => 0.99), 'c');
     assert.ok(['a', 'b'].includes(UI.pick(['a', 'b'])));
+  });
+});
+
+describe('Ersatztexte ohne Welt', () => {
+  test('passen zu jeder Welt: keine Einhörner, Pferde oder Regenbogen', () => {
+    assert.doesNotMatch(JSON.stringify(UI.TEXTS), /🦄|🐴|🐎|🏇|🌈|Wieher|Galopp|Einhorn|Regenbogen|Möhren/);
+  });
+});
+
+describe('Aktive Zeile ins Bild holen (nicht hinter dem Zahlenfeld)', () => {
+  // Sichtbarer Bereich: 8 bis 700 (darunter liegt das Zahlenfeld)
+  test('sichtbar: nicht scrollen', () => {
+    assert.equal(UI.revealDelta(100, 300, 8, 700), 0);
+  });
+  test('unten verdeckt: so weit hoch, dass die Zeile über dem Zahlenfeld steht', () => {
+    assert.equal(UI.revealDelta(535, 804, 8, 700), 104);
+  });
+  test('zu hoch für den Platz: oben bündig, nicht über den Anfang hinaus', () => {
+    assert.equal(UI.revealDelta(400, 1200, 8, 700), 392);
+  });
+  test('oben verdeckt: zurückscrollen', () => {
+    assert.equal(UI.revealDelta(-50, 100, 8, 700), -58);
   });
 });

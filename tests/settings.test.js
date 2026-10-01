@@ -125,6 +125,37 @@ describe('Rechenwege zur Auswahl', () => {
   });
 });
 
+describe('Aufgeklapptes Menü: was steht auf dem Knopf?', () => {
+  test('Gruppe und Name des gewählten Wegs', () => {
+    assert.deepEqual(Settings.strategyLabel('+', 'mix'), { group: 'Rechenwege', name: 'Alle Wege' });
+    assert.deepEqual(Settings.strategyLabel('+', 'schrittweise'), { group: 'Rechenwege', name: 'Schrittweise' });
+    assert.deepEqual(Settings.strategyLabel('−', 'ergaenzen'), { group: 'Rechenwege', name: 'Ergänzen' });
+  });
+  test('unbekannter Weg: wie "Alle Wege"', () => {
+    assert.deepEqual(Settings.strategyLabel('+', 'ergaenzen'), { group: 'Rechenwege', name: 'Alle Wege' });
+  });
+  test('nur ein Weg (Geteilt): dieser Weg', () => {
+    assert.deepEqual(Settings.strategyLabel(':', 'mix'), { group: 'Rechenwege', name: 'Zerlegen' });
+  });
+  test('gemischte Rechenarten: kein Menü', () => {
+    assert.equal(Settings.strategyLabel('mix', 'mix'), null);
+  });
+});
+
+describe('Zahlenraum-Schalter', () => {
+  test('setzt bis 100 oder bis 1000, auch aus Text', () => {
+    assert.equal(Settings.withRange(Settings.defaults().settings, '100').range, 100);
+    assert.equal(Settings.withRange(Settings.defaults().settings, 1000).range, 1000);
+    assert.equal(Settings.withRange(Settings.defaults().settings, 'quatsch').range, 1000);
+  });
+  test('verändert die alten Einstellungen nicht und verlangt eine neue Aufgabe', () => {
+    const s = Settings.defaults().settings;
+    const t = Settings.withRange(s, 100);
+    assert.equal(s.range, 1000);
+    assert.notEqual(Settings.taskKey(t), Settings.taskKey(s));
+  });
+});
+
 describe('Neue Aufgabe nach den Einstellungen?', () => {
   test('nur Zehnerübergang, Stufe und Rest ändern die Aufgabe', () => {
     const s = Settings.defaults().settings;

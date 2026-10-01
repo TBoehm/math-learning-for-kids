@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Einhorn-Rechenranch</title>
-  <meta name="description" content="Halbschriftlich rechnen üben mit Einhörnern und Pferden – Plus, Minus, Mal und Geteilt bis 100 für die 3. Klasse.">
+  <meta name="description" content="Halbschriftlich und schriftlich rechnen üben mit Einhörnern oder Fahrzeugen – Plus, Minus, Mal und Geteilt bis 1000 für die 3. Klasse.">
   <meta name="theme-color" content="#b9e4ff">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
@@ -55,7 +55,16 @@
   <main class="layout">
     <nav class="ops" aria-label="Rechenart wählen">
       <div class="op-chips" id="opChips"></div>
-      <div class="strat-chips" id="stratChips"></div>
+      <div class="ops-bar">
+        <details class="strat-menu" id="stratMenu">
+          <summary class="strat-summary" id="stratSummary" aria-label="Rechenweg wählen"></summary>
+          <div class="strat-chips" id="stratChips"></div>
+        </details>
+        <div class="range-toggle" id="rangeToggle" role="group" aria-label="Zahlenraum">
+          <button type="button" data-range="100">bis 100</button>
+          <button type="button" data-range="1000">bis 1000</button>
+        </div>
+      </div>
     </nav>
 
     <section class="stage">
@@ -82,6 +91,11 @@
     </section>
 
     <div class="numpad" id="numpad" aria-label="Zahlenfeld"></div>
+    <footer class="parents-note">
+      Für Eltern: Diese App hat Tobias Boehm mit KI-Coding-Agenten gebaut.
+      Soll Ihr Software-Team auch so arbeiten?
+      <a href="https://toboehm.de/agentic-engineering" target="_blank" rel="noopener">Workshop „Agentic Engineering für Teams“ →</a>
+    </footer>
   </main>
 
   <!-- Begrüßung / Begleiter wählen -->
@@ -95,7 +109,7 @@
       <div class="world-grid" id="worldGrid"></div>
       <p class="sheet-sub">Wähle deinen Begleiter:</p>
       <div class="buddy-grid" id="buddyGrid"></div>
-      <button class="btn btn-primary btn-big" value="ok">Los geht's! 🐎</button>
+      <button class="btn btn-primary btn-big" value="ok" id="welcomeStart">Los geht's!</button>
     </form>
   </dialog>
 
@@ -109,13 +123,6 @@
           <button type="button" data-value="ohne">ohne</button>
           <button type="button" data-value="egal">gemischt</button>
           <button type="button" data-value="mit">mit</button>
-        </div>
-      </fieldset>
-      <fieldset class="setting">
-        <legend>Zahlenraum</legend>
-        <div class="seg" data-setting="range">
-          <button type="button" data-value="100">bis 100</button>
-          <button type="button" data-value="1000">bis 1000</button>
         </div>
       </fieldset>
       <fieldset class="setting">
@@ -143,6 +150,10 @@
         <button type="button" class="btn btn-ghost" id="changeBuddyBtn">🎨 Welt, Begleiter &amp; Name</button>
         <button type="button" class="btn btn-ghost btn-danger" id="resetBtn">Fortschritt löschen</button>
       </div>
+      <p class="parents-note in-sheet">
+        Für Eltern: gebaut von Tobias Boehm mit KI-Coding-Agenten –
+        <a href="https://toboehm.de/agentic-engineering" target="_blank" rel="noopener">Workshop „Agentic Engineering für Teams“ für Ihr Software-Team →</a>
+      </p>
       <button class="btn btn-primary btn-big" value="ok">Fertig</button>
     </form>
   </dialog>
