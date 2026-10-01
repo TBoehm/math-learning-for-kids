@@ -153,6 +153,23 @@ describe('Rückmeldung nach einer richtigen Zeile', () => {
   });
 });
 
+describe('Name einer fertigen Zeile', () => {
+  test('ohne labelDone bleibt der Name', () => {
+    assert.equal(UI.doneLabel({ label: 'Zehner', tokens: [] }, {}), 'Zehner');
+  });
+  test('labelDone benennt die Zeile nach dem, was das Kind gerechnet hat', () => {
+    const row = { label: 'Eine Stelle', tokens: [], labelDone: (vals) => (vals.sx1 === 6 ? 'Einer' : null) };
+    assert.equal(UI.doneLabel(row, { sx1: 6 }), 'Einer');
+    assert.equal(UI.doneLabel(row, { sx1: 7 }), 'Eine Stelle');
+  });
+  test('Stellenweise, alles selbst: erst die Einer gerechnet -> "Einer"', () => {
+    const t = Tasks.build('+', 'stellenweise', 47, 38, { level: 'selbst', max: 100 });
+    const r = Check.checkRow(t.rows[0], { sx1: '8', sy1: '7', z1: '15' }, {});
+    assert.equal(r.correct, true);
+    assert.equal(UI.doneLabel(t.rows[0], r.vals), 'Einer');
+  });
+});
+
 describe('Namen der Eingabefelder (für Screenreader)', () => {
   test('Zeilenname und Nummer der Zahl', () => {
     const t = Tasks.generate({ op: '+', strategy: 'stellenweise', level: 'zerlegen' });

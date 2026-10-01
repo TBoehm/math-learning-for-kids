@@ -310,6 +310,9 @@
       var el = rowEl(i);
       el.classList.remove('active');
       el.classList.add('done');
+      // Zeilenname nach dem Rechnen, z. B. "Eine Stelle" -> "Zehner"
+      var lbl = el.querySelector('.row-label');
+      if (lbl) lbl.textContent = UI.doneLabel(row, cur.vals);
       markCurrent(null);
       fillRefs();
       if (cur.viz) cur.viz.update(cur.vals, i);
