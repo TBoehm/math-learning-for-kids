@@ -4,8 +4,8 @@
  * Einmaleins-Fehler, falsches Rechenzeichen beim Ausgleichen). Die Rechnung stammt aus einem echten
  * Rechenweg (Tasks.STRATEGIES, Stufe "Mit Hilfe"); Folgezeilen rechnen mit der falschen Zahl weiter.
  *   Zeile 1: Welche Zeile ist falsch? (die Zeilen sind die Auswahl-Knöpfe)
- *   Zeile 2: die falsche Zeile verbessern
- *   Zeile 3: das richtige Ergebnis (nur, wenn Zeile 2 nicht schon das Ergebnis ist)
+ *   Zeile 2: die falsche Zeile verbessern – dann ist die Aufgabe fertig.
+ * Oben steht keine eigene Rechenaufgabe, nur ein Titel (task.title).
  * Reines Modul ohne DOM – getestet in tests/fehler.test.js.
  */
 (function (root) {
@@ -182,9 +182,9 @@
     var rnd = (opt && opt.rnd) || Math.random;
     var ls = lines(base), shown = apply(ls, cand), L = cand.line;
     var truth = ls[L];
-    var fixId = truth[cand.item].id === 'res' ? 'res' : 'fix';
+    // das verbesserte Feld ist das Ergebnis der Aufgabe (id 'res', damit sie damit fertig ist)
     var fixTokens = truth.map(function (x, k) {
-      if (k === cand.item) return I(fixId, x.v);
+      if (k === cand.item) return I('res', x.v);
       return x.num ? N(x.v) : T(x.v);
     });
     var name = KIDS[Math.floor(rnd() * KIDS.length)];
@@ -197,13 +197,8 @@
     }, {
       label: 'Zeile ' + (L + 1) + ' verbessern', tokens: fixTokens, hint: fixHint(cand, truth, base.strategy)
     }];
-    if (fixId !== 'res') {
-      var res = [N(base.a), T(base.op), N(base.b), T('='), I('res', base.answer)];
-      if (base.rest) res.push(T('R'), N(base.rest));
-      rows.push({ label: 'Richtiges Ergebnis', tokens: res, hint: 'Rechne mit der verbesserten Zeile weiter bis zum Ergebnis.' });
-    }
     return {
-      op: base.op, strategy: 'fehler', a: base.a, b: base.b, answer: base.answer, rest: base.rest || 0,
+      op: base.op, strategy: 'fehler', a: base.a, b: base.b, answer: truth[cand.item].v, title: 'Wo steckt der Fehler?',
       // layout 'fehler' ohne eigene Darstellung: die Klasse layout-fehler an #rows gestaltet die Zeilen (css/formats.css)
       base: base.strategy, mistake: cand.type, shown: shown, layout: 'fehler', rows: rows,
       intro: name + ' hat gerechnet, aber ein Fehler hat sich eingeschlichen. Findest du ihn? 🔍'

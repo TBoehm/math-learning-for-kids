@@ -477,7 +477,9 @@ describe('Knobeln im Browser', () => {
       await setSettings(page, { op, strategy, level });
       await solveKnobel(page);
       await assert.doesNotReject(page.locator('#checkBtn', { hasText: 'Weiter' }).waitFor());
+      // Zahlenmauer und Fehler finden zeigen oben nur ihren Titel, keine Rechenaufgabe
       if (strategy === 'zahlenmauer') assert.equal(await page.locator('#equation').textContent(), 'Zahlenmauer');
+      else if (strategy === 'fehler') assert.equal(await page.locator('#equation').textContent(), 'Wo steckt der Fehler?');
       else assert.equal(await page.locator('#final').textContent(), String(await page.evaluate(() => window.RR.app.current.task.answer)));
     }
     assert.deepEqual(errors, []);

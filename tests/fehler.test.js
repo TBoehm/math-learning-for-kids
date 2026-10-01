@@ -108,14 +108,17 @@ describe('Aufgabe: Fehler finden und verbessern', () => {
     assert.equal(Check.checkRow(t.rows[1], { res: '75' }, vals).correct, false);
   });
 
-  test('Fehler weiter oben: Folgezeilen rechnen mit der falschen Zahl weiter, am Ende das richtige Ergebnis', () => {
+  test('Fehler weiter oben: nur die falsche Zeile wird verbessert – keine zweite Aufgabe dazu', () => {
     const base = schritt();
     const cand = Object.assign({}, find(FE.candidates(FE.lines(base), 'schrittweise'), 1, 'verzaehlt'), { w: 67 });
     const t = FE.build(base, cand, { rnd: seeded(2) });
     assert.deepEqual(fields(t.rows[0])[0].options, ['38 = 30 + 8', '47 + 30 = 67', '67 + 8 = 75']);
+    assert.equal(t.rows.length, 2);
     assert.equal(text(t.rows[1]), '47 + 30 = [77]');
-    assert.equal(text(t.rows[2]), '47 + 38 = [85]');
-    solve(t);
+    // oben steht keine Rechenaufgabe (47 + 38 = ?), nur ein Titel; fertig ist die Aufgabe mit der verbesserten Zeile
+    assert.equal(t.title, 'Wo steckt der Fehler?');
+    assert.equal(t.answer, 77);
+    assert.equal(Check.isSolved(t, solve(t)), true);
   });
 
   test('falsches Rechenzeichen: verbessert wird mit dem richtigen Zeichen', () => {
@@ -126,11 +129,12 @@ describe('Aufgabe: Fehler finden und verbessern', () => {
     solve(t);
   });
 
-  test('Geteilt mit Rest: Ergebnis-Zeile mit Rest', () => {
+  test('Geteilt mit Rest: auch hier nur die falsche Zeile', () => {
     const base = geteilt();
     const t = FE.build(base, find(FE.candidates(FE.lines(base), 'zerlegen'), 1, 'null'), { rnd: seeded(4) });
     assert.deepEqual(fields(t.rows[0])[0].options.slice(1), ['60 : 6 = 1', '27 : 6 = 4 R 3', '1 + 4 = 5 R 3']);
-    assert.equal(text(t.rows[2]), '87 : 6 = [14] R 3');
+    assert.equal(t.rows.length, 2);
+    assert.equal(text(t.rows[1]), '60 : 6 = [10]');
     solve(t);
   });
 });
@@ -159,8 +163,10 @@ describe('Zufällige Fehler-Aufgaben aus echten Rechenwegen', () => {
         if (t.mistake === 'einmaleins') assert.ok(shown[c.answer][0].v > 1 && shown[c.answer][2].v > 1, FE.text(shown[c.answer]));
         t.rows.forEach((r) => assert.doesNotMatch(r.hint + r.label, /undefined|NaN/));
         assert.doesNotMatch(t.rows[0].advice({ zeile: c.answer }), /undefined|NaN/);
+        assert.equal(t.rows.length, 2, 'nur auswählen und verbessern');
+        assert.equal(t.title, 'Wo steckt der Fehler?');
         const vals = solve(t);
-        assert.equal(vals.res, t.answer);
+        assert.equal(Check.isSolved(t, vals), true);
       }
       const want = { '+': ['uebertrag', 'verzaehlt', 'vorzeichen'], '−': ['uebertrag', 'verzaehlt', 'vorzeichen'], '·': ['null', 'einmaleins', 'einer'], ':': ['null', 'einmaleins'] }[op];
       for (const w of want) assert.ok(types.has(w), op + ': Fehlerart ' + w + ' kommt vor (' + [...types] + ')');
