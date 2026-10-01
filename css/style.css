@@ -20,6 +20,8 @@
 }
 
 * { box-sizing: border-box; }
+/* hidden gewinnt immer – sonst überstimmt z. B. display: block das Ausblenden */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;

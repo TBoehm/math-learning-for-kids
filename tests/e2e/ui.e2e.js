@@ -369,6 +369,19 @@ describe('Erweiterungs-Gerüst im Browser', () => {
     await ctx.close();
   });
 
+  test('Gemischt: kein Rechenweg-Menü (auch nicht das vom vorigen Weg), zurück bei Plus', async () => {
+    const { page, ctx, errors } = await openPage({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
+    await page.locator('.op-chip', { hasText: 'Plus' }).tap();
+    assert.equal(await page.isVisible('#stratSummary'), true);
+    await page.locator('.op-chip', { hasText: 'Gemischt' }).tap();
+    assert.equal(await page.isVisible('#stratSummary'), false, 'Menü-Knopf ausgeblendet');
+    assert.equal(await page.isVisible('#stratChips'), false);
+    await page.locator('.op-chip', { hasText: 'Plus' }).tap();
+    assert.equal(await page.isVisible('#stratSummary'), true);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   test('Rechenweg-Menü: zugeklappt, aufklappen, wählen klappt zu, Tippen daneben auch', async () => {
     const { page, ctx, errors } = await openPage();
     await page.evaluate(() => {
