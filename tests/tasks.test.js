@@ -85,3 +85,48 @@ assert(split[0].check(d, {}), 'Zerlegung mit kleinster Zahl der Reihe');
 assert(!split[0].check(d + 1, {}) || (d + 1) % d === 0, 'Nicht teilbare Zerlegung abgelehnt');
 assert(split[1].check(t.a - d, { p1: d }));
 });
+
+function hintsOf(t) { return t.rows.map(function (r) { return r.hint; }).join(' | '); }
+
+test('Minus schrittweise: kein "Erst bis X", wenn man schon bei X ist', function () {
+  for (var i = 0; i < 3000; i++) {
+    var t = Tasks.generate({ op: '−', strategy: 'schrittweise' });
+    var s1 = t.a - Math.floor(t.b / 10) * 10;
+    assert(hintsOf(t).indexOf('Erst bis ' + s1 + ',') < 0, Tasks.taskText(t) + ': ' + hintsOf(t));
+  }
+});
+
+test('Plus schrittweise: kein "Erst bis X", wenn X schon das Ergebnis ist', function () {
+  for (var i = 0; i < 3000; i++) {
+    var t = Tasks.generate({ op: '+', strategy: 'schrittweise' });
+    assert(hintsOf(t).indexOf('Erst bis ' + t.answer + ',') < 0, Tasks.taskText(t) + ': ' + hintsOf(t));
+  }
+});
+
+test('Hilfsaufgabe beachtet die Einstellung Zehnerübergang', function () {
+  for (var i = 0; i < 1500; i++) {
+    ['ohne', 'mit'].forEach(function (crossing) {
+      var p = Tasks.generate({ op: '+', strategy: 'hilfsaufgabe', crossing: crossing });
+      assert.strictEqual(p.a % 10 + p.b % 10 >= 10, crossing === 'mit', 'Plus ' + crossing + ': ' + Tasks.taskText(p));
+      var m = Tasks.generate({ op: '−', strategy: 'hilfsaufgabe', crossing: crossing });
+      assert.strictEqual(m.a % 10 < m.b % 10, crossing === 'mit', 'Minus ' + crossing + ': ' + Tasks.taskText(m));
+    });
+  }
+});
+
+test('Ergänzen: die Zusammen-Zeile hat immer mindestens zwei Sprünge', function () {
+  for (var i = 0; i < 3000; i++) {
+    var t = Tasks.generate({ op: '−', strategy: 'ergaenzen' });
+    var last = t.rows[t.rows.length - 1];
+    var refs = last.tokens.filter(function (x) { return x.t === 'ref'; }).length;
+    assert(refs === 0 || refs >= 2, Tasks.taskText(t) + ' hat eine Zusammen-Zeile mit ' + refs + ' Sprung');
+    assert(t.rows.some(function (r) { return r.tokens.some(function (x) { return x.id === 'res'; }); }));
+  }
+});
+
+test('Hinweise: "zusammen rechnen" statt "zählen", "dazugerechnet" statt "dazugetan"', function () {
+  for (var i = 0; i < 500; i++) {
+    var h = hintsOf(Tasks.generate({ op: 'mix', profi: i % 2 === 0 }));
+    assert(!/Zähle [^|.!]*zusammen|dazugetan/.test(h), h);
+  }
+});

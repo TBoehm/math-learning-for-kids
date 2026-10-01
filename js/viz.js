@@ -210,7 +210,7 @@
     function render(vals) {
       set('a', part(vals, 0));
       set('b', part(vals, 1));
-      set('s', vals.res !== undefined ? 'zusammen: ' + vals.res + (task.rest ? ' Rest ' + task.rest : '') : '');
+      set('s', vals.res !== undefined ? 'zusammen: ' + vals.res + (task.rest ? ' R ' + task.rest : '') : '');
     }
     render({});
     return { update: render };

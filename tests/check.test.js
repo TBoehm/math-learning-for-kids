@@ -174,3 +174,25 @@ describe('Rückmeldung bei Fehlern', () => {
     assert.equal(Check.solutionText(t.rows[0], r), String(D - d));
   });
 });
+
+describe('Abhängige Felder (Review-Befunde)', () => {
+  test('Profi-Division 51 : 3 mit "50 + 1": die 1 darf nicht als richtig gelten', () => {
+    let t;
+    do { t = Tasks.generate({ op: ':', profi: true }); } while (t.a < 20 || (Math.floor(t.a / 10) * 10) % t.b === 0);
+    const D = t.a, tensD = Math.floor(D / 10) * 10;
+    const r = Check.checkRow(t.rows[0], { p1: String(tensD), p2: String(D - tensD) }, {});
+    {
+      assert.equal(r.fields[0].status, 'wrong');
+      assert.equal(r.fields[1].status, 'pending', 'hängt von einem falschen Feld ab');
+      assert.equal(r.correct, false);
+    }
+  });
+
+  test('pending-Felder erscheinen im Lösungstext mit der Musterlösung', () => {
+    const t = Tasks.generate({ op: ':', profi: true });
+    const p1 = t.rows[0].tokens.find((x) => x.id === 'p1');
+    const p2 = t.rows[0].tokens.find((x) => x.id === 'p2');
+    const r = Check.checkRow(t.rows[0], { p1: String(p1.answer + 1), p2: String(t.a - p1.answer - 1) }, {});
+    assert.equal(Check.solutionText(t.rows[0], r), p1.answer + ' und ' + p2.answer);
+  });
+});

@@ -43,10 +43,11 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 | `js/progress.js` | Sterne, Serien, Parade, Freischaltungen |
 | `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |
 | `js/companion.js` | Begleiter als SVG |
+| `js/speech.js` | Text für „Vorlesen“ aufbereiten (84 : 6 → „84 geteilt durch 6“) |
 | `js/sound.js` | Klänge per Web-Audio (keine Sounddateien) |
 | `js/app.js` | Oberfläche und Ablauf |
 
-Die Prüf-Logik (`check.js`, `progress.js`) ist testgetrieben entwickelt und ohne DOM testbar.
+Die Prüf-Logik (`check.js`, `progress.js`, `speech.js`) ist testgetrieben entwickelt und ohne DOM testbar.
 `tests/tasks.test.js` erzeugt zehntausende Aufgaben und prüft, dass jede Zeile rechnerisch stimmt,
 alles im Zahlenraum bis 100 bleibt und falsche Antworten abgelehnt werden.
 

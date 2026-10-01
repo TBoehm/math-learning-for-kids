@@ -29,21 +29,25 @@
    * vals: bereits gesicherte Werte aus früheren Zeilen (wird nicht verändert)
    * -> { complete, correct, fields: [{id, status, value}], vals }
    *    status: 'correct' | 'wrong' | 'empty' | 'invalid'
+   *            | 'pending' (hängt von einem Feld ab, das noch nicht stimmt)
    *    vals:   bei richtiger Zeile inkl. der neuen Werte, sonst unverändert
    */
   function checkRow(row, raw, vals) {
     raw = raw || {};
     var tmp = Object.assign({}, vals);
     var fields = [];
-    var complete = true, allOk = true;
+    var complete = true, allOk = true, inRow = {};
     inputsOf(row).forEach(function (tok) {
       var v = parseNumber(raw[tok.id]);
+      var blocked = (tok.deps || []).some(function (d) { return d in inRow && inRow[d] !== 'correct'; });
       var status;
       if (v === null) { status = 'empty'; complete = false; }
       else if (Number.isNaN(v)) status = 'invalid';
+      else if (blocked) status = 'pending';
       else status = tok.check(v, tmp) ? 'correct' : 'wrong';
+      inRow[tok.id] = status;
       if (status !== 'correct') allOk = false;
-      if (status === 'correct' || status === 'wrong') tmp[tok.id] = v;
+      if (status === 'correct') tmp[tok.id] = v;
       fields.push({ id: tok.id, status: status, value: Number.isNaN(v) ? null : v });
     });
     var correct = complete && allOk;

@@ -63,9 +63,7 @@
   }
   function speak() {
     if (!('speechSynthesis' in window)) return;
-    var text = $('bubbleText').textContent
-      .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '')
-      .replace(/·/g, ' mal ').replace(/:/g, ' geteilt durch ').replace(/−/g, ' minus ');
+    var text = RR.Speech.toSpeech($('bubbleText').textContent);
     window.speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
     u.lang = 'de-DE'; u.rate = 0.95; u.pitch = 1.15;
@@ -118,6 +116,7 @@
     sbox.hidden = false;
     var list = [{ key: 'mix', name: 'Alle Wege' }].concat(Tasks.STRATEGIES[state.settings.op]);
     if (list.length === 2) list = list.slice(1);
+    if (!list.some(function (s) { return s.key === state.settings.strategy; })) state.settings.strategy = 'mix';
     list.forEach(function (s) {
       var b = document.createElement('button');
       var active = state.settings.strategy === s.key || (list.length === 1);
@@ -154,12 +153,13 @@
     activateRow(0);
   }
 
-  function tokenHtml(tok) {
+  function tokenHtml(tok, label, n) {
     if (tok.t === 'txt') return '<span class="tok-op">' + tok.v + '</span>';
     if (tok.t === 'num') return '<span class="tok-num">' + tok.v + '</span>';
     if (tok.t === 'ref') return '<span class="tok-num tok-ref" data-ref="' + tok.id + '">?</span>';
     return '<input class="cell" data-id="' + tok.id + '" type="text" maxlength="3" autocomplete="off" ' +
-      'autocorrect="off" spellcheck="false" enterkeyhint="done" pattern="[0-9]*" aria-label="Zahl eintragen">';
+      'autocorrect="off" spellcheck="false" enterkeyhint="done" pattern="[0-9]*" aria-label="' +
+      (label ? label + ': ' : '') + n + '. Zahl">';
   }
 
   function renderTask() {
@@ -175,7 +175,10 @@
       d.className = 'row future';
       d.dataset.i = i;
       d.innerHTML = '<span class="row-label">' + row.label + '</span><div class="eq">' +
-        row.tokens.map(tokenHtml).join('') + '</div>';
+        row.tokens.map(function (tok) {
+          var n = row.tokens.slice(0, row.tokens.indexOf(tok) + 1).filter(function (x) { return x.t === 'in'; }).length;
+          return tokenHtml(tok, row.label, n);
+        }).join('') + '</div>';
       rows.appendChild(d);
     });
     rows.querySelectorAll('.cell').forEach(setupInput);
@@ -271,6 +274,7 @@
       var inp = ins[k];
       inp.classList.remove('bad', 'shake', 'ok');
       if (f.status === 'correct') { inp.classList.add('ok'); inp.readOnly = true; }
+      else if (f.status === 'pending') { inp.dataset.fresh = '1'; }
       else { void inp.offsetWidth; inp.classList.add('bad', 'shake'); inp.dataset.fresh = '1'; }
     });
 
@@ -299,7 +303,7 @@
     if (level === 'encourage') say(pick(TXT.oops));
     else if (level === 'hint') say('Tipp: ' + row.hint);
     else say(row.hint + ' Die Lösung ist ' + Check.solutionText(row, r) + '.');
-    var firstBad = ins.filter(function (inp, k) { return r.fields[k].status !== 'correct'; })[0];
+    var firstBad = ins.filter(function (inp, k) { return r.fields[k].status !== 'correct' && r.fields[k].status !== 'pending'; })[0];
     if (firstBad) focusInput(firstBad);
   }
 

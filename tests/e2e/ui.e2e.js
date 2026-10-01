@@ -229,3 +229,39 @@ describe('Responsives Layout', () => {
     });
   }
 });
+
+describe('Review-Befunde in der Oberfläche', () => {
+  test('Profi-Division: falsche Zerlegung sperrt das zweite Feld nicht', async () => {
+    const { page, ctx } = await openPage();
+    // Aufgabe suchen, bei der "Zehner + Rest" nicht durch den Teiler teilbar ist
+    await page.evaluate(() => {
+      Object.assign(window.RR.app.state.settings, { op: ':', profi: true, rest: false });
+      do { window.RR.app.newTask(); } while ((Math.floor(window.RR.app.current.task.a / 10) * 10) % window.RR.app.current.task.b === 0);
+    });
+    await waitForInputRow(page);
+    const { D } = await page.evaluate(() => ({ D: window.RR.app.current.task.a }));
+    const cells = page.locator('.row.active .cell');
+    const t = Math.floor(D / 10) * 10;
+    await cells.nth(0).fill(String(t));
+    await cells.nth(1).fill(String(D - t));
+    await cells.nth(1).press('Enter');
+    assert.equal(await cells.nth(0).evaluate((e) => e.classList.contains('bad')), true);
+    assert.equal(await cells.nth(1).evaluate((e) => e.readOnly), false, 'zweites Feld bleibt änderbar');
+    // jetzt richtig lösen
+    const answers = await activeAnswers(page);
+    await cells.nth(0).fill(String(answers[0]));
+    await cells.nth(1).fill(String(answers[1]));
+    await cells.nth(1).press('Enter');
+    await page.waitForFunction(() => window.RR.app.current.row >= 1);
+    await ctx.close();
+  });
+
+  test('Eingabefelder haben sprechende Namen', async () => {
+    const { page, ctx } = await openPage();
+    await setSettings(page, { op: '+', strategy: 'stellenweise', profi: true });
+    await waitForInputRow(page);
+    const labels = await page.locator('.row.active .cell').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+    assert.deepEqual(labels, ['Zehner: 1. Zahl', 'Zehner: 2. Zahl', 'Zehner: 3. Zahl']);
+    await ctx.close();
+  });
+});

@@ -29,8 +29,9 @@
   }
   // Eingabefeld mit eigener Prüfung (z. B. frei wählbare Zerlegung).
   // expected(werte) liefert die passende Lösung zu den schon eingetragenen Werten.
-  function IC(id, answer, check, expected) {
-    return { t: 'in', id: id, answer: answer, check: check, expected: expected };
+  // deps: Felder derselben Zeile, die vorher stimmen müssen.
+  function IC(id, answer, check, expected, deps) {
+    return { t: 'in', id: id, answer: answer, check: check, expected: expected, deps: deps };
   }
   // Zahl, die im Profi-Modus selbst eingetragen wird
   function NP(profi, id, v) { return profi ? I(id, v) : N(v); }
@@ -87,7 +88,7 @@
         }),
         row([R('z'), T('+'), R('e'), T('='), I('res', a + b)], {
           label: 'Zusammen',
-          hint: 'Zähle beide Ergebnisse zusammen: ' + (at + bt) + ' + ' + (ao + bo) + '.'
+          hint: 'Rechne beide Ergebnisse zusammen: ' + (at + bt) + ' + ' + (ao + bo) + '.'
         })
       ]
     };
@@ -102,7 +103,7 @@
       rows: [
         row([N(b), T('='), NP(p, 'bt', bt), T('+'), NP(p, 'bo', bo)], {
           label: 'Zerlegen',
-          hint: 'Zerlege ' + b + ' in Zehner und Einer.'
+          hint: 'Zerlege ' + b + ' in Zehner und Einer – erst die Zehner, dann die Einer.'
         }),
         row([N(a), T('+'), RP(p, 'bt', bt), T('='), I('s1', a + bt)], {
           label: '1. Schritt', jump: { from: a, to: a + bt, text: '+' + bt },
@@ -111,14 +112,14 @@
         row([R('s1'), T('+'), RP(p, 'bo', bo), T('='), I('res', a + b)], {
           label: '2. Schritt', jump: { from: a + bt, to: a + b, text: '+' + bo },
           hint: 'Jetzt die Einer dazu: ' + (a + bt) + ' + ' + bo + '.' +
-                (ones(a) + bo >= 10 ? ' Tipp: Erst bis ' + (tens(a + bt) + 10) + ', dann weiter.' : '')
+                (ones(a) + bo > 10 ? ' Tipp: Erst bis ' + (tens(a + bt) + 10) + ', dann weiter.' : '')
         })
       ]
     };
   }
 
   function addHilfsaufgabe(opt) {
-    var n = addNumbers({ crossing: 'egal' }, function (a, b) {
+    var n = addNumbers(opt, function (a, b) {
       return ones(b) >= 8 && a + tens(b) + 10 <= MAX;
     });
     var a = n.a, b = n.b, p = opt.profi;
@@ -137,7 +138,7 @@
         }),
         row([R('s1'), T('−'), RP(p, 'd', d), T('='), I('res', a + b)], {
           label: 'Ausgleichen', jump: { from: a + B, to: a + b, text: '−' + d, back: true },
-          hint: 'Du hast ' + d + ' zu viel dazugetan. Nimm ' + d + ' wieder weg!'
+          hint: 'Du hast ' + d + ' zu viel dazugerechnet. Nimm ' + d + ' wieder weg!'
         })
       ]
     };
@@ -163,7 +164,7 @@
       line: { start: a },
       rows: [
         row([N(b), T('='), NP(p, 'bt', bt), T('+'), NP(p, 'bo', bo)], {
-          label: 'Zerlegen', hint: 'Zerlege ' + b + ' in Zehner und Einer.'
+          label: 'Zerlegen', hint: 'Zerlege ' + b + ' in Zehner und Einer – erst die Zehner, dann die Einer.'
         }),
         row([N(a), T('−'), RP(p, 'bt', bt), T('='), I('s1', a - bt)], {
           label: '1. Schritt', jump: { from: a, to: a - bt, text: '−' + bt },
@@ -172,7 +173,7 @@
         row([R('s1'), T('−'), RP(p, 'bo', bo), T('='), I('res', a - b)], {
           label: '2. Schritt', jump: { from: a - bt, to: a - b, text: '−' + bo },
           hint: 'Jetzt die Einer weg: ' + (a - bt) + ' − ' + bo + '.' +
-                (ones(a) < bo ? ' Tipp: Erst bis ' + tens(a - bt) + ', dann noch ' + (bo - ones(a)) + ' weiter.' : '')
+                (ones(a) !== 0 && ones(a) < bo ? ' Tipp: Erst bis ' + tens(a - bt) + ', dann noch ' + (bo - ones(a)) + ' weiter.' : '')
         })
       ]
     };
@@ -189,6 +190,13 @@
     if (tens(a) > cur) { cur = tens(a); stops.push(cur); }
     if (a > cur) { stops.push(a); }
     var rows = [], ids = [];
+    if (stops.length === 2) {
+      rows.push(row([N(b), T('+'), I('res', a - b), T('='), N(a)], {
+        label: 'Sprung', jump: { from: b, to: a, text: '+' + (a - b) },
+        hint: 'Wie viel fehlt von ' + b + ' bis ' + a + '? Zähle die Einer weiter.'
+      }));
+      return { op: '−', strategy: 'ergaenzen', a: a, b: b, answer: a - b, line: { start: b }, rows: rows };
+    }
     for (var i = 1; i < stops.length; i++) {
       var from = stops[i - 1], to = stops[i], id = 'j' + i;
       ids.push(id);
@@ -202,7 +210,7 @@
     var sumTokens = [];
     ids.forEach(function (id, k) { if (k) sumTokens.push(T('+')); sumTokens.push(R(id)); });
     sumTokens.push(T('='), I('res', a - b));
-    rows.push(row(sumTokens, { label: 'Zusammen', hint: 'Zähle alle Sprünge zusammen.' }));
+    rows.push(row(sumTokens, { label: 'Zusammen', hint: 'Rechne alle Sprünge zusammen.' }));
     return {
       op: '−', strategy: 'ergaenzen', a: a, b: b, answer: a - b,
       line: { start: b }, rows: rows
@@ -210,7 +218,7 @@
   }
 
   function subHilfsaufgabe(opt) {
-    var n = subNumbers({ crossing: 'egal' }, function (a, b) {
+    var n = subNumbers(opt, function (a, b) {
       return ones(b) >= 8 && tens(b) + 10 < a;
     });
     var a = n.a, b = n.b, p = opt.profi;
@@ -248,7 +256,7 @@
       viz: { type: 'malkreuz', a: a, parts: [bt, bo], cells: ['p1', 'p2'], partIds: p ? ['bt', 'bo'] : null },
       rows: [
         row([N(b), T('='), NP(p, 'bt', bt), T('+'), NP(p, 'bo', bo)], {
-          label: 'Zerlegen', hint: 'Zerlege ' + b + ' in Zehner und Einer.'
+          label: 'Zerlegen', hint: 'Zerlege ' + b + ' in Zehner und Einer – erst die Zehner, dann die Einer.'
         }),
         row([N(a), T('·'), RP(p, 'bt', bt), T('='), I('p1', a * bt)], {
           label: 'Zehner mal', hint: 'Denk an ' + a + ' · ' + bt / 10 + ' = ' + a * bt / 10 + '. Dann ist ' + a + ' · ' + bt + ' zehnmal so viel.'
@@ -257,7 +265,7 @@
           label: 'Einer mal', hint: 'Das ist eine Einmaleins-Aufgabe: ' + a + ' · ' + bo + '.'
         }),
         row([R('p1'), T('+'), R('p2'), T('='), I('res', a * b)], {
-          label: 'Zusammen', hint: 'Zähle beide Teilergebnisse zusammen: ' + a * bt + ' + ' + a * bo + '.'
+          label: 'Zusammen', hint: 'Rechne beide Teilergebnisse zusammen: ' + a * bt + ' + ' + a * bo + '.'
         })
       ]
     };
@@ -308,7 +316,7 @@
           label: 'Rest', hint: rest + ' · ' + b + '.'
         }),
         row([R('p1'), T('+'), R('p2'), T('='), I('res', a * b)], {
-          label: 'Zusammen', hint: 'Zähle zusammen: ' + 5 * b + ' + ' + rest * b + '.'
+          label: 'Zusammen', hint: 'Rechne zusammen: ' + 5 * b + ' + ' + rest * b + '.'
         })
       ]
     };
@@ -329,9 +337,9 @@
     var splitRow;
     if (p) {
       // Erste Teilzahl frei wählbar: muss durch d teilbar und kleiner als D sein.
-      var p1In = IC('p1', p1, function (v) { return v > 0 && v < D && v % d === 0 && v >= d; });
+      var p1In = IC('p1', p1, function (v) { return v > 0 && v < D && v % d === 0; });
       var p2In = IC('p2', p2, function (v, vals) { return v === D - vals.p1; },
-        function (vals) { return D - vals.p1; });
+        function (vals) { return D - vals.p1; }, ['p1']);
       splitRow = row([N(D), T('='), p1In, T('+'), p2In], {
         label: 'Zerlegen',
         hint: 'Suche eine leichte Zahl aus der ' + d + 'er-Reihe, z. B. ' + p1 + ' (' + tens(q) + ' · ' + d + '). Dann: Was bleibt übrig?'
@@ -366,7 +374,7 @@
           label: '2. Teil', hint: 'Wie oft passt ' + d + ' in ' + (p ? 'die zweite Zahl' : p2) + '?' +
             (withRest ? ' Was übrig bleibt, ist der Rest.' : '')
         }),
-        row(row3, { label: 'Zusammen', hint: 'Zähle die beiden Ergebnisse zusammen.' })
+        row(row3, { label: 'Zusammen', hint: 'Rechne die beiden Ergebnisse zusammen.' })
       ]
     };
   }
@@ -406,7 +414,11 @@
     if (opt.op !== 'mix' && opt.strategy && opt.strategy !== 'mix') {
       s = list.filter(function (x) { return x.key === opt.strategy; })[0];
     }
-    if (!s) s = pick(list);
+    if (!s) {
+      var pool = opt.crossing === 'ohne'
+        ? list.filter(function (x) { return x.key !== 'hilfsaufgabe'; }) : list;
+      s = pick(pool.length ? pool : list);
+    }
     var task = s.gen({ crossing: opt.crossing || 'egal', profi: !!opt.profi, rest: !!opt.rest });
     task.strategyName = s.name;
     task.strategyDesc = s.desc;
