@@ -85,7 +85,8 @@
     var level = Check.hintLevel(rowMistakes);
     if (level === 'encourage') return (pickFn || pick)((texts || TEXTS).oops);
     if (level === 'hint') return 'Tipp: ' + row.hint;
-    return row.hint + ' Die Lösung ist ' + Check.solutionText(row, result) + '.';
+    var sol = Check.solutionText(row, result);
+    return sol ? row.hint + ' Die Lösung ist ' + sol + '.' : row.hint;
   }
 
   /** Text nach einer richtigen Zeile: ein Rat geht vor, sonst Lob und der nächste Schritt. */
@@ -110,9 +111,9 @@
     return task.strategyName + ' · ' + lvl.name;
   }
 
-  /** Einleitung des Begleiters; greetName: Name für die Anrede oder ''. */
+  /** Einleitung des Begleiters; greetName: Name für die Anrede oder ''. Eigene Aufgabenarten bringen task.intro mit. */
   function introText(task, greetName) {
-    var intro = {
+    var intro = task.intro || {
       stellenweise: 'rechne stellenweise: Zehner und Einer getrennt.',
       schrittweise: task.op === '+' ? 'rechne schrittweise: erst die Zehner dazu, dann die Einer.'
         : 'rechne schrittweise: erst die Zehner weg, dann die Einer.',

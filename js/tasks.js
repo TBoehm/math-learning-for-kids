@@ -721,8 +721,8 @@
     return task;
   }
 
-  /** Text der Aufgabe, z. B. "47 + 38" */
-  function taskText(task) { return task.a + ' ' + task.op + ' ' + task.b; }
+  /** Text der Aufgabe, z. B. "47 + 38"; mit task.terms auch mehr Zahlen: "235 + 123 + 418" */
+  function taskText(task) { return (task.terms || [task.a, task.b]).join(' ' + task.op + ' '); }
 
   var api = { generate: generate, taskText: taskText, isEasySplit: isEasySplit, LEVELS: LEVELS, GROUPS: GROUPS, register: register, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

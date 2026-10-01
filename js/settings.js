@@ -64,10 +64,15 @@
     try { storage.setItem(STORE, JSON.stringify(state)); return true; } catch (e) { return false; }
   }
 
-  /** Rechenwege zum Auswählen; "Alle Wege" nur, wenn es mehrere gibt. */
+  /** Rechenwege zum Auswählen, nach Gruppen geordnet; "Alle Wege" nur, wenn es mehrere gibt. */
   function strategyChoices(op) {
     if (op === 'mix') return [];
-    var list = [{ key: 'mix', name: 'Alle Wege', group: 'weg' }].concat(Tasks.STRATEGIES[op]);
+    var order = Tasks.GROUPS.map(function (g) { return g.key; });
+    var rank = function (s) { return order.indexOf(s.group); };
+    var sorted = Tasks.STRATEGIES[op].map(function (s, i) { return { s: s, i: i }; })
+      .sort(function (x, y) { return rank(x.s) - rank(y.s) || x.i - y.i; })
+      .map(function (x) { return x.s; });
+    var list = [{ key: 'mix', name: 'Alle Wege', group: 'weg' }].concat(sorted);
     return list.length === 2 ? list.slice(1) : list;
   }
   /** Gibt es den Rechenweg bei dieser Rechenart nicht, gilt "mix". */

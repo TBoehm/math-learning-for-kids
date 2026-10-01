@@ -1,0 +1,75 @@
+/* Schriftliches Rechnen im Rechenraster (js/layouts/column.js) – Karopapier wie im Heft. */
+
+.layout-column { --sq: clamp(2.4rem, 11.5vw, 3rem); --karo: #c9dcf2; --karo-strong: #a9c4e6; }
+
+/* Karopapier: Kästchen mit halbem Rand rundherum */
+.layout-column .cpaper {
+  justify-self: center; max-width: 100%; padding: calc(var(--sq) / 2);
+  background-color: #fff;
+  background-image: linear-gradient(to right, var(--karo) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--karo) 1px, transparent 1px);
+  background-size: var(--sq) var(--sq);
+  background-position: calc(var(--sq) / 2) calc(var(--sq) / 2);
+  border-radius: 14px; box-shadow: inset 0 0 0 2px #e4edf9, 0 3px 10px rgba(90, 50, 140, .08);
+}
+body.has-numpad .layout-column .cpaper { scroll-margin-bottom: 190px; }
+.layout-column .cgrid { display: grid; position: relative; font-weight: 600; }
+
+/* Spalten-Schritte liegen mit ihren Feldern direkt im Raster */
+.layout-column .row.col-step { display: contents; }
+
+.cgrid .k-head, .cgrid .k-num, .cgrid .k-sign, .cgrid .k-slot {
+  display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; min-width: 0;
+}
+.cgrid .k-head { font-size: calc(var(--sq) * .42); color: var(--ink-soft); font-weight: 700; }
+.cgrid .k-num { font-size: calc(var(--sq) * .66); color: var(--ink); }
+.cgrid .k-sign { font-size: calc(var(--sq) * .66); color: var(--purple); font-weight: 700; }
+.cgrid .k-rule { align-self: start; height: 0; border-top: 3px solid var(--ink); margin-top: -1.5px; border-radius: 2px; z-index: 1; }
+
+/* Leuchtstreifen der aktiven Spalte */
+.cgrid .k-band { z-index: 0; border-radius: 10px; margin: 0 1px; transition: background .3s, box-shadow .3s; }
+.cgrid .row.active > .k-band { background: rgba(255, 214, 92, .32); box-shadow: inset 0 0 0 3px var(--sun); }
+.cgrid .row.active > .k-head { color: var(--pink); }
+
+/* Felder im Raster */
+.layout-column .cgrid .cell {
+  width: calc(var(--sq) - 6px); height: calc(var(--sq) - 6px); font-size: calc(var(--sq) * .6);
+  border-width: 2px; border-radius: 9px; line-height: 1;
+}
+/* kleine Felder: Übertrag und umgewechselte Zahlen */
+.cgrid .k-carry, .cgrid .k-n1, .cgrid .k-n2 { align-items: flex-end; padding-bottom: 2px; }
+.layout-column .cgrid .k-carry .cell, .layout-column .cgrid .k-n1 .cell, .layout-column .cgrid .k-n2 .cell {
+  width: calc(var(--sq) - 10px); height: calc(var(--sq) * .64); font-size: calc(var(--sq) * .42); border-radius: 7px;
+}
+.cgrid .k-fixnum { font-size: calc(var(--sq) * .42); color: var(--pink); font-weight: 700; line-height: 1; padding-bottom: 3px; }
+.cgrid .k-carry .k-fixnum, .cgrid .k-carry .cell { color: var(--pink); }
+
+/* spätere Spalten: sichtbar, aber blass und noch nicht antippbar */
+.layout-column .row.future > .k-slot { opacity: .38; pointer-events: none; }
+.layout-column .row.future > .k-slot.fix { visibility: hidden; }
+
+/* fertige Spalten sehen aus wie im Heft geschrieben */
+.layout-column .cgrid .row.done .cell.ok { background: transparent; border-color: transparent; color: #137a4d; }
+.layout-column .cgrid .row.done .k-carry .cell.ok, .layout-column .cgrid .row.done .k-n1 .cell.ok,
+.layout-column .cgrid .row.done .k-n2 .cell.ok { color: var(--pink); }
+/* leer gelassen und richtig (kein Übertrag, nichts umgewechselt) */
+.layout-column .cgrid .cell.ok:placeholder-shown { border-style: dashed; border-color: #bfeed6; background: transparent; }
+.layout-column .cgrid .row.done .cell.ok:placeholder-shown { visibility: hidden; }
+
+/* Umwechseln: alte Ziffer wird durchgestrichen, sobald darüber eine neue steht */
+.cgrid:has(.k-n1.k-c0 .cell:not(:placeholder-shown), .k-n2.k-c0 .cell:not(:placeholder-shown),
+  .row:not(.future) > .k-n1.k-c0.fix, .row:not(.future) > .k-n2.k-c0.fix) .k-top.k-c0::after,
+.cgrid:has(.k-n1.k-c1 .cell:not(:placeholder-shown), .k-n2.k-c1 .cell:not(:placeholder-shown),
+  .row:not(.future) > .k-n1.k-c1.fix, .row:not(.future) > .k-n2.k-c1.fix) .k-top.k-c1::after,
+.cgrid:has(.k-n1.k-c2 .cell:not(:placeholder-shown), .k-n2.k-c2 .cell:not(:placeholder-shown),
+  .row:not(.future) > .k-n1.k-c2.fix, .row:not(.future) > .k-n2.k-c2.fix) .k-top.k-c2::after,
+.cgrid:has(.k-n2.k-c1 .cell:not(:placeholder-shown), .row:not(.future) > .k-n2.k-c1.fix)
+  .k-n1.k-c1:is(.fix, :has(.cell:not(:placeholder-shown)))::after {
+  content: ''; position: absolute; left: 22%; right: 22%; top: 50%; border-top: 3px solid var(--orange);
+  transform: rotate(-35deg); border-radius: 2px; pointer-events: none;
+}
+.cgrid .k-n1::after { top: 62%; }
+
+@media (min-width: 700px) {
+  .layout-column { --sq: 3.2rem; }
+}

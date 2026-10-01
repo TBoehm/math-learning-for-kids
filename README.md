@@ -13,6 +13,13 @@ gerechnet wird im **halbschriftlichen Verfahren**, Schritt für Schritt, mit Ein
 | **−** Minus | Schrittweise · Ergänzen (37 → 40 → 80 → 82) · Hilfsaufgabe (82 − 39 → 82 − 40 + 1) | Rechenstrich |
 | **·** Mal | Zerlegen (4 · 23 = 4 · 20 + 4 · 3) · Kernaufgaben (7 · 8 = 5 · 8 + 2 · 8, 9 · 6 = 10 · 6 − 1 · 6) | Malkreuz, Punktefeld |
 | **:** Geteilt | Zerlegen (84 : 6 = 60 : 6 + 24 : 6), optional mit Rest | Zerlegungsbaum |
+| **Schriftlich** | Addieren (auch mit drei Zahlen, Übertrag bis 1000) · Subtrahieren durch Abziehen mit Entbündeln (503 − 278: aus 5 wird 4, aus 0 wird 9, aus 3 wird 13) · Subtrahieren durch Ergänzen mit Übertrag | Rechenraster auf Karopapier |
+
+**Schriftlich rechnen:** erst ein Überschlag (Ü: 440 + 250 = 690), dann Spalte für Spalte von rechts nach links –
+Einer, Zehner, Hunderter. Die ganze Rechnung steht im Raster (H | Z | E), die aktive Spalte leuchtet.
+*Mit Hilfe* stehen Überträge und umgewechselte Zahlen schon da, bei *Zerlegung selbst* gibt es Felder nur dort,
+wo etwas hingehört, bei *Alles selbst* überall – das Kind entscheidet selbst, wo es überträgt oder umwechselt
+(leer lassen heißt „nichts“). Im Zahlenraum bis 100 wird zweistellig gerechnet.
 
 Jede Aufgabe wird zufällig neu erzeugt. Das Kind löst sie Zeile für Zeile; jede Zeile wird sofort geprüft.
 
@@ -54,6 +61,8 @@ npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 | `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |
 | `js/themes.js` | Welten: Texte, Begleiter, Effekte und Klänge je Welt, Weltwechsel |
 | `js/vehicles.js` | Fahrzeug-Begleiter der Werkstatt als SVG (Bagger, Rennauto, Feuerwehr, Kipplaster, Monstertruck, Helden-Auto) |
+| `js/formats/schriftlich.js` | Schriftlich addieren und subtrahieren: Rechnung Stelle für Stelle, Zeilen, Tipps (ohne DOM) |
+| `js/layouts/column.js`, `css/column.css` | Rechenraster (Karopapier) für die schriftlichen Verfahren |
 | `js/companion.js` | Begleiter als SVG |
 | `js/sound.js` | Klänge per Web-Audio (keine Sounddateien) |
 | `js/app.js` | Oberfläche und Ablauf |
