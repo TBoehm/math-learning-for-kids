@@ -22,7 +22,7 @@ const saved = (obj) => memoryStorage({ [Settings.STORE]: JSON.stringify(obj) });
 describe('Standardwerte', () => {
   test('neue Kinder starten mit "Alles selbst", Plus und allen Wegen', () => {
     const s = Settings.defaults();
-    assert.deepEqual(s.settings, { op: '+', strategy: 'mix', crossing: 'egal', level: 'selbst', rest: false, sound: true, numpad: 'auto' });
+    assert.deepEqual(s.settings, { op: '+', strategy: 'mix', crossing: 'egal', level: 'selbst', rest: false, sound: true, numpad: 'auto', range: 1000 });
     assert.deepEqual(s.progress, { stars: 0, streak: 0, bestStreak: 0, solved: 0 });
     assert.equal(s.companion, 'luna');
     assert.equal(s.name, '');

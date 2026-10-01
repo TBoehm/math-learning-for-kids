@@ -5,17 +5,18 @@
 (function (root) {
   'use strict';
 
-  /** '' -> null, gültige Zahl (max. 3 Ziffern) -> Zahl, alles andere -> NaN */
+  /** '' -> null, gültige Zahl (max. 4 Ziffern, bis 1000 reicht das) -> Zahl, alles andere -> NaN */
   function parseNumber(raw) {
     if (raw === undefined || raw === null) return null;
     var s = String(raw).trim();
     if (s === '') return null;
-    if (!/^[0-9]{1,3}$/.test(s)) return NaN;
+    if (!/^[0-9]{1,4}$/.test(s)) return NaN;
     return parseInt(s, 10);
   }
 
   function inputsOf(row) {
-    return row.tokens.filter(function (t) { return t.t === 'in'; });
+    // Eingabefelder und Auswahlfelder (Wert = Nummer der gewählten Antwort)
+    return row.tokens.filter(function (t) { return t.t === 'in' || t.t === 'choice'; });
   }
 
   /** Erwarteter Wert eines Feldes, abhängig von bereits richtigen Werten. */

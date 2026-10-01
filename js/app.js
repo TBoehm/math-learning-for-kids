@@ -76,7 +76,16 @@
     sbox.hidden = false;
     var list = Settings.strategyChoices(state.settings.op);
     state.settings.strategy = Settings.validStrategy(state.settings.op, state.settings.strategy);
+    var groups = list.map(function (s) { return s.group; }).filter(function (g, i, a) { return a.indexOf(g) === i; });
+    var lastGroup = null;
     list.forEach(function (s) {
+      if (groups.length > 1 && s.group !== lastGroup) {
+        var h = document.createElement('span');
+        h.className = 'strat-group';
+        h.textContent = Tasks.GROUPS.filter(function (g) { return g.key === s.group; })[0].name;
+        sbox.appendChild(h);
+      }
+      lastGroup = s.group;
       var b = document.createElement('button');
       var active = state.settings.strategy === s.key || (list.length === 1);
       b.className = 'strat-chip' + (active ? ' active' : '');
@@ -95,7 +104,7 @@
   // ---------- Aufgabe aufbauen ----------
   function newTask() {
     var s = state.settings;
-    var task = Tasks.generate({ op: s.op, strategy: s.strategy, crossing: s.crossing, level: s.level, rest: s.rest });
+    var task = Tasks.generate({ op: s.op, strategy: s.strategy, crossing: s.crossing, level: s.level, rest: s.rest, max: Number(s.range) });
     cur = { task: task, row: -1, vals: {}, rowMistakes: 0, mistakes: 0, hintsUsed: 0, done: false, id: ++taskSeq };
     renderTask();
     say(UI.introText(task, state.name && Math.random() < 0.3 ? state.name : ''));
@@ -106,7 +115,15 @@
     if (tok.t === 'txt') return '<span class="tok-op">' + tok.v + '</span>';
     if (tok.t === 'num') return '<span class="tok-num">' + tok.v + '</span>';
     if (tok.t === 'ref') return '<span class="tok-num tok-ref" data-ref="' + tok.id + '">?</span>';
-    return '<input class="cell" data-id="' + tok.id + '" type="text" maxlength="3" autocomplete="off" ' +
+    if (tok.t === 'choice') {
+      // Auswahl: Knöpfe + verstecktes Feld mit der Nummer der gewählten Antwort
+      return '<span class="choice" role="group" aria-label="' + ariaLabel + '" data-for="' + tok.id + '">' +
+        tok.options.map(function (o, k) {
+          return '<button type="button" class="choice-btn" data-k="' + k + '">' + o + '</button>';
+        }).join('') +
+        '<input class="cell choice-input" data-id="' + tok.id + '" type="hidden" value=""></span>';
+    }
+    return '<input class="cell" data-id="' + tok.id + '" type="text" maxlength="4" autocomplete="off" ' +
       'autocorrect="off" spellcheck="false" enterkeyhint="done" pattern="[0-9]*" aria-label="' + ariaLabel + '">';
   }
 
@@ -118,23 +135,47 @@
     $('equation').innerHTML = '<span>' + Tasks.taskText(t) + ' = </span><span class="final" id="final">?</span>' + rest;
     var rows = $('rows');
     rows.innerHTML = '';
-    t.rows.forEach(function (row, i) {
-      var d = document.createElement('div');
-      d.className = 'row future';
-      d.dataset.i = i;
-      var labels = UI.cellLabels(row), n = 0;
-      d.innerHTML = '<span class="row-label">' + row.label + '</span><div class="eq">' +
-        row.tokens.map(function (tok) {
-          return tokenHtml(tok, tok.t === 'in' ? labels[n++] : '');
-        }).join('') + '</div>';
-      rows.appendChild(d);
-    });
-    rows.querySelectorAll('.cell').forEach(setupInput);
+    rows.className = 'rows' + (t.layout ? ' layout-' + t.layout : '');
+    var layout = t.layout && RR.Layouts && RR.Layouts[t.layout];
+    // Eine Darstellung muss je Zeile ein .row[data-i] mit den Feldern (.cell) erzeugen
+    if (layout) layout.render(t, rows, { tokenHtml: tokenHtml, cellLabels: UI.cellLabels });
+    else t.rows.forEach(function (row, i) { rows.appendChild(rowElement(row, i)); });
+    rows.querySelectorAll('.row').forEach(wireRow);
     applyInputMode();
     cur.viz = Viz.create($('viz'), t, state.companion);
     $('checkBtn').textContent = 'Prüfen ✔';
     $('checkBtn').classList.remove('next');
     $('taskCard').classList.remove('solved');
+  }
+
+  function rowElement(row, i) {
+    var d = document.createElement('div');
+    d.className = 'row future';
+    d.dataset.i = i;
+    var labels = UI.cellLabels(row), n = 0;
+    d.innerHTML = '<span class="row-label">' + row.label + '</span><div class="eq">' +
+      row.tokens.map(function (tok) {
+        return tokenHtml(tok, tok.t === 'in' || tok.t === 'choice' ? labels[n++] : '');
+      }).join('') + '</div>';
+    return d;
+  }
+  function wireRow(d) {
+    d.querySelectorAll('.cell:not(.choice-input)').forEach(setupInput);
+    d.querySelectorAll('.choice').forEach(function (group) {
+      var inp = group.querySelector('.choice-input');
+      group.querySelectorAll('.choice-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (inp.readOnly || !d.classList.contains('active')) return;
+          group.querySelectorAll('.choice-btn').forEach(function (b) { b.classList.remove('picked'); });
+          btn.classList.add('picked');
+          inp.value = btn.dataset.k;
+          Sound.tap();
+          // Gibt es in der Zeile sonst nichts mehr einzutragen, gleich prüfen
+          var open = Array.prototype.some.call(d.querySelectorAll('.cell:not(.choice-input)'), function (c) { return !c.readOnly && !c.value; });
+          if (!open) check();
+        });
+      });
+    });
   }
 
   function rowEl(i) { return $('rows').querySelector('.row[data-i="' + i + '"]'); }
@@ -171,6 +212,8 @@
   }
 
   function focusInput(inp) {
+    if (!inp) return;
+    if (inp.classList.contains('choice-input')) { markCurrent(null); return; }
     lastInput = inp;
     // Auf Touch-Geräten mit Zahlenfeld nicht fokussieren (sonst springt evtl. die Tastatur auf)
     if (numpadVisible() && coarse.matches) { markCurrent(inp); return; }
@@ -229,6 +272,12 @@
       if (fx.cls) inp.classList.add(fx.cls);
       if (fx.locked) inp.readOnly = true;
       if (fx.fresh) inp.dataset.fresh = '1';
+      if (inp.classList.contains('choice-input')) {
+        var g = inp.parentNode;
+        g.classList.remove('bad', 'shake', 'ok');
+        if (fx.cls) g.classList.add(fx.cls);
+        if (fx.shake) { void g.offsetWidth; g.classList.add('shake'); }
+      }
     });
 
     if (out.kind === 'correct') {
@@ -239,7 +288,17 @@
       markCurrent(null);
       fillRefs();
       if (cur.viz) cur.viz.update(cur.vals, i);
-      if (Check.isSolved(cur.task, cur.vals)) { finish(); return; }
+      var step = UI.afterCorrect(cur.task, cur.vals, i);
+      if (step === 'finish' || step === 'stuck') { finish(); return; }
+      if (step === 'append') {
+        // das Kind verlängert die Rechnung selbst: nächste Zeile erzeugen
+        var nr = cur.task.nextRow(cur.vals);
+        cur.task.rows.push(nr);
+        var nd = rowElement(nr, i + 1);
+        $('rows').appendChild(nd);
+        wireRow(nd);
+        applyInputMode();
+      }
       Sound.step();
       react('nod', 700);
       say(UI.rowDoneText(row, cur.task.rows[i + 1], cur.vals));
@@ -394,7 +453,8 @@
   }
   function targetInput() {
     if (!cur || cur.done || cur.row < 0) return null;
-    return UI.pickTarget(inputsIn(cur.row), lastInput);
+    // Auswahlfelder werden angetippt, nicht über das Zahlenfeld gefüllt
+    return UI.pickTarget(inputsIn(cur.row).filter(function (c) { return !c.classList.contains('choice-input'); }), lastInput);
   }
   function numKey(k) {
     Sound.tap();
@@ -547,6 +607,7 @@
     get state() { return state; },
     get current() { return cur; },
     newTask: newTask,
+    renderOps: renderOps,
     check: check
   };
 

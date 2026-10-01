@@ -19,8 +19,8 @@ describe('Eingabe ins Feld', () => {
     assert.equal(UI.sanitize(' 1 2 '), '12');
     assert.equal(UI.sanitize(''), '');
   });
-  test('höchstens drei Ziffern', () => {
-    assert.equal(UI.sanitize('1234'), '123');
+  test('höchstens vier Ziffern (bis 1000)', () => {
+    assert.equal(UI.sanitize('12345'), '1234');
     assert.equal(UI.sanitize('100'), '100');
   });
 });
@@ -30,8 +30,8 @@ describe('Zahlenfeld', () => {
     assert.equal(UI.applyKey('', false, '4'), '4');
     assert.equal(UI.applyKey('4', false, '7'), '47');
   });
-  test('höchstens drei Ziffern', () => {
-    assert.equal(UI.applyKey('100', false, '5'), '100');
+  test('höchstens vier Ziffern', () => {
+    assert.equal(UI.applyKey('1000', false, '5'), '1000');
   });
   test('⌫ löscht die letzte Ziffer', () => {
     assert.equal(UI.applyKey('47', false, '⌫'), '4');

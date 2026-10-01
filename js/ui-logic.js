@@ -28,17 +28,18 @@
   function pick(list, rnd) { return list[Math.floor((rnd || Math.random)() * list.length)]; }
 
   // ---------- Eingabe ----------
-  /** Nur Ziffern, höchstens drei. */
-  function sanitize(value) { return String(value).replace(/[^0-9]/g, '').slice(0, 3); }
+  var DIGITS = 4; // bis 1000
+  /** Nur Ziffern, höchstens vier. */
+  function sanitize(value) { return String(value).replace(/[^0-9]/g, '').slice(0, DIGITS); }
 
   /**
-   * Taste im Zahlenfeld: Ziffer anhängen (max. 3) oder ⌫ löschen.
+   * Taste im Zahlenfeld: Ziffer anhängen (max. 4) oder ⌫ löschen.
    * fresh: Feld wurde gerade geprüft – dann ersetzt die erste Taste den Inhalt.
    */
   function applyKey(value, fresh, key) {
     if (fresh) value = '';
     if (key === '⌫') return value.slice(0, -1);
-    return value.length < 3 ? value + key : value;
+    return value.length < DIGITS ? value + key : value;
   }
 
   /** Feld für das Zahlenfeld: zuletzt gewähltes, sonst erstes leeres, sonst erstes änderbares. */
@@ -97,7 +98,7 @@
   /** Namen der Eingabefelder einer Zeile, z. B. "Zehner: 1. Zahl". */
   function cellLabels(row) {
     var n = 0;
-    return row.tokens.filter(function (t) { return t.t === 'in'; }).map(function () {
+    return row.tokens.filter(function (t) { return t.t === 'in' || t.t === 'choice'; }).map(function () {
       n++;
       return (row.label ? row.label + ': ' : '') + n + '. Zahl';
     });
@@ -130,7 +131,20 @@
   }
   function cleanName(value) { return String(value).trim().slice(0, 20); }
 
+  /**
+   * Was passiert nach einer richtigen Zeile?
+   * 'finish' (gelöst) | 'next' (nächste Zeile) | 'append' (das Kind verlängert die Rechnung:
+   * task.nextRow liefert die nächste Zeile) | 'stuck' (sollte nicht vorkommen)
+   */
+  function afterCorrect(task, vals, i) {
+    if (Check.isSolved(task, vals)) return 'finish';
+    if (i + 1 < task.rows.length) return 'next';
+    if (typeof task.nextRow === 'function') return 'append';
+    return 'stuck';
+  }
+
   var api = {
+    afterCorrect: afterCorrect,
     TEXTS: TEXTS, pick: pick, sanitize: sanitize, applyKey: applyKey, pickTarget: pickTarget, inputMode: inputMode,
     fieldEffect: fieldEffect, outcome: outcome, wrongText: wrongText, rowDoneText: rowDoneText,
     cellLabels: cellLabels, badgeText: badgeText, introText: introText, welcomeText: welcomeText, cleanName: cleanName

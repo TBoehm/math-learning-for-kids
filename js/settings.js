@@ -11,7 +11,7 @@
   var STORE = 'rechenranch-v1';
 
   var DEFAULTS = {
-    settings: { op: '+', strategy: 'mix', crossing: 'egal', level: 'selbst', rest: false, sound: true, numpad: 'auto' },
+    settings: { op: '+', strategy: 'mix', crossing: 'egal', level: 'selbst', rest: false, sound: true, numpad: 'auto', range: 1000 },
     progress: { stars: 0, streak: 0, bestStreak: 0, solved: 0 },
     companion: 'luna', name: '', welcomed: false
   };
@@ -32,6 +32,8 @@
     if (raw.settings && !raw.settings.level && raw.settings.profi) s.settings.level = 'zerlegen';
     delete s.settings.profi;
     if (!levelInfo(s.settings.level)) s.settings.level = 'selbst';
+    // Zahlenraum: bis 100 (Wiederholung) oder bis 1000 (Stoff der 3. Klasse)
+    s.settings.range = Number(s.settings.range) === 100 ? 100 : 1000;
     s.progress = Object.assign(s.progress, raw.progress);
     ['companion', 'name', 'welcomed'].forEach(function (k) { if (k in raw) s[k] = raw[k]; });
     return s;
@@ -51,7 +53,7 @@
   /** Rechenwege zum Auswählen; "Alle Wege" nur, wenn es mehrere gibt. */
   function strategyChoices(op) {
     if (op === 'mix') return [];
-    var list = [{ key: 'mix', name: 'Alle Wege' }].concat(Tasks.STRATEGIES[op]);
+    var list = [{ key: 'mix', name: 'Alle Wege', group: 'weg' }].concat(Tasks.STRATEGIES[op]);
     return list.length === 2 ? list.slice(1) : list;
   }
   /** Gibt es den Rechenweg bei dieser Rechenart nicht, gilt "mix". */
@@ -62,7 +64,7 @@
 
   /** Nur diese Einstellungen verlangen eine neue Aufgabe. */
   function taskKey(settings) {
-    return JSON.stringify([settings.crossing, settings.level, settings.rest]);
+    return JSON.stringify([settings.crossing, settings.level, settings.rest, Number(settings.range)]);
   }
 
   /** Zahlenfeld zeigen? mode: 'auto' | 'on' | 'off', coarse: Touch-Gerät */

@@ -28,7 +28,7 @@ describe('parseNumber', () => {
     assert.equal(Check.parseNumber(null), null);
   });
   test('ungültige Eingaben sind NaN', () => {
-    for (const s of ['-3', '4a', 'a4', '1e2', '3.5', '3,5', '+4', '1 2', '0x10', '1234']) {
+    for (const s of ['-3', '4a', 'a4', '1e2', '3.5', '3,5', '+4', '1 2', '0x10', '12345']) {
       assert.ok(Number.isNaN(Check.parseNumber(s)), s);
     }
   });

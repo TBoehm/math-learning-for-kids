@@ -643,25 +643,45 @@
   // ---------- Verzeichnis ----------
   var STRATEGIES = {
     '+': [
-      { key: 'stellenweise', name: 'Stellenweise', desc: 'Zehner + Zehner, Einer + Einer', gen: addStellenweise },
-      { key: 'schrittweise', name: 'Schrittweise', desc: 'Erst die Zehner, dann die Einer dazu', gen: addSchrittweise },
-      { key: 'hilfsaufgabe', name: 'Hilfsaufgabe', desc: 'Mit der glatten Zahl rechnen und ausgleichen', gen: addHilfsaufgabe }
+      { key: 'stellenweise', name: 'Stellenweise', desc: 'Zehner + Zehner, Einer + Einer', group: 'weg', gen: addStellenweise },
+      { key: 'schrittweise', name: 'Schrittweise', desc: 'Erst die Zehner, dann die Einer dazu', group: 'weg', gen: addSchrittweise },
+      { key: 'hilfsaufgabe', name: 'Hilfsaufgabe', desc: 'Mit der glatten Zahl rechnen und ausgleichen', group: 'weg', gen: addHilfsaufgabe }
     ],
     '−': [
-      { key: 'schrittweise', name: 'Schrittweise', desc: 'Erst die Zehner, dann die Einer weg', gen: subSchrittweise },
-      { key: 'ergaenzen', name: 'Ergänzen', desc: 'Von der kleinen zur großen Zahl springen', gen: subErgaenzen },
-      { key: 'hilfsaufgabe', name: 'Hilfsaufgabe', desc: 'Mit der glatten Zahl rechnen und ausgleichen', gen: subHilfsaufgabe }
+      { key: 'schrittweise', name: 'Schrittweise', desc: 'Erst die Zehner, dann die Einer weg', group: 'weg', gen: subSchrittweise },
+      { key: 'ergaenzen', name: 'Ergänzen', desc: 'Von der kleinen zur großen Zahl springen', group: 'weg', gen: subErgaenzen },
+      { key: 'hilfsaufgabe', name: 'Hilfsaufgabe', desc: 'Mit der glatten Zahl rechnen und ausgleichen', group: 'weg', gen: subHilfsaufgabe }
     ],
     '·': [
-      { key: 'zerlegen', name: 'Zerlegen', desc: 'Zehner mal, Einer mal, zusammen', gen: mulZerlegen },
-      { key: 'kernaufgaben', name: 'Kernaufgaben', desc: 'Schwere Einmaleins-Aufgaben mit 5 · und 10 ·', gen: mulKernaufgaben }
+      { key: 'zerlegen', name: 'Zerlegen', desc: 'Zehner mal, Einer mal, zusammen', group: 'weg', gen: mulZerlegen },
+      { key: 'kernaufgaben', name: 'Kernaufgaben', desc: 'Schwere Einmaleins-Aufgaben mit 5 · und 10 ·', group: 'weg', gen: mulKernaufgaben }
     ],
     ':': [
-      { key: 'zerlegen', name: 'Zerlegen', desc: 'In zwei leichte Teile zerlegen', gen: divZerlegen }
+      { key: 'zerlegen', name: 'Zerlegen', desc: 'In zwei leichte Teile zerlegen', group: 'weg', gen: divZerlegen }
     ]
   };
 
   var OPS = ['+', '−', '·', ':'];
+
+  // Gruppen für die Auswahl: Rechenwege (halbschriftlich), Knobeln, schriftliche Verfahren
+  var GROUPS = [
+    { key: 'weg', name: 'Rechenwege' },
+    { key: 'knobeln', name: 'Knobeln' },
+    { key: 'schriftlich', name: 'Schriftlich' }
+  ];
+
+  /**
+   * Neue Aufgabenart anmelden (z. B. aus js/formats/*.js).
+   * def: { key, name, desc, group: 'weg'|'knobeln'|'schriftlich', gen(opt) -> task }
+   * Eine Aufgabe darf task.layout setzen (eigene Darstellung) und task.nextRow(vals)
+   * anbieten (das Kind verlängert die Rechnung selbst).
+   */
+  function register(op, def) {
+    var list = STRATEGIES[op];
+    if (!list) throw new Error('Unbekannte Rechenart ' + op);
+    if (list.some(function (s) { return s.key === def.key; })) throw new Error('Doppelter Schlüssel ' + def.key);
+    list.push(Object.assign({ group: 'weg' }, def));
+  }
 
   var LEVELS = [
     { key: 'hilfe', name: 'Mit Hilfe', desc: 'Zerlegung und Zwischenschritte sind vorgegeben.' },
@@ -671,7 +691,8 @@
 
   /**
    * opt: { op: '+'|'−'|'·'|':'|'mix', strategy: key|'mix', crossing: 'ohne'|'mit'|'egal',
-   *        level: 'hilfe'|'zerlegen'|'selbst' (alt: profi: bool = 'zerlegen'), rest: bool }
+   *        level: 'hilfe'|'zerlegen'|'selbst' (alt: profi: bool = 'zerlegen'), rest: bool,
+   *        max: 100|1000 (Zahlenraum) }
    */
   function generate(opt) {
     opt = opt || {};
@@ -682,23 +703,28 @@
       s = list.filter(function (x) { return x.key === opt.strategy; })[0];
     }
     if (!s) {
+      // "Alle Wege"/"Gemischt": nur halbschriftliche Rechenwege
+      var wege = list.filter(function (x) { return x.group === 'weg'; });
       var pool = opt.crossing === 'ohne'
-        ? list.filter(function (x) { return x.key !== 'hilfsaufgabe'; }) : list;
-      s = pick(pool.length ? pool : list);
+        ? wege.filter(function (x) { return x.key !== 'hilfsaufgabe'; }) : wege;
+      s = pick(pool.length ? pool : wege);
     }
+    var max = opt.max === 1000 ? 1000 : 100;
     var level = opt.level || (opt.profi ? 'zerlegen' : 'hilfe');
-    var task = s.gen({ crossing: opt.crossing || 'egal', level: level, profi: level === 'zerlegen', rest: !!opt.rest });
+    var task = s.gen({ crossing: opt.crossing || 'egal', level: level, profi: level === 'zerlegen', rest: !!opt.rest, max: max });
     task.strategyName = s.name;
     task.strategyDesc = s.desc;
     task.level = level;
     task.profi = level !== 'hilfe';
+    task.max = max;
+    task.group = s.group;
     return task;
   }
 
   /** Text der Aufgabe, z. B. "47 + 38" */
   function taskText(task) { return task.a + ' ' + task.op + ' ' + task.b; }
 
-  var api = { generate: generate, taskText: taskText, isEasySplit: isEasySplit, LEVELS: LEVELS, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX };
+  var api = { generate: generate, taskText: taskText, isEasySplit: isEasySplit, LEVELS: LEVELS, GROUPS: GROUPS, register: register, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RR = Object.assign(root.RR || {}, { Tasks: api });
 })(typeof window !== 'undefined' ? window : this);

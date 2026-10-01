@@ -93,6 +93,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--purple); ou
 .strat-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .strat-chip { border: 2px solid #fff; background: rgba(255, 255, 255, .7); border-radius: 999px; padding: 6px 14px;
   font-size: .95rem; min-height: 38px; }
+.strat-group { flex-basis: 100%; text-align: center; font-size: .8rem; font-weight: 600; color: var(--ink-soft);
+  text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.strat-group:first-child { margin-top: 0; }
 .strat-chip.active { background: #fff; border-color: var(--purple); color: var(--purple); font-weight: 600; }
 
 /* Bühne: Begleiter + Aufgabe */
@@ -135,13 +138,20 @@ body.has-numpad .row { scroll-margin-bottom: 170px; }
 .eq { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: clamp(1.55rem, 6.5vw, 2.1rem); font-weight: 600; }
 .tok-op { color: var(--purple); font-weight: 700; min-width: .5em; text-align: center; }
 .tok-ref { min-width: 1.4em; text-align: center; }
-.cell { width: 2.4em; height: 1.6em; font: inherit; font-weight: 700; text-align: center; color: var(--ink);
+.cell { width: 2.7em; height: 1.6em; font: inherit; font-weight: 700; text-align: center; color: var(--ink);
   border: 3px dashed #b996ff; border-radius: 14px; background: #fff; padding: 0; transition: border-color .2s, background .2s, transform .2s;
   caret-color: var(--pink); }
 .cell:focus, .cell.current { border-style: solid; border-color: var(--pink); box-shadow: 0 0 0 4px rgba(255, 111, 191, .25); outline: none; }
 .cell.ok { border-style: solid; border-color: var(--mint); background: #dcf8ea; color: #137a4d; box-shadow: none; }
 .cell.bad { border-style: solid; border-color: var(--orange); background: #fff0e2; }
 .cell.shake { animation: shake .45s ease; }
+.choice { display: inline-flex; flex-wrap: wrap; gap: 6px; border-radius: 16px; padding: 3px; }
+.choice-btn { font: inherit; font-weight: 700; min-height: 1.6em; min-width: 1.6em; padding: 0 .45em; border-radius: 14px;
+  border: 3px dashed #b996ff; background: #fff; color: var(--ink); }
+.choice-btn.picked { border-style: solid; border-color: var(--pink); }
+.choice.ok .choice-btn.picked { border-color: var(--mint); background: #dcf8ea; color: #137a4d; }
+.choice.bad .choice-btn.picked { border-color: var(--orange); background: #fff0e2; }
+.choice.shake { animation: shake .45s ease; }
 
 /* Anschauung */
 .viz:empty { display: none; }

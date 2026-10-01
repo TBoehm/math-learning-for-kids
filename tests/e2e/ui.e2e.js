@@ -251,3 +251,89 @@ describe('Dialoge auf kleinen Bildschirmen', () => {
     });
   }
 });
+
+describe('Erweiterungs-Gerüst im Browser', () => {
+  // Test-Aufgabenarten direkt im Browser anmelden und erzeugen
+  async function useTestStrategy(page, def) {
+    await page.evaluate((src) => {
+      const def = (0, eval)('(' + src + ')');
+      if (!window.RR.Tasks.STRATEGIES['+'].some((s) => s.key === def.key)) window.RR.Tasks.register('+', def);
+      Object.assign(window.RR.app.state.settings, { op: '+', strategy: def.key });
+      window.RR.app.newTask();
+    }, def);
+  }
+
+  test('Auswahlfeld: Antippen wählt und prüft', async () => {
+    const { page, ctx, errors } = await openPage();
+    await useTestStrategy(page, `{ key: 'e2ewahl', name: 'Wahl', group: 'knobeln', gen: function () {
+      return { op: '+', strategy: 'e2ewahl', a: 40, b: 2, answer: 42, rows: [{ label: 'Welche?', hint: '', tokens: [
+        { t: 'choice', id: 'res', options: ['41', '42', '43'], answer: 1, check: function (v) { return v === 1; } }] }] }; } }`);
+    await page.locator('.row.active .choice-btn', { hasText: '43' }).click();
+    await page.waitForFunction(() => window.RR.app.current.mistakes === 1);
+    await page.locator('.row.active .choice-btn', { hasText: '42' }).click();
+    await page.waitForFunction(() => window.RR.app.current.done);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('Rechnung selbst verlängern: neue Zeile wird angehängt', async () => {
+    const { page, ctx, errors } = await openPage();
+    await useTestStrategy(page, `{ key: 'e2eweg', name: 'Weg', gen: function () {
+      var mk = function (id, ans) { return { label: 'Schritt', hint: '', tokens: [{ t: 'in', id: id, answer: ans, check: function (v) { return v === ans; } }] }; };
+      return { op: '+', strategy: 'e2eweg', a: 1, b: 1, answer: 2, rows: [mk('s1', 1)],
+        nextRow: function (vals) { return mk('res', 2); } }; } }`);
+    await page.locator('.row.active .cell').fill('1');
+    await page.locator('.row.active .cell').press('Enter');
+    await page.waitForFunction(() => document.querySelectorAll('#rows .row').length === 2 && window.RR.app.current.row === 1);
+    await page.locator('.row.active .cell').fill('2');
+    await page.locator('.row.active .cell').press('Enter');
+    await page.waitForFunction(() => window.RR.app.current.done);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('eigene Darstellung (layout) wird verwendet', async () => {
+    const { page, ctx, errors } = await openPage();
+    await page.evaluate(() => {
+      window.RR.Layouts = window.RR.Layouts || {};
+      window.RR.Layouts.e2etest = { render: function (task, box, h) {
+        task.rows.forEach(function (row, i) {
+          const d = document.createElement('div');
+          d.className = 'row future e2e-layout'; d.dataset.i = i;
+          d.innerHTML = row.tokens.map(function (t) { return h.tokenHtml(t, 'Feld'); }).join('');
+          box.appendChild(d);
+        });
+      } };
+    });
+    await useTestStrategy(page, `{ key: 'e2elayout', name: 'Layout', group: 'knobeln', gen: function () {
+      return { op: '+', strategy: 'e2elayout', a: 1, b: 1, answer: 2, layout: 'e2etest', rows: [{ label: '', hint: '',
+        tokens: [{ t: 'in', id: 'res', answer: 2, check: function (v) { return v === 2; } }] }] }; } }`);
+    assert.equal(await page.locator('.e2e-layout .cell').count(), 1);
+    await page.locator('.row.active .cell').fill('2');
+    await page.locator('.row.active .cell').press('Enter');
+    await page.waitForFunction(() => window.RR.app.current.done);
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('Zahlenraum in den Einstellungen umschalten', async () => {
+    const { page, ctx } = await openPage();
+    assert.equal(await page.evaluate(() => window.RR.app.current.task.max), 1000);
+    await page.click('#settingsBtn');
+    await page.click('.seg[data-setting="range"] button[data-value="100"]');
+    await page.click('#settingsDlg button[value=ok]');
+    await page.waitForFunction(() => window.RR.app.current.task.max === 100);
+    await ctx.close();
+  });
+
+  test('Rechenweg-Auswahl zeigt Gruppen-Überschriften, wenn es mehrere Gruppen gibt', async () => {
+    const { page, ctx } = await openPage();
+    await page.evaluate(() => {
+      window.RR.Tasks.register('+', { key: 'e2egrp', name: 'Mauer', group: 'knobeln', gen: function () { return null; } });
+      Object.assign(window.RR.app.state.settings, { op: '+', strategy: 'mix' });
+      window.RR.app.renderOps();
+    });
+    assert.deepEqual(await page.locator('#stratChips .strat-group').allTextContents(), ['Rechenwege', 'Knobeln']);
+    await ctx.close();
+  });
+});
