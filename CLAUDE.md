@@ -1,11 +1,14 @@
 # Einhorn-Rechenranch – Hinweise für die Entwicklung
 
-Statische Lern-App (HTML/CSS/JS ohne Build) für halbschriftliches Rechnen, Klasse 3, Zahlenraum bis 100.
+Statische Lern-App (HTML/CSS/JS ohne Build) für halbschriftliches (und schriftliches) Rechnen, Klasse 3, Zahlenraum bis 1000 (bis 100 zur Wiederholung).
 Veröffentlicht über GitHub Pages ("Deploy from a branch: main"): jeder Push auf `main` geht live.
 
 ## Tests – verbindliche Regeln
 
 - **Testgetrieben (TDD):** erst einen fehlschlagenden Test schreiben, dann implementieren.
+- **Richtige Alternativen annehmen:** Geprüft wird „ist der Schritt mathematisch richtig und passt er
+  zum Rechenweg?“, nicht „stimmt er mit der Musterlösung überein?“. Neue Rechenwege brauchen Tests, die
+  alle gültigen Alternativen durchspielen (siehe `tests/alternativen.test.js`).
 - **Unit vor E2E:** Alles, was sich als Unit-Test prüfen lässt, wird als Unit-Test geschrieben –
   nicht als E2E-Test. Logik gehört deshalb in reine Module ohne DOM (`js/tasks.js`, `js/check.js`,
   `js/progress.js`, `js/settings.js`, `js/ui-logic.js`, …), die per `module.exports` in Node testbar sind.
