@@ -1,0 +1,81 @@
+/* ============ Fahrzeug-Begleiter (Turbo-Rechenwerkstatt) ============
+ * Ergänzt css/style.css. Alle Regeln hängen an .vehicle, damit die Einhörner
+ * unberührt bleiben; .pony.vehicle schlägt die allgemeinen .pony-Regeln.
+ */
+.pony.vehicle { overflow: visible; }
+
+/* Grundzustand: Fahrzeug steht, Aufbau federt leicht */
+.pony.vehicle .pony-all { animation: none; transform-box: fill-box; transform-origin: 20% 100%; }
+.vehicle .pony-shadow { animation: v-shadow 2.4s ease-in-out infinite; }
+.vehicle .v-body { animation: v-idle 2.4s ease-in-out infinite; }
+.vehicle .v-wheel { transform-box: fill-box; transform-origin: center; }
+.vehicle .v-eye { transform-box: fill-box; transform-origin: center; animation: v-blink 5.2s infinite; }
+.vehicle .v-arm { transform-box: view-box; animation: v-arm 4.8s ease-in-out infinite; }
+.vehicle .v-tipper { transform-box: view-box; }
+.vehicle .v-cape { transform-box: view-box; animation: v-cape 1.6s ease-in-out infinite; }
+.vehicle .v-light { animation: v-light 1.2s steps(1, end) infinite; }
+.vehicle .v-light-b { animation-delay: -.6s; }
+.vehicle .v-puff, .vehicle .v-speed { opacity: 0; transition: opacity .2s; }
+.vehicle .v-puff circle { transform-box: fill-box; transform-origin: center; }
+.vehicle .v-mud { opacity: 0; }
+
+/* Richtig: Hüpfer mit Wheelie */
+.is-happy .pony.vehicle .pony-all { animation: v-wheelie .9s cubic-bezier(.3, .6, .4, 1); }
+.is-happy .vehicle .v-wheel { animation: v-spin .45s linear 2; }
+.is-happy .vehicle .v-arm { animation: v-arm-cheer .9s ease; }
+.is-happy .vehicle .v-tipper { animation: v-tip .9s ease; }
+.is-happy .vehicle .v-light { animation-duration: .3s; }
+
+/* Hoppla: Kopfschütteln als Wackeln */
+.is-oops .pony.vehicle .pony-all { animation: v-nope .6s ease; }
+
+/* Kurzes Nicken: einmal einfedern */
+.is-nod .pony.vehicle .pony-all { animation: v-squat .6s ease; }
+
+/* Flitzen (Parade): Räder drehen, Wölkchen und Tempo-Striche */
+.is-gallop .pony.vehicle .pony-all { animation: v-race .3s ease-in-out infinite; }
+.is-gallop .vehicle .v-body { animation: v-idle .3s ease-in-out infinite; }
+.is-gallop .vehicle .v-wheel { animation: v-spin .35s linear infinite; }
+.is-gallop .vehicle .v-cape { animation-duration: .4s; }
+.is-gallop .vehicle .v-light { animation-duration: .4s; }
+.is-gallop .vehicle .v-arm { animation: none; }
+.is-gallop .vehicle .pony-shadow { animation: none; }
+.is-gallop .vehicle .v-puff, .is-gallop .vehicle .v-speed, .is-gallop .vehicle .v-mud { opacity: 1; }
+.is-gallop .vehicle .v-puff circle { animation: v-puff .6s ease-out infinite; }
+.is-gallop .vehicle .v-puff .v-puff-2 { animation-delay: -.2s; }
+.is-gallop .vehicle .v-puff .v-puff-3 { animation-delay: -.4s; }
+.is-gallop .vehicle .v-speed { animation: v-speed .3s linear infinite; }
+
+/* Mini-Hüpfer auf dem Rechenstrich bleibt ruhig */
+.rs-hopper .pony.vehicle .pony-all, .rs-hopper .vehicle .v-body { animation: none; }
+
+@keyframes v-idle { 50% { transform: translateY(-2px); } }
+@keyframes v-shadow { 50% { transform: scaleX(.97); opacity: .85; } }
+@keyframes v-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes v-arm { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-4deg); } }
+@keyframes v-arm-cheer { 35% { transform: rotate(-16deg); } 60% { transform: rotate(-10deg); } 80% { transform: rotate(2deg); } }
+@keyframes v-tip { 30%, 55% { transform: rotate(-16deg); } 85% { transform: rotate(1deg); } }
+@keyframes v-cape { 0%, 100% { transform: skewY(0) scaleY(1); } 50% { transform: skewY(-4deg) scaleY(1.06); } }
+@keyframes v-light { 0% { opacity: 1; filter: drop-shadow(0 0 5px #6cc3ff) brightness(1.25); } 50% { opacity: .55; filter: none; } }
+@keyframes v-spin { to { transform: rotate(360deg); } }
+@keyframes v-wheelie {
+  0% { transform: none; }
+  30% { transform: translateY(-26px) rotate(-12deg); }
+  60% { transform: translateY(-6px) rotate(-5deg); }
+  80% { transform: translateY(0) rotate(1deg) scaleY(.96); }
+  100% { transform: none; }
+}
+@keyframes v-nope {
+  15% { transform: translateX(-6px) rotate(-2deg); }
+  35% { transform: translateX(6px) rotate(2deg); }
+  55% { transform: translateX(-4px) rotate(-1deg); }
+  75% { transform: translateX(3px); }
+}
+@keyframes v-squat { 35% { transform: scaleY(.94) translateY(3px); } 70% { transform: translateY(-3px); } }
+@keyframes v-race { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-4px) rotate(-2deg); } }
+@keyframes v-puff { from { transform: translate(0, 0) scale(.5); opacity: .95; } to { transform: translate(-22px, -10px) scale(1.5); opacity: 0; } }
+@keyframes v-speed { from { transform: translateX(6px); } to { transform: translateX(-6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .vehicle, .vehicle * { animation: none !important; }
+}
