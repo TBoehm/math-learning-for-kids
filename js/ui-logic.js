@@ -80,18 +80,18 @@
     return { kind: 'wrong', mistake: true, focus: bad < 0 ? null : bad };
   }
 
-  /** Text nach dem n-ten Fehlversuch in einer Zeile: Ermutigung, Tipp, Tipp + Lösung. */
-  function wrongText(row, result, rowMistakes, pickFn) {
+  /** Text nach dem n-ten Fehlversuch in einer Zeile: Ermutigung, Tipp, Tipp + Lösung. texts: Texte der Welt */
+  function wrongText(row, result, rowMistakes, pickFn, texts) {
     var level = Check.hintLevel(rowMistakes);
-    if (level === 'encourage') return (pickFn || pick)(TEXTS.oops);
+    if (level === 'encourage') return (pickFn || pick)((texts || TEXTS).oops);
     if (level === 'hint') return 'Tipp: ' + row.hint;
     return row.hint + ' Die Lösung ist ' + Check.solutionText(row, result) + '.';
   }
 
   /** Text nach einer richtigen Zeile: ein Rat geht vor, sonst Lob und der nächste Schritt. */
-  function rowDoneText(row, next, vals, pickFn) {
+  function rowDoneText(row, next, vals, pickFn, texts) {
     var advice = row.advice ? row.advice(vals) : null;
-    return advice || (pickFn || pick)(TEXTS.rowOk) + (next && next.label ? ' Weiter: ' + next.label + '.' : '');
+    return advice || (pickFn || pick)((texts || TEXTS).rowOk) + (next && next.label ? ' Weiter: ' + next.label + '.' : '');
   }
 
   // ---------- Texte zur Aufgabe ----------

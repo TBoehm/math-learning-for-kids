@@ -6,18 +6,26 @@
 (function (root) {
   'use strict';
 
-  var Tasks = typeof module !== 'undefined' && module.exports ? require('./tasks.js') : root.RR.Tasks;
+  var node = typeof module !== 'undefined' && module.exports;
+  var Tasks = node ? require('./tasks.js') : root.RR.Tasks;
+  var Themes = node ? require('./themes.js') : root.RR.Themes;
 
   var STORE = 'rechenranch-v1';
 
   var DEFAULTS = {
     settings: { op: '+', strategy: 'mix', crossing: 'egal', level: 'selbst', rest: false, sound: true, numpad: 'auto', range: 1000 },
     progress: { stars: 0, streak: 0, bestStreak: 0, solved: 0 },
-    companion: 'luna', name: '', welcomed: false
+    companion: 'luna', name: '', welcomed: false,
+    // Welt und gemerkter Begleiter je Welt
+    theme: 'ranch', companions: null
   };
 
   /** Frische Kopie der Standardwerte. */
-  function defaults() { return JSON.parse(JSON.stringify(DEFAULTS)); }
+  function defaults() {
+    var d = JSON.parse(JSON.stringify(DEFAULTS));
+    d.companions = Themes.defaultCompanions();
+    return d;
+  }
 
   function levelInfo(key) {
     return Tasks.LEVELS.filter(function (l) { return l.key === key; })[0];
@@ -36,6 +44,12 @@
     s.settings.range = Number(s.settings.range) === 100 ? 100 : 1000;
     s.progress = Object.assign(s.progress, raw.progress);
     ['companion', 'name', 'welcomed'].forEach(function (k) { if (k in raw) s[k] = raw[k]; });
+    // Welt: unbekannt -> Ranch; Begleiter gehört zur Welt, sonst deren gemerkter/Standard-Begleiter
+    s.theme = Themes.isTheme(raw.theme) ? raw.theme : 'ranch';
+    s.companions = Object.assign(Themes.defaultCompanions(), raw.companions);
+    var home = Themes.themeOfCompanion(s.companion);
+    if (home) s.companions[home] = s.companion;
+    if (home !== s.theme) s.companion = s.companions[s.theme];
     return s;
   }
 

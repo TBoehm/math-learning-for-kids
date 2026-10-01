@@ -202,7 +202,7 @@ describe('Responsives Layout', () => {
       await waitForInputRow(page);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       assert.ok(overflow <= 0, 'horizontaler Überlauf: ' + overflow + 'px');
-      for (const sel of ['#equation', '#checkBtn', '.row.active .cell', '#opChips', '#buddyFigure']) {
+      for (const sel of ['#equation', '#checkBtn', '.row.active .cell', '#opChips', '#buddyFigure', '#settingsBtn', '#themeBtn']) {
         const box = await page.locator(sel).first().boundingBox();
         assert.ok(box && box.width > 0 && box.x >= 0 && box.x + box.width <= w + 1, sel + ' sichtbar');
       }
@@ -334,6 +334,33 @@ describe('Erweiterungs-Gerüst im Browser', () => {
       window.RR.app.renderOps();
     });
     assert.deepEqual(await page.locator('#stratChips .strat-group').allTextContents(), ['Rechenwege', 'Knobeln']);
+    await ctx.close();
+  });
+});
+
+describe('Welten', () => {
+  test('Welt-Knopf wechselt Aussehen, Titel und Begleiter – und wieder zurück', async () => {
+    const { page, ctx, errors } = await openPage();
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'ranch');
+    await page.click('#themeBtn');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'werkstatt');
+    assert.equal(await page.title(), 'Turbo-Rechenwerkstatt');
+    assert.equal(await page.evaluate(() => window.RR.app.state.companion), 'v-bruno');
+    assert.equal(await page.locator('#buddyFigure svg.vehicle').count(), 1, 'Fahrzeug als Begleiter');
+    await page.click('#themeBtn');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'ranch');
+    assert.equal(await page.evaluate(() => window.RR.app.state.companion), 'luna');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('Begrüßung: Welt wählen zeigt die Begleiter dieser Welt', async () => {
+    const { page, ctx } = await openPage({ saved: null });
+    await page.locator('#welcomeDlg[open]').waitFor();
+    await page.locator('.world-card', { hasText: 'Turbo-Werkstatt' }).click();
+    const names = await page.locator('#buddyGrid .buddy-card b').allTextContents();
+    assert.deepEqual(names, ['Bruno', 'Flitz', 'Funke', 'Kalle', 'Rumms', 'Turbo-Max']);
+    assert.match(await page.locator('#welcomeTitle').textContent(), /Rechenwerkstatt/);
     await ctx.close();
   });
 });

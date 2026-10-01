@@ -52,6 +52,18 @@
       var times = [0, 0.12, 0.24, 0.4, 0.62, 0.74, 0.9];
       seq.forEach(function (f, i) { tone(f, times[i], 0.22, 'square', 0.07); tone(f / 2, times[i], 0.22, 'triangle', 0.08); });
     },
+    // Motor: kurzes "Wrrumm"
+    engine: function (count) {
+      for (var i = 0; i < (count || 1); i++) {
+        var t = i * 0.45;
+        tone(70, t, 0.42, 'sawtooth', 0.05, 220);
+        tone(140, t + 0.05, 0.35, 'square', 0.025, 330);
+      }
+    },
+    horn: function () {
+      tone(392, 0, 0.16, 'square', 0.05); tone(494, 0, 0.16, 'square', 0.04);
+      tone(392, 0.2, 0.22, 'square', 0.05); tone(494, 0.2, 0.22, 'square', 0.04);
+    },
     // Hufgetrappel
     gallop: function (count) {
       for (var i = 0; i < (count || 8); i++) {

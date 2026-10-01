@@ -1,0 +1,74 @@
+/* ============ Welten (Themes) ============
+   Standard ist die Einhorn-Ranch (css/style.css). Hier: Teile, die nur eine Welt hat,
+   und die Turbo-Werkstatt als Abwandlung. */
+
+/* Welt-Auswahl in der Begrüßung (beide Welten) */
+.world-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.world-card { border: 3px solid #f0e8ff; background: #fbf8ff; border-radius: 20px; padding: 10px 6px;
+  display: grid; justify-items: center; gap: 2px; font-size: 1rem; }
+.world-card .wc-icon { font-size: 2.4rem; line-height: 1.1; }
+.world-card.selected { border-color: var(--pink); background: #fff0f8; box-shadow: 0 0 0 4px rgba(255, 111, 191, .2); }
+
+/* Kran und Straße gibt es nur in der Werkstatt */
+.crane, .road { display: none; }
+
+/* ============ Turbo-Werkstatt ============ */
+[data-theme="werkstatt"] {
+  --ink: #1f2a44;
+  --ink-soft: #4f5d75;
+  --pink: #ff8a1f;          /* Akzent: Signal-Orange */
+  --purple: #2f80ed;        /* zweiter Akzent: Blau */
+  --sky: #4cc9f0;
+  --sun: #ffd23f;
+  --mint: #2ec4b6;
+  --orange: #e63946;        /* "nicht ganz": Rot statt Orange (Orange ist hier Akzent) */
+  --row: #eef3fb;
+  --shadow: 0 10px 30px rgba(31, 42, 68, .18), 0 2px 6px rgba(31, 42, 68, .08);
+  --grad: linear-gradient(135deg, #ff9f1c, #ff5e1a);
+}
+[data-theme="werkstatt"] body { background: #cfe9fb; }
+[data-theme="werkstatt"] .scene { background: linear-gradient(180deg, #7cc4f5 0%, #cfe9fb 50%, #f6e7c8 100%); }
+[data-theme="werkstatt"] .rainbow,
+[data-theme="werkstatt"] .twinkles { display: none; }
+[data-theme="werkstatt"] .hills path:nth-child(1) { fill: #ecd29b; }
+[data-theme="werkstatt"] .hills path:nth-child(2) { fill: #dcb874; }
+[data-theme="werkstatt"] .crane { display: block; position: absolute; left: 1vw; bottom: 7vh; height: 34vh; opacity: .5; }
+@media (max-width: 700px) { [data-theme="werkstatt"] .crane { display: none; } }
+[data-theme="werkstatt"] .crane rect:last-of-type { animation: craneLight 1.6s steps(2) infinite; }
+[data-theme="werkstatt"] .road { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 8vh;
+  background: linear-gradient(#ffd23f, #ffd23f) center / 100% 0 no-repeat,
+    repeating-linear-gradient(90deg, #ffd23f 0 46px, transparent 46px 92px) center / 100% 5px no-repeat, #3d4451;
+  box-shadow: inset 0 4px 0 #2b313c; }
+[data-theme="werkstatt"] .flowers span { animation: none; }
+[data-theme="werkstatt"] .brand { text-shadow: 0 2px 0 #2f80ed, 0 4px 12px rgba(31, 42, 68, .35); }
+
+/* Knöpfe und Felder */
+[data-theme="werkstatt"] .btn-primary { box-shadow: 0 6px 0 #c2410c, 0 10px 20px rgba(255, 94, 26, .35); }
+[data-theme="werkstatt"] .btn-primary:active { box-shadow: 0 2px 0 #c2410c; }
+[data-theme="werkstatt"] .btn-ghost { box-shadow: 0 4px 0 #d6dde8; }
+[data-theme="werkstatt"] .np-key { box-shadow: 0 4px 0 #d6dde8; }
+[data-theme="werkstatt"] .np-key:active { background: #fff4e8; box-shadow: 0 1px 0 #d6dde8; }
+[data-theme="werkstatt"] .np-ok { box-shadow: 0 4px 0 #c2410c; }
+[data-theme="werkstatt"] .strategy-badge { background: #e3edfd; color: #1f5fbf; }
+[data-theme="werkstatt"] .strat-chip.active { border-color: var(--purple); color: #1f5fbf; }
+[data-theme="werkstatt"] .seg { background: #e9eef6; }
+[data-theme="werkstatt"] .seg button.active { color: #1f5fbf; }
+[data-theme="werkstatt"] .final { border-color: #9bb8ea; color: #1f5fbf; }
+[data-theme="werkstatt"] .cell, [data-theme="werkstatt"] .choice-btn { border-color: #8fb0e6; }
+[data-theme="werkstatt"] .cell:focus, [data-theme="werkstatt"] .cell.current { box-shadow: 0 0 0 4px rgba(255, 138, 31, .25); }
+[data-theme="werkstatt"] .cell.bad { background: #ffe8ea; }
+[data-theme="werkstatt"] .row.active { background: #fff6dc; }
+[data-theme="werkstatt"] .tok-op { color: #1f5fbf; }
+[data-theme="werkstatt"] .dot-minus { fill: #d0d7e2; }
+[data-theme="werkstatt"] .buddy-card, [data-theme="werkstatt"] .world-card { border-color: #e6ebf2; background: #f6f8fb; }
+[data-theme="werkstatt"] .buddy-card.selected, [data-theme="werkstatt"] .world-card.selected {
+  border-color: var(--pink); background: #fff4e8; box-shadow: 0 0 0 4px rgba(255, 138, 31, .2); }
+[data-theme="werkstatt"] .toggle { background: #f4f7fb; }
+[data-theme="werkstatt"] .name-field input { border-color: #d3deef; }
+
+/* Parade: Zielflagge statt Regenbogen */
+[data-theme="werkstatt"] .parade-trail {
+  background: repeating-conic-gradient(#1f2a44 0 25%, #fff 0 50%) 0 0 / 18px 18px;
+}
+
+@keyframes craneLight { 50% { fill: #ffd23f; } }

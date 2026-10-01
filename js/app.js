@@ -1,11 +1,11 @@
-/* Einhorn-Rechenranch – Oberfläche und Spielablauf. */
+/* Rechen-App (Welten: Einhorn-Ranch, Turbo-Werkstatt) – Oberfläche und Spielablauf. */
 (function () {
   'use strict';
 
   var RR = window.RR;
   var Tasks = RR.Tasks, Check = RR.Check, Progress = RR.Progress;
   var Companion = RR.Companion, Sound = RR.Sound, Viz = RR.Viz;
-  var Settings = RR.Settings, UI = RR.UI;
+  var Settings = RR.Settings, UI = RR.UI, Themes = RR.Themes;
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var coarse = window.matchMedia('(pointer: coarse)');
@@ -21,7 +21,30 @@
   var taskSeq = 0;
 
   var $ = function (id) { return document.getElementById(id); };
-  var pick = UI.pick, TXT = UI.TEXTS;
+  var pick = UI.pick;
+  // aktuelle Welt und ihre Texte
+  function theme() { return Themes.byKey(state.theme); }
+  function txt() { return theme().texts; }
+  function themeCompanions() { return theme().companions.map(function (k) { return Companion.byKey(k); }); }
+
+  function applyTheme() {
+    var t = theme();
+    document.documentElement.dataset.theme = t.key;
+    document.title = t.title;
+    $('brandIcon').textContent = t.icon;
+    $('brandText').innerHTML = t.title.replace('-', '-<wbr>');
+    var other = Themes.byKey(Themes.next(t.key));
+    $('themeBtn').textContent = other.icon;
+    $('themeBtn').setAttribute('aria-label', 'Welt wechseln: ' + other.name);
+    $('themeBtn').title = 'Welt wechseln: ' + other.name;
+    decorate();
+    renderBuddy();
+  }
+  function setCompanion(key) {
+    state.companion = key;
+    state.companions = Object.assign({}, state.companions);
+    state.companions[state.theme] = key;
+  }
 
   // ---------- Sprechblase ----------
   function say(text) {
@@ -317,7 +340,7 @@
   function hint() {
     if (!cur) return;
     Sound.tap();
-    if (cur.done) { say('Das hast du super gemacht! Drück auf „Weiter“. 🐴'); return; }
+    if (cur.done) { say(theme().doneHint); return; }
     cur.hintsUsed++;
     react('nod', 700);
     say('Tipp: ' + cur.task.rows[cur.row].hint);
@@ -336,12 +359,12 @@
     $('checkBtn').classList.add('next');
     $('checkBtn').focus({ preventScroll: true });
 
-    var res = Progress.applyResult(state.progress, { mistakes: cur.mistakes, hintsUsed: cur.hintsUsed }, Companion.COMPANIONS);
+    var res = Progress.applyResult(state.progress, { mistakes: cur.mistakes, hintsUsed: cur.hintsUsed }, themeCompanions());
     state.progress = res.state;
     save();
     Sound.win();
     react('happy', 1400);
-    say(pick(res.events.perfect ? TXT.perfect : TXT.solved));
+    say(pick(res.events.perfect ? txt().perfect : txt().solved));
     confetti(fin);
     flyStar(fin);
     if (res.events.parade) setTimeout(function () { parade(res.state.streak); }, 900);
@@ -361,8 +384,6 @@
   }
 
   // ---------- Effekte ----------
-  var CONFETTI = ['⭐', '💖', '🌈', '✨', '🦄', '🌸', '💜', '🐴', '🍭'];
-  var COLORS = ['#ff7ac6', '#9b6bff', '#58c7ff', '#ffd65c', '#6fe3a8', '#ff9f5a'];
   function confetti(origin) {
     var layer = $('fxLayer');
     var r = origin.getBoundingClientRect();
@@ -371,8 +392,8 @@
     for (var i = 0; i < n; i++) {
       var p = document.createElement('span');
       p.className = 'confetti';
-      if (i % 3 === 0) { p.classList.add('bit'); p.style.background = pick(COLORS); }
-      else p.textContent = pick(CONFETTI);
+      if (i % 3 === 0) { p.classList.add('bit'); p.style.background = pick(theme().colors); }
+      else p.textContent = pick(theme().confetti);
       p.style.left = ox + 'px'; p.style.top = oy + 'px';
       layer.appendChild(p);
       var ang = Math.random() * Math.PI * 2, dist = 120 + Math.random() * 260;
@@ -405,11 +426,11 @@
     var layer = $('fxLayer');
     var p = document.createElement('div');
     p.className = 'parade';
-    p.innerHTML = '<div class="parade-banner">' + streak + ' richtig hintereinander! 🎉</div>' +
+    p.innerHTML = '<div class="parade-banner">' + theme().paradeBanner(streak) + '</div>' +
       '<div class="parade-runner is-gallop"><div class="parade-trail"></div>' + Companion.svg(state.companion) + '</div>';
     layer.appendChild(p);
     Sound.fanfare();
-    setTimeout(function () { Sound.gallop(14); }, 600);
+    setTimeout(function () { if (theme().sound === 'engine') Sound.engine(5); else Sound.gallop(14); }, 600);
     var runner = p.querySelector('.parade-runner');
     var a = runner.animate([
       { transform: 'translateX(-40vw)' }, { transform: 'translateX(120vw)' }
@@ -421,7 +442,7 @@
     var dlg = $('unlockDlg');
     $('unlockFigure').innerHTML = Companion.svg(c.key);
     $('unlockText').textContent = c.name + ' (' + c.kind + ') möchte mit dir rechnen!';
-    $('unlockTake').onclick = function () { state.companion = c.key; save(); renderBuddy(); dlg.close(); say('Hallo, ich bin ' + c.name + '! ✨'); react('happy'); };
+    $('unlockTake').onclick = function () { setCompanion(c.key); save(); renderBuddy(); dlg.close(); say('Hallo, ich bin ' + c.name + '! ✨'); react('happy'); };
     Sound.fanfare();
     dlg.showModal();
     confetti($('unlockFigure'));
@@ -473,7 +494,7 @@
   function renderBuddyGrid() {
     var grid = $('buddyGrid');
     grid.innerHTML = '';
-    Companion.COMPANIONS.forEach(function (c) {
+    themeCompanions().forEach(function (c) {
       var open = Progress.isUnlocked(state.progress, c);
       var b = document.createElement('button');
       b.type = 'button';
@@ -483,13 +504,40 @@
       b.innerHTML = '<div class="bc-fig">' + Companion.svg(c.key) + '</div><b>' + c.name + '</b><small>' +
         (open ? c.kind : '🔒 ab ' + c.stars + ' ⭐') + '</small>';
       b.addEventListener('click', function () {
-        state.companion = c.key; save(); Sound.hop(); renderBuddyGrid(); renderBuddy();
+        setCompanion(c.key); save(); Sound.hop(); renderBuddyGrid(); renderBuddy();
       });
       grid.appendChild(b);
     });
   }
+  // Welten zur Auswahl (Begrüßung)
+  function renderWorldGrid() {
+    var grid = $('worldGrid');
+    grid.innerHTML = '';
+    Themes.THEMES.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'world-card' + (state.theme === t.key ? ' selected' : '');
+      b.setAttribute('aria-pressed', state.theme === t.key);
+      b.innerHTML = '<span class="wc-icon">' + t.icon + '</span><b>' + t.name + '</b>';
+      b.addEventListener('click', function () {
+        if (state.theme === t.key) return;
+        switchWorld(t.key);
+        renderWorldGrid(); renderBuddyGrid();
+      });
+      grid.appendChild(b);
+    });
+    $('welcomeTitle').textContent = theme().welcome;
+  }
+  function switchWorld(key) {
+    state = Themes.switchTheme(state, key);
+    save();
+    applyTheme();
+    if (theme().sound === 'engine') Sound.engine(); else Sound.hop();
+  }
+
   function openWelcome() {
     $('nameInput').value = state.name || '';
+    renderWorldGrid();
     renderBuddyGrid();
     $('welcomeDlg').showModal();
   }
@@ -551,7 +599,7 @@
     $('resetBtn').addEventListener('click', function () {
       if (!window.confirm('Wirklich alle Sterne und Freischaltungen löschen?')) return;
       state.progress = Settings.defaults().progress;
-      state.companion = Progress.isUnlocked(state.progress, Companion.byKey(state.companion)) ? state.companion : 'luna';
+      if (!Progress.isUnlocked(state.progress, Companion.byKey(state.companion))) setCompanion(theme().defaultCompanion);
       save(); updateStats(); renderBuddy();
     });
   }
@@ -559,6 +607,7 @@
   // ---------- Hintergrund ----------
   function decorate() {
     var tw = document.querySelector('.twinkles');
+    tw.innerHTML = '';
     for (var i = 0; i < 14; i++) {
       var s = document.createElement('span');
       s.textContent = i % 3 ? '✦' : '✧';
@@ -569,7 +618,8 @@
       tw.appendChild(s);
     }
     var fl = document.querySelector('.flowers');
-    var kinds = ['🌸', '🌼', '🌷', '🌸', '🍄', '🌼'];
+    fl.innerHTML = '';
+    var kinds = theme().decor;
     for (var j = 0; j < 12; j++) {
       var f = document.createElement('span');
       f.textContent = kinds[j % kinds.length];
@@ -583,8 +633,7 @@
   // ---------- Start ----------
   function init() {
     Sound.setEnabled(state.settings.sound);
-    decorate();
-    renderBuddy();
+    applyTheme();
     renderOps();
     buildNumpad();
     updateStats();
@@ -594,9 +643,15 @@
     $('hintBtn').addEventListener('click', hint);
     $('newBtn').addEventListener('click', function () { Sound.tap(); newTask(); });
     $('buddyFigure').addEventListener('click', function () {
-      Sound.hop(); react('happy', 1000); say(pick(TXT.poke));
+      if (theme().sound === 'engine') Sound.horn(); else Sound.hop();
+      react('happy', 1000); say(pick(txt().poke));
     });
     if (coarse.addEventListener) coarse.addEventListener('change', applyInputMode);
+    $('themeBtn').addEventListener('click', function () {
+      switchWorld(Themes.next(state.theme));
+      react('happy', 1000);
+      say(theme().welcome);
+    });
 
     newTask();
     if (!state.welcomed) openWelcome();

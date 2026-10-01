@@ -348,9 +348,10 @@ body.has-numpad .numpad { position: sticky; bottom: max(8px, env(safe-area-inset
   .card { padding: 26px 34px; }
 }
 
-/* Kleine Handys */
-@media (max-width: 360px) {
+/* Handys: in der Kopfzeile nur das Welt-Symbol, damit alle Knöpfe Platz haben */
+@media (max-width: 520px) {
   .brand-text { display: none; }
+  .brand-icon { font-size: 1.9rem; }
 }
 @media (max-width: 380px) {
   .stats { gap: 5px; }

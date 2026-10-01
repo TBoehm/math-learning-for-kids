@@ -28,7 +28,15 @@
 
   var uid = 0;
 
+  // Fahrzeuge (Werkstatt-Welt) kommen aus js/vehicles.js
+  function vehicles() { return root.RR && root.RR.Vehicles; }
+  function isVehicle(key) { return /^v-/.test(key || '') && !!vehicles(); }
+
   function byKey(key) {
+    if (isVehicle(key)) {
+      var V = vehicles();
+      return V.COMPANIONS.filter(function (c) { return c.key === key; })[0] || V.COMPANIONS[0];
+    }
     return COMPANIONS.filter(function (c) { return c.key === key; })[0] || COMPANIONS[0];
   }
 
@@ -57,6 +65,7 @@
 
   /** Liefert das SVG eines Begleiters als String. */
   function svg(key, opts) {
+    if (isVehicle(key)) return vehicles().svg(key);
     var c = byKey(key);
     opts = opts || {};
     var id = 'p' + (++uid);

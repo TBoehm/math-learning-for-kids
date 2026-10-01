@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#b9e4ff">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/vehicles.css">
 </head>
 <body>
   <!-- Hintergrund-Szene -->
@@ -21,15 +23,29 @@
       <path d="M0,150 C240,60 420,90 640,150 C860,210 1080,70 1440,120 L1440,260 L0,260 Z" fill="#bfe8a7"/>
       <path d="M0,200 C300,130 520,170 760,200 C1000,230 1220,150 1440,180 L1440,260 L0,260 Z" fill="#9ed98a"/>
     </svg>
+    <!-- Werkstatt-Welt: Kran und Straße -->
+    <svg class="crane" viewBox="0 0 220 300" aria-hidden="true">
+      <g fill="none" stroke="#3d4451" stroke-width="6" stroke-linejoin="round">
+        <path d="M60 300 V40 M84 300 V40 M60 40 H84"/>
+        <path d="M60 280 L84 255 L60 230 L84 205 L60 180 L84 155 L60 130 L84 105 L60 80 L84 55" stroke-width="4"/>
+        <path d="M20 40 H210 M20 40 L72 10 L210 40 M72 10 V40"/>
+        <path d="M180 40 V120" stroke-width="3"/>
+      </g>
+      <rect x="10" y="40" width="34" height="26" rx="4" fill="#3d4451"/>
+      <rect x="164" y="120" width="34" height="18" rx="3" fill="#ff8a1f"/>
+      <rect x="60" y="28" width="24" height="16" rx="3" fill="#ffd23f"/>
+    </svg>
+    <div class="road"></div>
     <div class="flowers"></div>
     <div class="twinkles"></div>
   </div>
 
   <header class="topbar">
-    <div class="brand"><span class="brand-icon">🦄</span><span class="brand-text">Einhorn-<wbr>Rechenranch</span></div>
+    <div class="brand"><span class="brand-icon" id="brandIcon">🦄</span><span class="brand-text" id="brandText">Einhorn-<wbr>Rechenranch</span></div>
     <div class="stats">
       <span class="stat" title="Gesammelte Sterne"><span aria-hidden="true">⭐</span> <b id="starCount">0</b></span>
       <span class="stat" title="Richtig ohne Fehler hintereinander"><span aria-hidden="true">🔥</span> <b id="streakCount">0</b></span>
+      <button class="icon-btn theme-btn" id="themeBtn" aria-label="Welt wechseln" title="Welt wechseln">🏎️</button>
       <button class="icon-btn" id="settingsBtn" aria-label="Einstellungen">⚙️</button>
     </div>
   </header>
@@ -69,10 +85,12 @@
   <!-- Begrüßung / Begleiter wählen -->
   <dialog class="sheet" id="welcomeDlg">
     <form method="dialog" class="sheet-inner" id="welcomeForm">
-      <h2>Willkommen auf der Rechenranch! 🌈</h2>
+      <h2 id="welcomeTitle">Willkommen auf der Rechenranch! 🌈</h2>
       <label class="name-field">Wie heißt du?
         <input type="text" id="nameInput" maxlength="20" autocomplete="off" placeholder="Dein Name">
       </label>
+      <p class="sheet-sub">Wähle deine Welt:</p>
+      <div class="world-grid" id="worldGrid"></div>
       <p class="sheet-sub">Wähle deinen Begleiter:</p>
       <div class="buddy-grid" id="buddyGrid"></div>
       <button class="btn btn-primary btn-big" value="ok">Los geht's! 🐎</button>
@@ -120,7 +138,7 @@
         </div>
       </fieldset>
       <div class="sheet-actions">
-        <button type="button" class="btn btn-ghost" id="changeBuddyBtn">🦄 Begleiter &amp; Name</button>
+        <button type="button" class="btn btn-ghost" id="changeBuddyBtn">🎨 Welt, Begleiter &amp; Name</button>
         <button type="button" class="btn btn-ghost btn-danger" id="resetBtn">Fortschritt löschen</button>
       </div>
       <button class="btn btn-primary btn-big" value="ok">Fertig</button>
@@ -147,7 +165,9 @@
   <script src="js/check.js"></script>
   <script src="js/progress.js"></script>
   <script src="js/companion.js"></script>
+  <script src="js/vehicles.js"></script>
   <script src="js/sound.js"></script>
+  <script src="js/themes.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/ui-logic.js"></script>
   <script src="js/viz-logic.js"></script>

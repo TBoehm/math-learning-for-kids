@@ -77,7 +77,7 @@ describe('Laden und Speichern', () => {
   test('speichern und wieder laden ergibt denselben Stand', () => {
     const store = memoryStorage();
     const s = Settings.defaults();
-    s.name = 'Mia'; s.companion = 'blitz'; s.progress.stars = 3; s.settings.level = 'hilfe';
+    s.name = 'Mia'; s.companion = 'blitz'; s.companions.ranch = 'blitz'; s.progress.stars = 3; s.settings.level = 'hilfe';
     assert.equal(Settings.save(store, s), true);
     assert.deepEqual(Settings.load(store), s);
   });
