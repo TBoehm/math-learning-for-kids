@@ -61,10 +61,13 @@ So bleiben sie unmarkiert, statt rot zu werden. Tests: `tests/rueckmeldung.test.
 
 ## Veröffentlichung
 
-GitHub Pages ist auf **Deploy from a branch → `main` / root** eingestellt: jeder Push auf `main` geht automatisch live.
-Der Workflow `.github/workflows/ci.yml` führt bei jedem Push und Pull Request Unit- und Browser-Tests aus.
-Damit nur Grünes live geht: in *Settings → Branches* eine Regel für `main` mit den Pflicht-Checks
-„Unit-Tests“ und „Browser-Tests (Ende-zu-Ende)“ anlegen und Änderungen per Pull Request mergen.
+GitHub Pages muss unter **Settings → Pages → Source** auf **GitHub Actions** eingestellt sein. Der Workflow
+`.github/workflows/ci.yml` führt bei jedem Push und Pull Request Unit- und Browser-Tests aus. Nur bei einem Push auf
+`main` und nur nachdem beide Test-Jobs erfolgreich waren, veröffentlicht der abhängige Job
+„GitHub Pages veröffentlichen“ die statischen Dateien. Pull Requests veröffentlichen nichts.
+
+Zusätzlich sollte `main` durch eine Branch-Regel mit den Pflicht-Checks „Unit-Tests“ und
+„Browser-Tests (Ende-zu-Ende)“ geschützt sein und nur über Pull Requests geändert werden.
 
 ## Knobel-Module
 
