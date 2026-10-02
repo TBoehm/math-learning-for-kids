@@ -18,8 +18,11 @@ Veröffentlicht über GitHub Pages ("Deploy from a branch: main"): jeder Push au
 - Zufall in Tests: Wenn ein Test eine bestimmte Eigenschaft der Aufgabe braucht, die Aufgabe gezielt
   auswählen (nicht hoffen). Wackelnde Tests sind Fehler und werden an der Ursache behoben.
 - Beide Suiten laufen in der CI (`.github/workflows/ci.yml`):
-  - `npm test` – Unit-Tests (Node, ohne Abhängigkeiten)
-  - `npm run test:e2e` – Browser-Tests mit Playwright (lokal: `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`)
+  - `npm test` – Unit-Tests
+  - `npm run test:e2e` – Browser-Tests mit Playwright (vorher lokal einmal
+    `npm exec -- playwright install chromium` ausführen)
+- Lokal und in CI gelten exakt Node 24.20.0 und npm 11.19.0 (`.nvmrc`, `.node-version`, `package.json`).
+  Abhängigkeiten werden ausschließlich mit `npm ci` aus `package-lock.json` installiert.
 
 ## Sonstiges
 

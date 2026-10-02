@@ -15,14 +15,22 @@ und KI-Agenten gleichermaßen. Die Kurzfassung:
 ## Loslegen
 
 Reines HTML/CSS/JavaScript ohne Build-Schritt – `index.html` funktioniert sogar direkt per Doppelklick.
+Für Entwicklung und Tests gelten die in `.nvmrc` und `package.json` festgelegten Versionen Node 24.20.0 und
+npm 11.19.0. Mit `nvm` wird diese Umgebung so eingerichtet:
 
 ```bash
+nvm install && nvm use
+npm ci
 npm start            # lokaler Server auf http://localhost:8080
-npm test             # Unit-Tests (Node, ohne Abhängigkeiten)
-npm ci && npx playwright install chromium
+npm test             # Unit-Tests
+npm exec -- playwright install chromium
 npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 npm run stamp        # nach Änderungen an css/ oder js/: Cache-Sperre (?v=<Hash>) in index.html setzen
 ```
+
+`.npmrc` lehnt andere Node-/npm-Versionen ab, speichert neue Abhängigkeiten exakt und deaktiviert
+Lifecycle-Skripte von Abhängigkeiten. Dependabot schlägt Aktualisierungen für npm-Pakete und GitHub Actions
+als prüfbare Pull Requests vor.
 
 | Datei | Inhalt |
 |---|---|

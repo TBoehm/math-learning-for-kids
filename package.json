@@ -10,13 +10,19 @@
     "url": "https://github.com/tboehm/math-learning-for-kids.git"
   },
   "license": "MIT",
+  "engines": {
+    "node": "24.20.0",
+    "npm": "11.19.0"
+  },
+  "packageManager": "npm@11.19.0",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
-    "start": "npx --yes http-server -c-1 -p 8080 .",
+    "start": "http-server -c-1 -p 8080 .",
     "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.e2e.js\"",
     "stamp": "node scripts/version-assets.js"
   },
   "devDependencies": {
-    "playwright": "1.56.1"
+    "http-server": "14.1.1",
+    "playwright": "1.63.0"
   }
 }
