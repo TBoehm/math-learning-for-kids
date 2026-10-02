@@ -125,6 +125,17 @@
     return out;
   }
 
+  /**
+   * Alle Fehler, die sich in diese Rechnung einbauen lassen. Die Probe bleibt immer richtig: Sie gehört nicht
+   * zum Rechenweg (bei Geteilt wäre der Fehler sonst in einer Malaufgabe, beim Ergänzen in einer Plusaufgabe).
+   */
+  function mistakes(base, max) {
+    var ls = lines(base);
+    return candidates(ls, base.strategy).filter(function (c) {
+      return base.rows[c.line].label !== 'Probe' && valid(ls, apply(ls, c), c, max || 1000);
+    });
+  }
+
   /** Fehler einbauen; Folgezeilen rechnen mit der falschen Zahl weiter. */
   function apply(ls, cand) {
     var shown = ls.map(function (items) { return items.map(function (x) { return Object.assign({}, x); }); });
@@ -224,10 +235,9 @@
       } catch (e) { continue; }
       if (!base || !base.rows) continue;
       base.strategy = base.strategy || s.key;
-      var ls = lines(base);
-      if (!ls.every(lineOk)) continue;
+      if (!lines(base).every(lineOk)) continue;
       // jede Fehlerart gleich oft, dann eine Stelle dazu
-      var cands = candidates(ls, base.strategy).filter(function (c) { return valid(ls, apply(ls, c), c, max); });
+      var cands = mistakes(base, max);
       if (!cands.length) continue;
       var types = cands.map(function (c) { return c.type; }).filter(function (t, k, a) { return a.indexOf(t) === k; });
       var type = types[Math.floor(rnd() * types.length)];
@@ -245,7 +255,7 @@
     });
   });
 
-  var api = { lines: lines, text: text, lineOk: lineOk, candidates: candidates, apply: apply, build: build, gen: gen };
+  var api = { lines: lines, text: text, lineOk: lineOk, candidates: candidates, mistakes: mistakes, apply: apply, build: build, gen: gen };
   if (node) module.exports = api;
   else root.RR.Formats = Object.assign(root.RR.Formats || {}, { fehler: api });
 })(typeof window !== 'undefined' ? window : this);
