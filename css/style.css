@@ -152,6 +152,14 @@ body.menu-open .numpad { display: none; }
   padding: 4px 12px; border-radius: 999px; }
 .equation { margin: 8px 0 12px; font-size: clamp(2.1rem, 9vw, 3.4rem); font-weight: 700; letter-spacing: .02em;
   line-height: 1.1; }
+/* So geht's: kleiner Knopf neben dem Rechenweg – gut zu sehen, aber ruhiger als das Schild */
+.info-btn { display: inline-flex; align-items: center; gap: 6px; vertical-align: middle; margin-left: 6px; min-height: 34px;
+  padding: 3px 12px 3px 4px; border: 2px solid #e3d4ff; border-radius: 999px; background: #fff; color: var(--purple);
+  font-size: .9rem; font-weight: 600; line-height: 1; transition: border-color .2s, transform .15s; }
+.info-btn:hover { border-color: var(--purple); }
+.info-btn:active { transform: scale(.96); }
+.info-i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--purple);
+  color: #fff; font-weight: 700; font-size: .9rem; }
 .final { display: inline-block; min-width: 1.6em; padding: 0 .2em; border: 3px dashed #cdb6ff; border-radius: 16px;
   color: var(--purple); }
 .final.solved { border-style: solid; border-color: var(--mint); background: #e6fbf1; color: #148a57; animation: pop .5s ease; }
@@ -288,6 +296,34 @@ body.has-numpad .numpad { position: sticky; bottom: max(8px, env(safe-area-inset
 .sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .sheet-actions .btn { flex: 1 1 200px; }
 .unlock-figure { width: min(260px, 70vw); margin: 0 auto; }
+
+/* So geht's: Erklär-Dialog mit Begleiter, Sprechblase und Beispiel (Zeilen wie in der Aufgabe, schon ausgefüllt) */
+.sheet.explain { max-width: min(720px, calc(100vw - 24px)); }
+.explain .sheet-inner { position: relative; gap: 12px; }
+.explain h2 { padding: 0 40px; font-size: 1.35rem; }
+.ex-close { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: var(--row); color: var(--ink); font-size: 1.1rem; }
+.ex-talk { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 12px; }
+.ex-buddy .pony { width: 100%; height: auto; display: block; overflow: visible; }
+.explain .bubble { background: var(--row); box-shadow: none; font-size: 1.05rem; min-height: 4.2em; }
+.explain .bubble::before { display: block; left: -10px; top: 50%; bottom: auto; margin: -10px 0 0; border: 10px solid transparent;
+  border-left: 0; border-right-color: var(--row); }
+.ex-task { display: grid; gap: 8px; min-width: 0; }
+.ex-eq { margin: 0; text-align: center; font-size: clamp(1.5rem, 6vw, 2.1rem); font-weight: 700; }
+.ex-rows .eq { font-size: clamp(1.2rem, 5vw, 1.6rem); }
+.ex-rows .cell, .ex-rows .choice-btn { pointer-events: none; }
+.ex-rows.layout-column { --sq: clamp(2rem, 9vw, 2.6rem); }
+.ex-sources { font-size: .9rem; color: var(--ink-soft); background: #faf7ff; border-radius: 14px; padding: 8px 12px; }
+.ex-sources summary { cursor: pointer; font-weight: 600; }
+.ex-sources p { margin: 8px 0 0; }
+.ex-sources ul { margin: 8px 0 0; padding-left: 1.2em; }
+.ex-sources a { color: var(--purple); }
+/* Weiter und Zurück bleiben unten im Bild, auch wenn das Beispiel lang ist */
+.ex-nav { position: sticky; bottom: -20px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin: 0 -20px -20px; padding: 10px 20px 20px; background: #fff; border-radius: 0 0 28px 28px; }
+.ex-nav .btn { min-height: 48px; font-size: 1.05rem; flex: 0 1 auto; }
+.ex-nav .btn:disabled { opacity: .4; cursor: default; }
+.ex-count { color: var(--ink-soft); font-weight: 600; font-size: .9rem; white-space: nowrap; }
 .unlock-figure .pony { width: 100%; height: auto; }
 
 /* ============ Effekte ============ */
@@ -373,6 +409,8 @@ body.has-numpad .numpad { position: sticky; bottom: max(8px, env(safe-area-inset
   .actions #checkBtn { order: 0; min-width: 200px; }
   .buddy-grid { grid-template-columns: repeat(3, 1fr); }
   .sheet-inner { padding: 26px 28px; }
+  .ex-nav { bottom: -26px; margin: 0 -28px -26px; padding: 12px 28px 26px; }
+  .ex-talk { grid-template-columns: 110px minmax(0, 1fr); }
 }
 
 /* ============ Desktop ============ */

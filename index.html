@@ -7,11 +7,11 @@
   <meta name="description" content="Halbschriftlich und schriftlich rechnen üben mit Einhörnern oder Fahrzeugen – Plus, Minus, Mal und Geteilt bis 1000 für die 3. Klasse.">
   <meta name="theme-color" content="#b9e4ff">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=0e3362304f">
-  <link rel="stylesheet" href="css/themes.css?v=0e3362304f">
-  <link rel="stylesheet" href="css/vehicles.css?v=0e3362304f">
-  <link rel="stylesheet" href="css/column.css?v=0e3362304f">
-  <link rel="stylesheet" href="css/formats.css?v=0e3362304f">
+  <link rel="stylesheet" href="css/style.css?v=06dac62f50">
+  <link rel="stylesheet" href="css/themes.css?v=06dac62f50">
+  <link rel="stylesheet" href="css/vehicles.css?v=06dac62f50">
+  <link rel="stylesheet" href="css/column.css?v=06dac62f50">
+  <link rel="stylesheet" href="css/formats.css?v=06dac62f50">
 </head>
 <body>
   <!-- Hintergrund-Szene -->
@@ -79,6 +79,7 @@
       <article class="card task-card" id="taskCard">
         <div class="task-head">
           <span class="strategy-badge" id="strategyBadge"></span>
+          <button type="button" class="info-btn" id="infoBtn" aria-haspopup="dialog" hidden><span class="info-i" aria-hidden="true">?</span>So geht's</button>
           <h1 class="equation" id="equation"></h1>
         </div>
         <div class="rows" id="rows"></div>
@@ -170,27 +171,55 @@
     </form>
   </dialog>
 
+  <!-- So geht's: der Begleiter erklärt den Rechenweg an einem Beispiel (js/explain.js) -->
+  <dialog class="sheet explain" id="explainDlg" aria-labelledby="explainTitle">
+    <form method="dialog" class="sheet-inner">
+      <button class="ex-close" value="close" aria-label="Schließen">✕</button>
+      <h2 id="explainTitle">So geht's</h2>
+      <div class="ex-talk">
+        <div class="ex-buddy" id="explainBuddy" aria-hidden="true"></div>
+        <div class="bubble ex-bubble"><span id="explainSay" aria-live="polite"></span></div>
+      </div>
+      <div class="ex-task">
+        <p class="ex-eq" id="explainEq"></p>
+        <div class="rows ex-rows" id="explainRows"></div>
+      </div>
+      <details class="ex-sources" id="explainSources">
+        <summary>Für Erwachsene: Worauf beruht die Erklärung?</summary>
+        <p id="explainNote"></p>
+        <p>Das Beispiel rechnet die App selbst – mit denselben Zeilen und Tipps wie beim Üben in der Stufe „Mit Hilfe“.</p>
+        <ul id="explainLinks"></ul>
+      </details>
+      <div class="ex-nav">
+        <button type="button" class="btn btn-ghost" id="explainBack">◀ Zurück</button>
+        <span class="ex-count" id="explainCount"></span>
+        <button type="button" class="btn btn-primary" id="explainNext" autofocus>Weiter ➜</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
   <div class="toast" id="toast" role="status"></div>
 
-  <script src="js/tasks.js?v=0e3362304f"></script>
-  <script src="js/formats/zahlenmauer.js?v=0e3362304f"></script>
-  <script src="js/formats/fehler.js?v=0e3362304f"></script>
-  <script src="js/formats/welcherweg.js?v=0e3362304f"></script>
-  <script src="js/formats/ueberschlag.js?v=0e3362304f"></script>
-  <script src="js/layouts/wall.js?v=0e3362304f"></script>
-  <script src="js/check.js?v=0e3362304f"></script>
-  <script src="js/progress.js?v=0e3362304f"></script>
-  <script src="js/companion.js?v=0e3362304f"></script>
-  <script src="js/vehicles.js?v=0e3362304f"></script>
-  <script src="js/sound.js?v=0e3362304f"></script>
-  <script src="js/themes.js?v=0e3362304f"></script>
-  <script src="js/settings.js?v=0e3362304f"></script>
-  <script src="js/ui-logic.js?v=0e3362304f"></script>
-  <script src="js/viz-logic.js?v=0e3362304f"></script>
-  <script src="js/viz.js?v=0e3362304f"></script>
-  <script src="js/formats/schriftlich.js?v=0e3362304f"></script>
-  <script src="js/layouts/column.js?v=0e3362304f"></script>
-  <script src="js/app.js?v=0e3362304f"></script>
+  <script src="js/tasks.js?v=06dac62f50"></script>
+  <script src="js/formats/zahlenmauer.js?v=06dac62f50"></script>
+  <script src="js/formats/fehler.js?v=06dac62f50"></script>
+  <script src="js/formats/welcherweg.js?v=06dac62f50"></script>
+  <script src="js/formats/ueberschlag.js?v=06dac62f50"></script>
+  <script src="js/layouts/wall.js?v=06dac62f50"></script>
+  <script src="js/check.js?v=06dac62f50"></script>
+  <script src="js/progress.js?v=06dac62f50"></script>
+  <script src="js/companion.js?v=06dac62f50"></script>
+  <script src="js/vehicles.js?v=06dac62f50"></script>
+  <script src="js/sound.js?v=06dac62f50"></script>
+  <script src="js/themes.js?v=06dac62f50"></script>
+  <script src="js/settings.js?v=06dac62f50"></script>
+  <script src="js/ui-logic.js?v=06dac62f50"></script>
+  <script src="js/viz-logic.js?v=06dac62f50"></script>
+  <script src="js/viz.js?v=06dac62f50"></script>
+  <script src="js/formats/schriftlich.js?v=06dac62f50"></script>
+  <script src="js/layouts/column.js?v=06dac62f50"></script>
+  <script src="js/explain.js?v=06dac62f50"></script>
+  <script src="js/app.js?v=06dac62f50"></script>
 </body>
 </html>
