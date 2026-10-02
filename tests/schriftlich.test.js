@@ -476,7 +476,7 @@ describe('Vergleich mit dem Überschlag', () => {
   }
   test('Tipp: mit Hilfe der Überschlag zum Vergleichen, sonst ohne festen Überschlag', () => {
     assert.equal(step(S.build('add', [438, 254], { level: 'hilfe', max: 1000 }), 'Vergleich').hint,
-      'Überschlag 690 und Ergebnis 692 liegen nah beieinander – das passt.');
+      'Überschlag 690 und Ergebnis 692 liegen nah beieinander. Das passt.');
     // das Kind darf auch auf Hunderter runden (700): der Tipp nennt keinen festen Überschlag
     const h = step(S.build('add', [438, 254], { level: 'selbst', max: 1000 }), 'Vergleich').hint;
     assert.match(h, /692/);

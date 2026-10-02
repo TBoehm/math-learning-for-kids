@@ -83,7 +83,7 @@
   function companionName() { return Companion.byKey(state.companion).name; }
   function renderBuddy() {
     $('buddyFigure').innerHTML = Companion.svg(state.companion);
-    $('buddyFigure').setAttribute('aria-label', companionName() + ' – antippen');
+    $('buddyFigure').setAttribute('aria-label', companionName() + ' antippen');
   }
   var reactTimer = null;
   function react(kind, ms) {
@@ -187,7 +187,7 @@
     $('strategyBadge').title = t.strategyDesc;
     // So geht's: nur bei Rechenwegen, zu denen es eine Erklärung gibt (nicht bei Knobeleien)
     $('infoBtn').hidden = !Explain.has(t.op, t.strategy);
-    $('infoBtn').setAttribute('aria-label', "So geht's: " + t.strategyName + ' erklärt');
+    $('infoBtn').setAttribute('aria-label', "So geht's: " + t.strategyName);
     var rest = t.op === ':' && t.rest ? '<span class="final-rest" hidden> R ' + t.rest + '</span>' : '';
     // Knobel-Aufgaben ohne einzelne Rechnung (z. B. Zahlenmauer) zeigen nur ihren Titel
     $('equation').innerHTML = t.title ? '<span>' + t.title + '</span>'

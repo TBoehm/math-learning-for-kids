@@ -2,19 +2,22 @@
 
 Schön, dass du mitmachen willst! Fehler und Ideen bitte als
 [Issue](https://github.com/tboehm/math-learning-for-kids/issues) melden, Änderungen gern als Pull Request.
-Die verbindlichen Regeln für Tests und Texte stehen in [`CLAUDE.md`](CLAUDE.md) – sie gelten für Menschen
+Die verbindlichen Regeln für Tests und Texte stehen in [`CLAUDE.md`](CLAUDE.md). Sie gelten für Menschen
 und KI-Agenten gleichermaßen. Die Kurzfassung:
 
 - **Testgetrieben:** erst ein fehlschlagender Test, dann der Code.
-- **Richtige Alternativen annehmen:** Geprüft wird, ob ein Schritt mathematisch stimmt und zum Rechenweg passt –
-  nicht, ob er der Musterlösung gleicht.
+- **Richtige Alternativen annehmen:** Geprüft wird, ob ein Schritt mathematisch stimmt und zum Rechenweg passt.
+  Er muss nicht der Musterlösung gleichen.
 - **Unit vor E2E:** Logik steckt in reinen Modulen ohne DOM; Browser-Tests nur für Verdrahtung, Fokus und Layout.
 - **Keine Lehrwerks- oder Verlagsnamen**, keine externen Server zur Laufzeit, kindgerechtes Deutsch.
+- **Deutsch denken, nicht übersetzen:** Vor jedem neuen oder geänderten deutschen Text gilt das Verfahren aus
+  [`.claude/skills/deutsch-first/SKILL.md`](.claude/skills/deutsch-first/SKILL.md) (Telefon-Test, Rückübersetzungs-Test,
+  keine Gedankenstriche als Satztrenner).
 - Mit einem Beitrag stimmst du zu, dass er unter der [MIT-Lizenz](LICENSE) des Projekts veröffentlicht wird.
 
 ## Loslegen
 
-Reines HTML/CSS/JavaScript ohne Build-Schritt – `index.html` funktioniert sogar direkt per Doppelklick.
+Reines HTML/CSS/JavaScript ohne Build-Schritt. `index.html` lässt sich sogar direkt per Doppelklick öffnen.
 
 ```bash
 npm ci               # Entwicklungs-Werkzeuge genau nach package-lock.json (Testserver, Playwright)
@@ -61,7 +64,7 @@ die Browser-Tests (`tests/e2e/`) prüfen nur, was einen echten Browser braucht: 
 
 Passt eine eingetragene Zahl nicht zum Rechenweg, sagt der Begleiter gleich beim ersten Prüfen, warum. Dazu kann jedes
 Eingabefeld einen Grund liefern: `tok.why(wert, werte)` gibt einen Satz zurück, z. B. „60 steckt nicht in 54, denn
-54 = 50 + 4. Nimm die 50 – die ist am nächsten an 60.“ (Hilfen dafür: `Tasks.why`). `Check.checkRow` setzt daraus
+54 = 50 + 4. Nimm die 50. Die liegt am nächsten an 60.“ (Hilfen dafür: `Tasks.why`). `Check.checkRow` setzt daraus
 `result.why`. Stimmt die Gleichung mit den Zahlen des Kindes trotzdem (13 + 60 = 73), beginnt der Text mit
 „13 + 60 = 73 stimmt, aber …“. Felder, deren Ergebnis von einer frei gewählten Zahl abhängt, tragen dafür `deps`.
 So bleiben sie unmarkiert, statt rot zu werden. Tests: `tests/rueckmeldung.test.js`.
@@ -73,11 +76,11 @@ Beispiel erklärt (`js/explain.js`, Dialog in `js/app.js`). Damit die Erklärung
 geschrieben:
 
 - Das **Beispiel** ist eine echte Aufgabe aus dem Generator in der Stufe „Mit Hilfe“ (`Tasks.build` bzw. `Schriftlich.build`),
-  gezeichnet wie beim Üben, die Felder schon ausgefüllt.
+  gezeichnet wie beim Üben. Nur sind die Felder schon ausgefüllt.
 - Zu jeder Zeile sagt der Begleiter den **Tipp der App** (`row.hint`).
 - Von Hand geschrieben sind nur die **Idee** am Anfang, die **Tipps** am Ende und der **Hinweis für Erwachsene** mit Quellen.
 
-Die Rechenwege und Beispiele stammen aus den frei zugänglichen Seiten von KIRA, PIKAS und Mahiko (DZLM) – keine Lehrwerke.
+Die Rechenwege und Beispiele stammen aus den frei zugänglichen Seiten von KIRA, PIKAS und Mahiko (DZLM), nicht aus Lehrwerken.
 Wo möglich ist das Beispiel genau das aus der Quelle (z. B. 399 + 473 auf vier Wegen); `tests/explain.test.js` prüft, dass
 die App diese Rechnungen genau so aufschreibt, und dass **jeder** halbschriftliche Rechenweg und jedes schriftliche Verfahren
 eine Erklärung hat. Ein neuer Rechenweg braucht deshalb einen Eintrag in `Explain.LESSONS` (Beispiel je Zahlenraum, Idee,
@@ -97,6 +100,6 @@ Zusätzlich sollte `main` durch eine Branch-Regel mit den Pflicht-Checks „Unit
 ## Knobel-Module
 
 Jede Knobelei ist ein eigenes Modul in `js/formats/` und meldet sich mit `Tasks.register(op, def)` an
-(Gruppe `knobeln`); die Zahlenmauer wird von `js/layouts/wall.js` als Pyramide gezeichnet,
-eigene Gestaltung steht in `css/formats.css`. Unit-Tests: `tests/zahlenmauer.test.js`, `tests/fehler.test.js`,
+(Gruppe `knobeln`). Die Zahlenmauer zeichnet `js/layouts/wall.js` als Pyramide; die Gestaltung der Knobeleien
+steht in `css/formats.css`. Unit-Tests: `tests/zahlenmauer.test.js`, `tests/fehler.test.js`,
 `tests/welcherweg.test.js`, `tests/ueberschlag.test.js`.

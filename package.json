@@ -2,7 +2,7 @@
   "name": "einhorn-rechenranch",
   "version": "1.0.0",
   "private": true,
-  "description": "Halbschriftlich und schriftlich rechnen üben (Klasse 3, Zahlenraum bis 1000) – statische Web-App, läuft im Browser",
+  "description": "Halbschriftlich und schriftlich rechnen üben (Klasse 3, Zahlenraum bis 1000). Statische Web-App für den Browser",
   "author": "Tobias Boehm",
   "homepage": "https://tboehm.github.io/math-learning-for-kids/",
   "repository": {

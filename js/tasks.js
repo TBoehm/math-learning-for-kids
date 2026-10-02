@@ -77,10 +77,10 @@
   function nearest(xs, v) {
     return xs.reduce(function (best, x) { return Math.abs(x - v) < Math.abs(best - v) ? x : best; }, xs[0]);
   }
-  /** "Nimm die 50 – die ist am nächsten an 60." */
+  /** "Nimm die 50. Die liegt am nächsten an 60." */
   function takeNearest(xs, v) {
     var x = nearest(xs, v);
-    return 'Nimm die ' + x + (xs.length > 1 ? ' – die ist am nächsten an ' + v + '.' : '.');
+    return 'Nimm die ' + x + (xs.length > 1 ? '. Die liegt am nächsten an ' + v + '.' : '.');
   }
   /** Teil, der nicht in n steckt (13 + [60] bei 13 + 54): n = 50 + 4, nimm die nähere Zahl */
   function partWhy(n) {
@@ -95,7 +95,7 @@
   function glattWhy(v, n, G) {
     if (v === n) return 'mach ' + n + ' glatt: ' + n + ' ist fast ' + G + '.';
     if (v % 10 === 0 && Math.abs(v - n) > Math.abs(G - n)) {
-      return v + ' ist zu weit weg von ' + n + '. Die nächste glatte Zahl ist ' + G + ', die ist näher dran.';
+      return v + ' ist zu weit weg von ' + n + '. Nimm die glatte Zahl, die näher dran ist: ' + G + '.';
     }
     if (v % 10 === 0) return 'rechne mit ' + G + ': ' + n + ' ist fast ' + G + '.';
     return v + ' ist keine glatte Zahl. Mach ' + n + ' glatt: ' + n + ' ist fast ' + G + '.';
@@ -294,12 +294,12 @@
       var k = i + 1, name = PLACE[s.p];
       if (lvl === 'selbst') { rows.push(placeRowSelbst(shared, i, a, b)); return; }
       var hint = lvl === 'zerlegen'
-        ? 'Nimm von beiden Zahlen nur die ' + name + ': ' + a + ' hat ' + s.x + ', ' + b + ' hat ' + s.y + '.'
+        ? 'Nimm von beiden Zahlen nur die ' + name + ': ' + s.x + ' aus ' + a + ' und ' + s.y + ' aus ' + b + '.'
         : (s.p === 1 ? 'Jetzt die Einer: ' + s.x + ' + ' + s.y + '.'
           : 'Rechne die ' + name + ': ' + s.x + ' + ' + s.y + '. Denk an ' + s.x / s.p + ' + ' + s.y / s.p + ' = ' + (s.x + s.y) / s.p + '!');
       if (lvl === 'zerlegen') {
         var why = function (v, rest) {
-          return v + ' sind nicht die ' + name + ': ' + a + ' hat ' + s.x / s.p + ' ' + name + ', also ' + s.x + ', und ' +
+          return v + ' sind nicht die ' + name + '. ' + a + ' hat ' + s.x / s.p + ' ' + name + ', also ' + s.x + ', und ' +
             b + ' hat ' + s.y / s.p + ' ' + name + ', also ' + s.y + '. ' + takeNearest(rest, v);
         };
         rows.push(stepRow('+', [{ id: 'sa' + k, v: s.x }, { id: 'sb' + k, v: s.y }], 'z' + k, { label: name, hint: hint, why: why }));
@@ -498,7 +498,7 @@
       yTok = IC(yId, st0, function (v) { return stepOk(s0, v); }, function () { return st0; });
     }
     xTok.why = function () {
-      return first ? 'fang mit ' + a + (op === '+' ? ' oder ' + b : '') + ' an.' : 'mach bei ' + s0 + ' weiter – da bist du angekommen.';
+      return first ? 'fang mit ' + a + (op === '+' ? ' oder ' + b : '') + ' an.' : 'mach bei ' + s0 + ' weiter. Da bist du gerade angekommen.';
     };
     yTok.why = function (v, vv) {
       var start = xId in vv ? vv[xId] : s0;
@@ -581,7 +581,7 @@
       // die glatte Zahl wählt das Kind: das Ergebnis hängt davon ab (43 + [30] = [73] ist dann richtig gerechnet)
       bTok.why = function (v) { return glattWhy(v, x, X); };
       dTok.why = function (v) {
-        return 'von ' + x + ' bis ' + X + ' sind es nicht ' + v + '. Zähl nach: So viel musst du ausgleichen.';
+        return 'von ' + x + ' bis ' + X + ' sind es nicht ' + v + '. Zähl nach: Genau so viel musst du ausgleichen.';
       };
       s1Tok = IE('s1', s1, function (vals) { return ra ? (op === '+' ? vals.B + b : vals.B - b) : (op === '+' ? a + vals.B : a - vals.B); }, ['B']);
       resTok = IE('res', answer, function (vals) { return back === '+' ? vals.s1 + vals.d : vals.s1 - vals.d; }, ['d']);
@@ -629,7 +629,7 @@
     var xb = IC('xb', B, function (v, vals) { return 'xa' in vals ? pairOk(vals.xa, v) : secondOk(v); },
       function (vals) { return 'xa' in vals ? partner(vals.xa) : B; });
     xa.why = function (v) {
-      if (op === '−' && v === b) return 'fang mit ' + a + ' an – davon nimmst du weg.';
+      if (op === '−' && v === b) return 'fang mit ' + a + ' an. Davon nimmst du weg.';
       var n = op === '+' ? nearest([a, b], v) : a;
       return glattWhy(v, n, nearestGlatt(n));
     };
@@ -767,7 +767,7 @@
     var hint;
     if (op === '+') {
       var other = nearA ? b : a;
-      hint = k > 0 ? near + ' bekommt ' + kk + ' dazu und wird ' + G + '. Damit es gerecht bleibt, gibt ' + other + ' genau ' + kk + ' ab.'
+      hint = k > 0 ? near + ' bekommt ' + kk + ' dazu und wird ' + G + '. Damit das Ergebnis gleich bleibt, gibt ' + other + ' genau ' + kk + ' ab.'
         : near + ' gibt ' + kk + ' ab und wird ' + G + '. Dafür bekommt ' + other + ' genau ' + kk + ' dazu.';
     } else {
       var sg = k > 0 ? ' + ' : ' − ';
@@ -878,7 +878,7 @@
     var startOf = function (vv) { return fId in vv ? vv[fId] : start; };
     var fTok = IE(fId, start, function () { return start; });
     fTok.why = function (v) {
-      if (k > 1) return 'mach bei ' + start + ' weiter – da bist du angekommen.';
+      if (k > 1) return 'mach bei ' + start + ' weiter. Da bist du gerade angekommen.';
       return v === a ? 'beim Ergänzen fängst du bei der kleineren Zahl ' + b + ' an und springst bis ' + a + '.'
         : 'fang bei der kleineren Zahl ' + b + ' an.';
     };
@@ -977,7 +977,7 @@
         times(s, parts[0], bigFirst) + ' + ' + times(s, parts[1], bigFirst) + '.' + (p ? ' Die Reihenfolge darfst du selbst wählen.' : ''),
       advice: p ? function (vals) {
         if (placeOf(vals.m1) && placeOf(vals.m2)) return null;
-        return 'Stimmt! Tipp fürs nächste Mal: ' + parts.join(' + ') + ' ist leichter – ' + andList(parts.map(placeName)) + '. 💡';
+        return 'Stimmt! Tipp fürs nächste Mal: Zerlege in ' + andList(parts.map(placeName)) + ', also ' + parts.join(' + ') + '. Das ist leichter. 💡';
       } : null
     });
     var rows = [splitRow];
@@ -1057,7 +1057,7 @@
     var whyPart = function (v, vv) {
       var other = xId in vv && v !== vv[xId] ? vv[xId] : null;
       if (k === 1) {
-        if (v >= big && v !== a && v !== b) return v + ' ist zu groß. Ein Faktor bleibt (' + s + '), den anderen zerlegst du: ' + big + ' = ' +
+        if (v >= big && v !== a && v !== b) return v + ' ist zu groß. Die ' + s + ' bleibt, und die ' + big + ' zerlegst du: ' + big + ' = ' +
           canonParts.join(' + ') + '.';
         if (other !== null && (other === a || other === b) && v === (other === a ? b : a)) {
           return 'das ist schon die ganze Aufgabe. Zerlege ' + big + ', zum Beispiel in ' + canonParts.join(' + ') + '.';
@@ -1070,7 +1070,7 @@
     xTok.why = whyPart;
     yTok.why = whyPart;
     var hint = k === 1
-      ? 'Zerlege ' + big + ' in ' + canonParts.join(' + ') + '. Fang an mit ' + times(s, canonParts[0], a !== s) + '. ' +
+      ? 'Zerlege ' + big + ' in ' + canonParts.join(' + ') + '. Fang mit ' + times(s, canonParts[0], a !== s) + ' an. ' +
         timesHint(s, canonParts[0], a !== s)
       : 'Von ' + info.F + ' fehlen noch ' + left + '. Rechne zum Beispiel ' + times(K, sug, a !== s && K === s) + '.';
     return row([xTok, T('·'), yTok, T('='), pTok], { label: k + '. Malaufgabe', hint: hint });
@@ -1158,11 +1158,11 @@
       row([RP(p, 'k1', k1), T('·'), N(b), T('='), IE('p1', k1 * b, function (vals) { return k1Of(vals) * b; })], {
         label: 'Kernaufgabe',
         hint: k1 === 10 ? 'Mal 10 ist leicht: 10 · ' + b + '.'
-          : '5 mal ist die Hälfte von 10 mal: 10 · ' + b + ' = ' + 10 * b + ', die Hälfte davon.'
+          : '5 mal ist die Hälfte von 10 mal: 10 · ' + b + ' = ' + 10 * b + ', und davon die Hälfte.'
       }),
       row([RP(p, 'k2', k2), T('·'), N(b), T('='), IE('p2', k2 * b, function (vals) { return k2Of(vals) * b; })], {
         label: minus ? 'Zu viel' : 'Dazu',
-        hint: minus ? k2 + ' · ' + b + ' – so viel ist zu viel.'
+        hint: minus ? '10 ist ' + k2 + ' mehr als ' + a + '. Also ist ' + k2 + ' · ' + b + ' zu viel.'
           : 'Noch ' + k2 + ' · ' + b + ' dazu.' + (k2 === 2 ? ' Das ist das Doppelte von ' + b + '.' : '')
       }),
       row([R('p1'), T(op), R('p2'), T('='), I('res', a * b)], {
@@ -1212,7 +1212,7 @@
     ], {
       label: 'Kernaufgabe',
       hint: k1 === 10 ? a + ' ist fast 10. Rechne erst 10 · ' + b + '.'
-        : 'Nimm erst 5 · ' + b + ' – das ist die Hälfte von 10 · ' + b + '. Du darfst auch die andere Zahl zerlegen.'
+        : 'Nimm erst 5 · ' + b + '. Das ist die Hälfte von 10 · ' + b + '. Du darfst auch die andere Zahl zerlegen.'
     });
   }
 

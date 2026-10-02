@@ -214,7 +214,7 @@
     null: 'fehlt eine Null',
     einmaleins: 'steckt ein Einmaleins-Fehler',
     abgeben: 'wurde in die falsche Richtung verändert',
-    ergebnis: 'wurde beim Ergebnis verrechnet'
+    ergebnis: 'hat sich jemand beim Ergebnis verrechnet'
   };
 
   function fixHint(cand, items) {
@@ -222,7 +222,7 @@
     switch (cand.type) {
       case 'uebertrag': return 'Rechne ' + text(s.left) + ' noch einmal. Achtung, Zehnerübergang!';
       case 'verzaehlt': return cand.item === 2 ? 'Wie viel fehlt von ' + x + ' bis ' + s.right[0].v + '? Zähl noch mal genau.'
-        : 'Rechne ' + x + ' ' + op + ' ' + y + ' noch einmal – zähl die Zehner genau.';
+        : 'Rechne ' + x + ' ' + op + ' ' + y + ' noch einmal und zähl die Zehner genau.';
       case 'einer': return 'Hier wurden die Einer von ' + y + ' vergessen. Rechne ' + x + ' ' + op + ' ' + y + '.';
       case 'null': return op === '·' ? 'Denk an die Null: ' + x + ' · ' + y + ' ist zehnmal so viel wie ' +
         (y % 10 === 0 ? x + ' · ' + y / 10 : x / 10 + ' · ' + y) + '.'

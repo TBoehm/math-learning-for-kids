@@ -120,7 +120,7 @@
       if (s.kind !== 'sum') {
         tok.why = function (v, vals) {
           var top = valueOf(p[0], vals), side = valueOf(p[1], vals);
-          return v === top + side ? 'du hast plus gerechnet. Der Stein oben ist die Summe – hier fehlt ein Stein darunter: ' +
+          return v === top + side ? 'du hast plus gerechnet. Der Stein oben ist die Summe. Hier fehlt ein Stein darunter: ' +
             top + ' − ' + side + '.' : null;
         };
       }
@@ -129,7 +129,7 @@
     return {
       op: '−', strategy: 'zahlenmauer', title: 'Zahlenmauer', answer: levels[last.k][last.j],
       layout: 'wall', wall: { levels: wall }, steps: steps, rows: rows,
-      intro: 'in dieser Mauer fehlen Steine. Jeder Stein ist die Summe der zwei darunter – manchmal hilft dir Minus! 🧱'
+      intro: 'in dieser Mauer fehlen Steine. Jeder Stein ist die Summe der zwei darunter. Manchmal hilft dir Minus! 🧱'
     };
   }
 
@@ -182,7 +182,7 @@
   Tasks.register('−', {
     // nicht „Minusmauer“: so heißen in der Fachdidaktik Mauern mit Unterschieds-Regel
     key: 'zahlenmauer', name: 'Zahlenmauer mit Lücken', group: 'knobeln',
-    desc: 'Jeder Stein ist die Summe der zwei Steine darunter. Fehlende Steine finden – mit Plus und Minus', gen: minus
+    desc: 'Jeder Stein ist die Summe der zwei Steine darunter. Fehlende Steine mit Plus und Minus finden', gen: minus
   });
 
   var api = { build: build, deduce: deduce, plusTask: plusTask, minusTask: minusTask, plus: plus, minus: minus };
