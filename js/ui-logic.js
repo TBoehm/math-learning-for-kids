@@ -52,11 +52,12 @@
 
   // ---------- Nach dem Prüfen ----------
   /**
-   * Was mit einem Feld nach dem Prüfen passiert.
+   * Was mit einem Feld nach dem Prüfen passiert. rowDone: die ganze Zeile stimmt.
    * -> { cls: 'ok' | 'bad' | '', shake, locked: nicht mehr änderbar, fresh: nächste Eingabe ersetzt }
+   * Gesperrt wird erst, wenn die ganze Zeile stimmt: bis dahin darf das Kind auch grüne Zahlen ändern.
    */
-  function fieldEffect(status) {
-    if (status === 'correct') return { cls: 'ok', shake: false, locked: true, fresh: false };
+  function fieldEffect(status, rowDone) {
+    if (status === 'correct') return { cls: 'ok', shake: false, locked: !!rowDone, fresh: !rowDone };
     // hängt von einem falschen Feld ab: nicht markieren, aber änderbar lassen
     if (status === 'pending') return { cls: '', shake: false, locked: false, fresh: true };
     return { cls: 'bad', shake: true, locked: false, fresh: true };

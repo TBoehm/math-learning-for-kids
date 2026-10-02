@@ -136,6 +136,31 @@ describe('Rückmeldung', () => {
     await ctx.close();
   });
 
+  test('grüne Zahl in einer Zeile, die noch nicht stimmt, lässt sich wieder ändern', async () => {
+    const { page, ctx, errors } = await openPage();
+    await setSettings(page, { op: '−', strategy: 'ergaenzen', level: 'selbst' });
+    await waitForInputRow(page);
+    const b = await page.evaluate(() => window.RR.app.current.task.b);
+    const cells = page.locator('.row.active .cell');
+    // b + [4] = [falsch]: Start und Sprung werden grün, das Ergebnis rot
+    await cells.nth(0).fill(String(b));
+    await cells.nth(1).fill('4');
+    await cells.nth(2).fill(String(b + 5));
+    await cells.nth(2).press('Enter');
+    await page.locator('.row.active .cell.bad').waitFor();
+    assert.equal(await page.locator('.row.active .cell.ok').count(), 2);
+    assert.equal(await cells.nth(1).getAttribute('readonly'), null, 'grüner Sprung bleibt änderbar');
+    // doch lieber nur 1 springen
+    await cells.nth(1).fill('1');
+    assert.equal(await page.locator('.row.active .cell.ok').count(), 1, 'geänderte Zahl ist nicht mehr grün');
+    await cells.nth(2).fill(String(b + 1));
+    await cells.nth(2).press('Enter');
+    await page.waitForFunction(() => window.RR.app.current.row === 1);
+    assert.equal(await page.locator('.row.done .cell:not([readonly])').count(), 0, 'gelöste Zeile ist gesperrt');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   test('5 fehlerfrei hintereinander: Galopp-Parade', async () => {
     // 4 fehlerfreie Aufgaben sind schon gespeichert, die 5. löst die Parade aus
     const { page, ctx } = await openPage({ saved: Object.assign({}, WELCOMED, {

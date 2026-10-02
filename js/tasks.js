@@ -752,7 +752,7 @@
       IE(fId, start, function () { return start; }),
       T('+'),
       IC(jId, next - start, function (v, vv) { return v > 0 && startOf(vv) + v <= a; },
-        function (vv) { var s = startOf(vv); return (s === start ? next : nextStop(s, a)) - s; }),
+        function (vv) { var s = startOf(vv); return (s === start ? next : nextStop(s, a)) - s; }, [fId]),
       T('='),
       IE(tId, next, function (vv) { return vv[fId] + vv[jId]; }, [fId, jId])
     ], {

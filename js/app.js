@@ -302,7 +302,7 @@
       inp.dataset.fresh = '';
       var clean = UI.sanitize(inp.value);
       if (clean !== inp.value) inp.value = clean;
-      inp.classList.remove('bad', 'shake');
+      inp.classList.remove('bad', 'shake', 'ok');
     });
     inp.addEventListener('focus', function () {
       lastInput = inp; markCurrent(inp);
@@ -338,7 +338,7 @@
     }
 
     r.fields.forEach(function (f, k) {
-      var inp = ins[k], fx = UI.fieldEffect(f.status);
+      var inp = ins[k], fx = UI.fieldEffect(f.status, r.correct);
       inp.classList.remove('bad', 'shake', 'ok');
       if (fx.shake) { void inp.offsetWidth; inp.classList.add('shake'); }
       if (fx.cls) inp.classList.add(fx.cls);
@@ -536,7 +536,7 @@
     // Nach dem Prüfen ist das Feld "frisch": erste Ziffer ersetzt den Inhalt
     inp.value = UI.applyKey(inp.value, inp.dataset.fresh === '1', k);
     inp.dataset.fresh = '';
-    inp.classList.remove('bad', 'shake');
+    inp.classList.remove('bad', 'shake', 'ok');
     lastInput = inp;
     markCurrent(inp);
   }

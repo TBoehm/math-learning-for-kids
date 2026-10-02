@@ -65,8 +65,19 @@ describe('Zahlenfeld', () => {
 });
 
 describe('Felder nach dem Prüfen', () => {
-  test('richtig: grün und gesperrt', () => {
-    assert.deepEqual(UI.fieldEffect('correct'), { cls: 'ok', shake: false, locked: true, fresh: false });
+  test('richtig in einer richtigen Zeile: grün und gesperrt', () => {
+    assert.deepEqual(UI.fieldEffect('correct', true), { cls: 'ok', shake: false, locked: true, fresh: false });
+  });
+  test('richtig, aber die Zeile stimmt noch nicht: grün und trotzdem änderbar', () => {
+    // sonst sitzt das Kind fest, wenn es die Zahl doch anders haben will (19 + [4] statt 19 + [1])
+    assert.deepEqual(UI.fieldEffect('correct', false), { cls: 'ok', shake: false, locked: false, fresh: true });
+  });
+  test('Ergänzen, alles selbst: falscher Start 56 + 4 = 60 sperrt kein Feld', () => {
+    const t = Tasks.build('−', 'ergaenzen', 56, 19, { level: 'selbst', max: 100 });
+    const [f, j, z] = inputs(t.rows[0]);
+    const r = Check.checkRow(t.rows[0], { [f.id]: '56', [j.id]: '4', [z.id]: '60' }, {});
+    assert.deepEqual(r.fields.map((x) => x.status), ['wrong', 'pending', 'pending'], 'der Sprung hängt vom Start ab');
+    assert.ok(r.fields.every((x) => !UI.fieldEffect(x.status, r.correct).locked));
   });
   test('falsch oder ungültig: rot, wackelt, bleibt änderbar, nächste Ziffer ersetzt', () => {
     for (const s of ['wrong', 'invalid']) {
