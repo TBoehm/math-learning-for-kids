@@ -64,8 +64,8 @@
     return cands.length ? cands[Math.floor(rnd() * cands.length)] : exact;
   }
 
-  function choice(id, answer, opts) {
-    return { t: 'choice', id: id, options: opts, answer: answer, check: function (v) { return v === answer; } };
+  function choice(id, answer, opts, why) {
+    return { t: 'choice', id: id, options: opts, answer: answer, check: function (v) { return v === answer; }, why: why };
   }
 
   /**
@@ -92,6 +92,18 @@
         return us.some(function (u) { return vals.ra === round(a, u) && v === round(b, u); });
       }, rbExp, ['ra']);
     }
+    // Grund bei falsch gerundeter Zahl (376 -> 370: 380 ist näher)
+    if (ra) ra.why = function (v) { return Tasks.why.round(a, v, us.filter(function (u) { return v % u === 0 && Math.abs(v - a) < u; })[0] || 10); };
+    rb.why = function (v, vals) {
+      if (mul) return Tasks.why.round(b, v, us.filter(function (u) { return v % u === 0 && Math.abs(v - b) < u; })[0] || 10);
+      if (!('ra' in vals)) return Tasks.why.round(b, v, 10);
+      var u = unitOfA(vals);
+      if (us.some(function (w) { return w !== u && v === round(b, w); })) {
+        return 'runde beide Zahlen gleich: ' + a + ' hast du auf ' + (u === 10 ? 'Zehner' : 'Hunderter') + ' gerundet, also wird ' + b +
+          ' zu ' + round(b, u) + '.';
+      }
+      return Tasks.why.round(b, v, u);
+    };
     var rsExp = function (vals) { return calc(mul ? a : vals.ra, op, vals.rb); };
     var rs = IC('rs', estimate(a, op, b, 10), function (v, vals) { return v === rsExp(vals); }, rsExp, mul ? ['rb'] : ['ra', 'rb']);
     var also = us.length > 1 ? ' (oder alle auf Hunderter)' : '';
@@ -117,7 +129,9 @@
     if (variant === 'selbst') {
       rows = [ueRow, ask(exactRow, 'Passt dein Ergebnis zum Überschlag?'), {
         label: 'Passt dein Ergebnis zum Überschlag?',
-        tokens: [R('res'), T('und Ü'), R('rs'), choice('passt', 0, OPTIONS)],
+        tokens: [R('res'), T('und Ü'), R('rs'), choice('passt', 0, OPTIONS, function (v, vals) {
+          return 'dein Ergebnis ' + vals.res + ' liegt nah bei deinem Überschlag ' + vals.rs + ' – dann passt es.';
+        })],
         hint: 'Liegt dein Ergebnis nah bei deinem Überschlag? Dann passt es.',
         advice: function () { return 'Super! Es passt – so kannst du dich immer selbst prüfen. 🔍'; }
       }];
@@ -128,7 +142,10 @@
       rows = [ask(ueRow, 'Passt das Ergebnis von ' + name + ' zum Überschlag?'), {
         // klar sagen, wer gerechnet hat; in der Zeile steht nur der Vergleich (wie bei "Passt dein Ergebnis …")
         label: name + ' hat ' + a + ' ' + op + ' ' + b + ' = ' + other + ' gerechnet. Passt das zum Überschlag?',
-        tokens: [N(other), T('und Ü'), R('rs'), choice('passt', ok ? 0 : 1, OPTIONS)],
+        tokens: [N(other), T('und Ü'), R('rs'), choice('passt', ok ? 0 : 1, OPTIONS, function (v, vals) {
+          return ok ? other + ' liegt nah bei deinem Überschlag ' + vals.rs + ' – das kann passen.'
+            : other + ' ist weit weg von deinem Überschlag ' + vals.rs + ' – das kann nicht stimmen.';
+        })],
         hint: 'Vergleiche ' + other + ' mit deinem Überschlag. Liegt es nah dran oder weit weg?',
         advice: function () {
           return ok ? 'Genau! ' + other + ' liegt nah beim Überschlag. Rechne nach, ob es auch genau stimmt.'

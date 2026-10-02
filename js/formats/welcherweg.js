@@ -116,7 +116,10 @@
         tokens: [{
           t: 'choice', id: 'weg', answer: offered.indexOf(c.canonical),
           options: offered.map(function (k) { return nameOf(op, k); }),
-          check: function (v) { return ok.indexOf(v) >= 0; }
+          check: function (v) { return ok.indexOf(v) >= 0; },
+          why: function (v) {
+            return nameOf(op, offered[v]) + ' geht, ist hier aber nicht besonders geschickt. ' + choiceHint(c.canonical, a, op, b, max);
+          }
         }],
         hint: choiceHint(c.canonical, a, op, b, max),
         advice: function (vals) { return advice(offered[vals.weg], a, op, b, max); }

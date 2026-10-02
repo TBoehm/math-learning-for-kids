@@ -50,6 +50,15 @@ Rechenweg andere richtige Wege durch und prüft, dass sie angenommen werden.
 Auch die Logik der Oberfläche (`settings.js`, `ui-logic.js`, `viz-logic.js`) steckt in reinen Modulen mit Unit-Tests;
 die Browser-Tests (`tests/e2e/`) prüfen nur, was einen echten Browser braucht: Verdrahtung, Fokus, Layout und Dialoge.
 
+### Rückmeldung bei Fehlern
+
+Passt eine eingetragene Zahl nicht zum Rechenweg, sagt der Begleiter gleich beim ersten Prüfen, warum. Dazu kann jedes
+Eingabefeld einen Grund liefern: `tok.why(wert, werte)` gibt einen Satz zurück, z. B. „60 steckt nicht in 54, denn
+54 = 50 + 4. Nimm die 50 – die ist am nächsten an 60.“ (Hilfen dafür: `Tasks.why`). `Check.checkRow` setzt daraus
+`result.why`. Stimmt die Gleichung mit den Zahlen des Kindes trotzdem (13 + 60 = 73), beginnt der Text mit
+„13 + 60 = 73 stimmt, aber …“. Felder, deren Ergebnis von einer frei gewählten Zahl abhängt, tragen dafür `deps`.
+So bleiben sie unmarkiert, statt rot zu werden. Tests: `tests/rueckmeldung.test.js`.
+
 ## Veröffentlichung
 
 GitHub Pages ist auf **Deploy from a branch → `main` / root** eingestellt: jeder Push auf `main` geht automatisch live.

@@ -301,6 +301,20 @@ describe('Erweiterungs-Gerüst im Browser', () => {
     await ctx.close();
   });
 
+  test('richtig gerechnet, aber unpassende Zahl: der Begleiter sagt gleich beim ersten Prüfen, warum', async () => {
+    const { page, ctx, errors } = await openPage();
+    await useTestStrategy(page, `{ key: 'e2efest', name: 'Fest', gen: function () {
+      return window.RR.Tasks.build('+', 'schrittweise', 13, 54, { level: 'zerlegen', max: 100 }); } }`);
+    const cells = page.locator('.row.active .cell');
+    await cells.nth(0).fill('60');
+    await cells.nth(1).fill('73');
+    await cells.nth(1).press('Enter');
+    await page.waitForFunction(() => /73 stimmt, aber 60 steckt nicht in 54/.test(document.getElementById('bubbleText').textContent));
+    assert.equal(await page.locator('.row.active .cell.bad').count(), 1, 'nur die 60 ist rot, die 73 nicht');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
   test('Rechnung selbst verlängern: neue Zeile wird angehängt', async () => {
     const { page, ctx, errors } = await openPage();
     await useTestStrategy(page, `{ key: 'e2eweg', name: 'Weg', gen: function () {

@@ -72,6 +72,46 @@
   /** nächste glatte Zahl (für die Musterlösung) */
   function nearestGlatt(v) { return ones(v) >= 5 ? tens(v) + 10 : tens(v); }
 
+  // ---------- Gründe für die Rückmeldung (tok.why, siehe js/check.js) ----------
+  /** die Zahl aus xs, die am nächsten an v liegt */
+  function nearest(xs, v) {
+    return xs.reduce(function (best, x) { return Math.abs(x - v) < Math.abs(best - v) ? x : best; }, xs[0]);
+  }
+  /** "Nimm die 50 – die ist am nächsten an 60." */
+  function takeNearest(xs, v) {
+    var x = nearest(xs, v);
+    return 'Nimm die ' + x + (xs.length > 1 ? ' – die ist am nächsten an ' + v + '.' : '.');
+  }
+  /** Teil, der nicht in n steckt (13 + [60] bei 13 + 54): n = 50 + 4, nimm die nähere Zahl */
+  function partWhy(n) {
+    return function (v, rest) {
+      var parts = placeParts(n);
+      if (!rest.length) return null;
+      if (has(parts, v)) return 'die ' + v + ' hast du schon genommen. ' + takeNearest(rest, v);
+      return v + ' steckt nicht in ' + n + (parts.length > 1 ? ', denn ' + n + ' = ' + parts.join(' + ') : '') + '. ' + takeNearest(rest, v);
+    };
+  }
+  /** glatte Zahl zu n: zu weit weg, nicht glatt oder gar nicht verändert */
+  function glattWhy(v, n, G) {
+    if (v === n) return 'mach ' + n + ' glatt: ' + n + ' ist fast ' + G + '.';
+    if (v % 10 === 0 && Math.abs(v - n) > Math.abs(G - n)) {
+      return v + ' ist zu weit weg von ' + n + '. Die nächste glatte Zahl ist ' + G + ', die ist näher dran.';
+    }
+    if (v % 10 === 0) return 'rechne mit ' + G + ': ' + n + ' ist fast ' + G + '.';
+    return v + ' ist keine glatte Zahl. Mach ' + n + ' glatt: ' + n + ' ist fast ' + G + '.';
+  }
+  /** Runden auf u (10 oder 100): falsche Richtung oder gar nicht gerundet */
+  function roundTo(n, u) { return Math.floor((n + u / 2) / u) * u; }
+  function roundWhy(n, v, u) {
+    var r = roundTo(n, u), name = u === 10 ? 'Zehner' : 'Hunderter';
+    if (v !== r && v % u === 0 && Math.abs(v - n) < u) {
+      var up = r > n;
+      return n + ' liegt näher an ' + r + ' als an ' + v + '. ' + (up ? 'Ab 5 rundest du auf' : 'Bis 4 rundest du ab') +
+        ': ' + n + ' wird ' + r + '.';
+    }
+    return 'runde ' + n + ' auf ' + name + ': ' + n + ' wird ' + r + '.';
+  }
+
   var T = function (v) { return { t: 'txt', v: v }; };
   var N = function (v) { return { t: 'num', v: v }; };
   var R = function (id) { return { t: 'ref', id: id }; };
@@ -125,8 +165,9 @@
    * xs: [{ id, v (Musterlösung), exp(vals)? }]. Nur schon richtige Felder werden abgezogen –
    * so bleibt ein richtiges Feld richtig, auch wenn davor eins falsch ist.
    */
-  function freeFields(xs) {
+  function freeFields(xs, why) {
     var ids = xs.map(function (x) { return x.id; });
+    why = why || function (v, rest) { return rest.length ? v + ' passt hier nicht. ' + takeNearest(rest, v) : null; };
     return xs.map(function (x, i) {
       var prev = ids.slice(0, i);
       var remaining = function (vals) {
@@ -134,8 +175,11 @@
         prev.forEach(function (p) { var k = rest.indexOf(vals[p]); if (k >= 0) rest.splice(k, 1); });
         return rest;
       };
-      return IC(x.id, x.v, function (v, vals) { return remaining(vals).indexOf(v) >= 0; },
+      var tok = IC(x.id, x.v, function (v, vals) { return remaining(vals).indexOf(v) >= 0; },
         function (vals) { return remaining(vals)[0]; });
+      // Grund, warum die Zahl nicht passt: why(wert, noch passende Zahlen)
+      tok.why = function (v, vals) { return why(v, remaining(vals)); };
+      return tok;
     });
   }
 
@@ -149,7 +193,7 @@
     opts = opts || {};
     var ids = xs.map(function (x) { return x.id; });
     var free = (op === '+' || op === '·') && !opts.fixedOrder;
-    var fields = free ? freeFields(xs) : xs.map(function (x) {
+    var fields = free ? freeFields(xs, opts.why) : xs.map(function (x) {
       return IC(x.id, x.v, function (v, vals) { return v === valOf(x, vals); }, function (vals) { return valOf(x, vals); });
     });
     var calc = function (vals) { return CALC[op](ids.map(function (id) { return vals[id]; })); };
@@ -248,13 +292,17 @@
     var rows = [];
     shared.forEach(function (s, i) {
       var k = i + 1, name = PLACE[s.p];
-      if (lvl === 'selbst') { rows.push(placeRowSelbst(shared, i)); return; }
+      if (lvl === 'selbst') { rows.push(placeRowSelbst(shared, i, a, b)); return; }
       var hint = lvl === 'zerlegen'
         ? 'Nimm von beiden Zahlen nur die ' + name + ': ' + a + ' hat ' + s.x + ', ' + b + ' hat ' + s.y + '.'
         : (s.p === 1 ? 'Jetzt die Einer: ' + s.x + ' + ' + s.y + '.'
           : 'Rechne die ' + name + ': ' + s.x + ' + ' + s.y + '. Denk an ' + s.x / s.p + ' + ' + s.y / s.p + ' = ' + (s.x + s.y) / s.p + '!');
       if (lvl === 'zerlegen') {
-        rows.push(stepRow('+', [{ id: 'sa' + k, v: s.x }, { id: 'sb' + k, v: s.y }], 'z' + k, { label: name, hint: hint }));
+        var why = function (v, rest) {
+          return v + ' sind nicht die ' + name + ': ' + a + ' hat ' + s.x / s.p + ' ' + name + ', also ' + s.x + ', und ' +
+            b + ' hat ' + s.y / s.p + ' ' + name + ', also ' + s.y + '. ' + takeNearest(rest, v);
+        };
+        rows.push(stepRow('+', [{ id: 'sa' + k, v: s.x }, { id: 'sb' + k, v: s.y }], 'z' + k, { label: name, hint: hint, why: why }));
       } else {
         rows.push(row([N(s.x), T('+'), N(s.y), T('='), I('z' + k, s.x + s.y)], { label: name, hint: hint }));
       }
@@ -287,7 +335,7 @@
    * neutral ("Eine Stelle", "Nächste Stelle", "Letzte Stelle") und nach dem Rechnen so wie die
    * Stelle, die das Kind gewählt hat (row.labelDone: "Hunderter", "Zehner", "Einer").
    */
-  function placeRowSelbst(shared, i) {
+  function placeRowSelbst(shared, i, a, b) {
     var k = i + 1, xId = 'sx' + k, yId = 'sy' + k, zId = 'z' + k;
     function open(vals) {
       var used = [];
@@ -303,6 +351,25 @@
       return xId in vals ? v === partner(vals[xId], vals) : !!slot(v, vals);
     }, function (vals) { return xId in vals ? partner(vals[xId], vals) : open(vals)[0].y; });
     var z = IE(zId, canon.x + canon.y, function (vals) { return vals[xId] + vals[yId]; }, [xId, yId]);
+    x.why = function (v, vals) {
+      var o = open(vals), p = placeOf(v);
+      if (!p || v === a || v === b) {
+        return v + ' ist keine Stelle. Nimm von beiden Zahlen dieselbe Stelle, zum Beispiel die ' + PLACE[o[0].p] + ': ' +
+          o[0].x + ' + ' + o[0].y + '.';
+      }
+      if (shared.some(function (s) { return s.p === p && (s.x === v || s.y === v); })) {
+        return 'die ' + PLACE[p] + ' hast du schon gerechnet. Nimm eine andere Stelle.';
+      }
+      var all = [];
+      o.forEach(function (s) { all.push(s.x, s.y); });
+      return v + ' steckt nicht in ' + a + ' oder ' + b + '. ' + takeNearest(all, v);
+    };
+    y.why = function (v, vals) {
+      if (!(xId in vals)) return x.why(v, vals);
+      var p = partner(vals[xId], vals);
+      return p === undefined ? null : 'nimm von beiden Zahlen dieselbe Stelle: Zu ' + vals[xId] + ' gehört die ' + p + ' (' +
+        PLACE[placeOf(p)] + ').';
+    };
     var names = andList(shared.map(function (s) { return PLACE[s.p]; }));
     var hint = k === 1
       ? 'Nimm von beiden Zahlen dieselbe Stelle, zum Beispiel die ' + PLACE[canon.p] + ': ' + canon.x + ' + ' + canon.y +
@@ -359,7 +426,7 @@
     var parts = placeParts(b);
     var ids = parts.map(function (x, i) { return 'q' + (i + 1); });
     var names = parts.map(placeName);
-    var stepToks = own ? freeFields(parts.map(function (x, i) { return { id: ids[i], v: x }; })) : parts.map(N);
+    var stepToks = own ? freeFields(parts.map(function (x, i) { return { id: ids[i], v: x }; }), partWhy(b)) : parts.map(N);
     var rows = [];
     var cur = a, word = op === '+' ? 'dazu' : 'weg';
     parts.forEach(function (x, i) {
@@ -430,6 +497,19 @@
       xTok = IE(xId, s0, function () { return s0; });
       yTok = IC(yId, st0, function (v) { return stepOk(s0, v); }, function () { return st0; });
     }
+    xTok.why = function () {
+      return first ? 'fang mit ' + a + (op === '+' ? ' oder ' + b : '') + ' an.' : 'mach bei ' + s0 + ' weiter – da bist du angekommen.';
+    };
+    yTok.why = function (v, vv) {
+      var start = xId in vv ? vv[xId] : s0;
+      if (!has(starts, start) || !(v > 0)) return null;
+      var r = rem(start), sug = suggest(start);
+      var take = 'Zerlege ' + r + ' und rechne erst ' + start + ' ' + op + ' ' + sug + '.';
+      if (first && v === r) return 'das ist alles auf einmal. ' + take;
+      if (v > r) return first ? v + ' ist mehr als ' + r + '. ' + take
+        : v + ' ist zu viel: ' + (op === '+' ? 'Es fehlen nur noch ' + r + '.' : 'Du musst nur noch ' + r + ' wegnehmen.');
+      return null;
+    };
     var resTok = IC('res', apply(s0, st0), function (v, vv) { var p = split(vv); return v === apply(p.start, p.step); },
       function (vv) { var p = split(vv); return apply(p.start, p.step); }, [xId, yId]);
     var word = op === '+' ? 'dazu' : 'weg';
@@ -495,12 +575,23 @@
       ? (up ? 'Du hast ' + d + ' zu viel dazugerechnet. Nimm ' + d + ' wieder weg!' : 'Du hast ' + d + ' zu wenig dazugerechnet. Rechne noch ' + d + ' dazu!')
       : (up ? 'Du hast ' + d + ' zu viel weggenommen. Gib ' + d + ' wieder dazu!' : 'Du hast ' + d + ' zu wenig weggenommen. Nimm noch ' + d + ' weg!');
     // wie im Heft nur die Teilaufgaben untereinander (328 + 100 = 428, 428 − 1 = 427) – keine Zeile "99 = 100 − 1"
+    var bTok = NP(p, 'B', X), dTok = NP(p, 'd', d);
+    var s1Tok = I('s1', s1), resTok = I('res', answer);
+    if (p) {
+      // die glatte Zahl wählt das Kind: das Ergebnis hängt davon ab (43 + [30] = [73] ist dann richtig gerechnet)
+      bTok.why = function (v) { return glattWhy(v, x, X); };
+      dTok.why = function (v) {
+        return 'von ' + x + ' bis ' + X + ' sind es nicht ' + v + '. Zähl nach: So viel musst du ausgleichen.';
+      };
+      s1Tok = IE('s1', s1, function (vals) { return ra ? (op === '+' ? vals.B + b : vals.B - b) : (op === '+' ? a + vals.B : a - vals.B); }, ['B']);
+      resTok = IE('res', answer, function (vals) { return back === '+' ? vals.s1 + vals.d : vals.s1 - vals.d; }, ['d']);
+    }
     task.rows = [
-      row((ra ? [NP(p, 'B', X), T(op), N(b)] : [N(a), T(op), NP(p, 'B', X)]).concat([T('='), I('s1', s1)]), {
+      row((ra ? [bTok, T(op), N(b)] : [N(a), T(op), bTok]).concat([T('='), s1Tok]), {
         label: 'Leichte Aufgabe', jump: { from: start, to: s1, text: op + X },
         hint: x + ' ist fast ' + X + '. Rechne erst mit der glatten Zahl: ' + A + ' ' + op + ' ' + B + '.'
       }),
-      row([R('s1'), T(back), NP(p, 'd', d), T('='), I('res', answer)], {
+      row([R('s1'), T(back), dTok, T('='), resTok], {
         label: 'Ausgleichen', jump: { from: s1, to: answer, text: back + d, back: true }, hint: fix
       })
     ];
@@ -534,11 +625,31 @@
     }
     var calc = function (vals) { return op === '+' ? vals.xa + vals.xb : vals.xa - vals.xb; };
     var x0 = ra ? X : a; // Musterlösung: X + b oder a op X
+    var xa = IC('xa', x0, firstOk, function () { return x0; });
+    var xb = IC('xb', B, function (v, vals) { return 'xa' in vals ? pairOk(vals.xa, v) : secondOk(v); },
+      function (vals) { return 'xa' in vals ? partner(vals.xa) : B; });
+    xa.why = function (v) {
+      if (op === '−' && v === b) return 'fang mit ' + a + ' an – davon nimmst du weg.';
+      var n = op === '+' ? nearest([a, b], v) : a;
+      return glattWhy(v, n, nearestGlatt(n));
+    };
+    xb.why = function (v, vals) {
+      // die Zahl, zu der das zweite Feld gehört
+      var n = b;
+      if (op === '+') {
+        n = nearest([a, b], v);
+        if ('xa' in vals) n = vals.xa === a ? b : vals.xa === b ? a : kind(vals.xa, a) === 1 ? b : a;
+      }
+      var G = nearestGlatt(n);
+      if ('xa' in vals && vals.xa !== a && vals.xa !== b && v !== n) {
+        return v % 10 === 0 ? glattWhy(v, n, G) : 'die andere Zahl bleibt, wie sie ist: Nimm ' + n + '.';
+      }
+      return glattWhy(v, n, G);
+    };
     return row([
-      IC('xa', x0, firstOk, function () { return x0; }),
+      xa,
       T(op),
-      IC('xb', B, function (v, vals) { return 'xa' in vals ? pairOk(vals.xa, v) : secondOk(v); },
-        function (vals) { return 'xa' in vals ? partner(vals.xa) : B; }),
+      xb,
       T('='), IC('s1', op === '+' ? x0 + B : x0 - B, function (v, vals) { return v === calc(vals); }, calc, ['xa', 'xb'])
     ], {
       label: 'Leichte Aufgabe', fixedOrder: op === '−',
@@ -636,6 +747,23 @@
       return 'vx' in vals ? v === otherOf(vals.vx) && pairOk(vals.vx, v) : pairOk(firstOf(v), v);
     }, function (vals) { return 'vx' in vals ? otherOf(vals.vx) : y; });
     var calc = function (vals) { return op === '+' ? vals.vx + vals.vy : vals.vx - vals.vy; };
+    var glattFor = function (v) {
+      var n = op === '+' ? nearest([a, b], v) : (Math.abs(v - a) < Math.abs(v - b) ? a : b);
+      return v % 10 === 0 && v !== nearestGlatt(n) ? glattWhy(v, n, nearestGlatt(n))
+        : 'keine Zahl ist glatt geworden. Mach ' + n + ' glatt: ' + n + ' wird ' + nearestGlatt(n) + '.';
+    };
+    fx.why = glattFor;
+    fy.why = function (v, vals) {
+      if (!('vx' in vals)) return glattFor(v);
+      var u = vals.vx;
+      if (op === '+') {
+        var base = nearest([a, b], u), other = base === a ? b : a, kk = Math.abs(u - base);
+        return u > base ? base + ' hat ' + kk + ' bekommen. Dann muss ' + other + ' genau ' + kk + ' abgeben.'
+          : base + ' hat ' + kk + ' abgegeben. Dann bekommt ' + other + ' genau ' + kk + ' dazu.';
+      }
+      var dd = u - a, sg = dd > 0 ? ' + ' : ' − ';
+      return 'du hast ' + a + sg + Math.abs(dd) + ' = ' + u + ' gerechnet. Verändere ' + b + ' genauso: ' + b + sg + Math.abs(dd) + '.';
+    };
     var hint;
     if (op === '+') {
       var other = nearA ? b : a;
@@ -748,11 +876,22 @@
         'Spring bis ' + next + (next % 10 === 0 && b % 10 !== 0 ? ', das ist der nächste Zehner.' : '.'))
       : 'Mach bei ' + start + ' weiter. ' + (next === a ? 'Spring bis zum Ziel ' + a + '.' : 'Spring zum Beispiel bis ' + next + '.');
     var startOf = function (vv) { return fId in vv ? vv[fId] : start; };
+    var fTok = IE(fId, start, function () { return start; });
+    fTok.why = function (v) {
+      if (k > 1) return 'mach bei ' + start + ' weiter – da bist du angekommen.';
+      return v === a ? 'beim Ergänzen fängst du bei der kleineren Zahl ' + b + ' an und springst bis ' + a + '.'
+        : 'fang bei der kleineren Zahl ' + b + ' an.';
+    };
+    var jTok = IC(jId, next - start, function (v, vv) { return v > 0 && startOf(vv) + v <= a; },
+      function (vv) { var s = startOf(vv); return (s === start ? next : nextStop(s, a)) - s; }, [fId]);
+    jTok.why = function (v, vv) {
+      var s = startOf(vv);
+      return v > 0 && s + v > a ? 'mit +' + v + ' springst du über ' + a + ' hinaus. Spring erst bis ' + nextStop(s, a) + '.' : null;
+    };
     return row([
-      IE(fId, start, function () { return start; }),
+      fTok,
       T('+'),
-      IC(jId, next - start, function (v, vv) { return v > 0 && startOf(vv) + v <= a; },
-        function (vv) { var s = startOf(vv); return (s === start ? next : nextStop(s, a)) - s; }, [fId]),
+      jTok,
       T('='),
       IE(tId, next, function (vv) { return vv[fId] + vv[jId]; }, [fId, jId])
     ], {
@@ -823,6 +962,13 @@
       ? [IC('m1', parts[0], function (v) { return v > 0 && v < big; }),
         IE('m2', parts[1], function (vals) { return big - vals.m1; }, ['m1'])]
       : [N(parts[0]), N(parts[1])];
+    if (p) {
+      partToks[0].why = function (v) {
+        if (v < big) return null;
+        return (v === big ? 'das ist schon die ganze Zahl.' : v + ' ist größer als ' + big + '.') + ' Zerlege ' + big +
+          ' in zwei kleinere Zahlen, zum Beispiel ' + parts.join(' + ') + '.';
+      };
+    }
     var splitRow = row([N(a), T('·'), N(b), T('=')].concat(prod(partToks[0]), [T('+')], prod(partToks[1])), {
       label: 'Zerlegen',
       hint: 'Zerlege ' + big + ' in ' + andList(parts.map(placeName)) + ': ' + times(s, big, bigFirst) + ' = ' +
@@ -906,6 +1052,21 @@
         return s;
       });
     var pTok = IE(pId, x0 * y0, function (v) { return v[xId] * v[yId]; }, [xId, yId]);
+    var whyPart = function (v, vv) {
+      var other = xId in vv && v !== vv[xId] ? vv[xId] : null;
+      if (k === 1) {
+        if (v >= big && v !== a && v !== b) return v + ' ist zu groß. Ein Faktor bleibt (' + s + '), den anderen zerlegst du: ' + big + ' = ' +
+          canonParts.join(' + ') + '.';
+        if (other !== null && (other === a || other === b) && v === (other === a ? b : a)) {
+          return 'das ist schon die ganze Aufgabe. Zerlege ' + big + ', zum Beispiel in ' + canonParts.join(' + ') + '.';
+        }
+        return null;
+      }
+      if (other !== null && other !== K && v !== K) return 'ein Faktor bleibt immer ' + K + '.';
+      return v > left && v !== K ? v + ' ist zu viel: Von ' + info.F + ' fehlen nur noch ' + left + '.' : null;
+    };
+    xTok.why = whyPart;
+    yTok.why = whyPart;
     var hint = k === 1
       ? 'Zerlege ' + big + ' in ' + canonParts.join(' + ') + '. Fang an mit ' + times(s, canonParts[0], a !== s) + '. ' +
         timesHint(s, canonParts[0], a !== s)
@@ -969,7 +1130,19 @@
       return task;
     }
     if (p && !minus) viz.dyn = function (vals) { return 'k1' in vals ? { rows: a, cols: b, split: vals.k1, minus: false } : null; };
-    var splitToks = p && !minus ? freeFields([{ id: 'k1', v: k1 }, { id: 'k2', v: k2 }]) : [NP(p, 'k1', k1), NP(p, 'k2', k2)];
+    var notKern = function (v) {
+      return v + ' · ' + b + ' ist keine Kernaufgabe. Kernaufgaben sind 1 ·, 2 ·, 5 · und 10 ·.';
+    };
+    var splitToks = p && !minus
+      ? freeFields([{ id: 'k1', v: k1 }, { id: 'k2', v: k2 }], function (v, rest) {
+        if (!rest.length) return null;
+        return (has(KERN, v) ? 'zerlege ' + a + ' in ' + k1 + ' + ' + k2 + '.' : notKern(v)) + ' ' + takeNearest(rest, v);
+      })
+      : [NP(p, 'k1', k1), NP(p, 'k2', k2)];
+    if (p && minus) {
+      splitToks[0].why = function (v) { return (has(KERN, v) ? '' : notKern(v) + ' ') + a + ' ist fast 10: Nimm 10 · ' + b + '.'; };
+      splitToks[1].why = function () { return 'zieh nur so viel ab, wie 10 mehr ist als ' + a + '.'; };
+    }
     var k1Of = function (vals) { return p ? vals.k1 : k1; };
     var k2Of = function (vals) { return p ? vals.k2 : k2; };
     task.rows = [
@@ -1001,10 +1174,29 @@
   function kernFirstRow(a, b, k1) {
     var single = function (v) { return v === a || v === b || has(KERN, v); };
     var calc = function (vals) { return vals.kx1 * vals.ky1; };
+    var kernWhy = function (v, vals) {
+      var x = 'kx1' in vals ? vals.kx1 : null;
+      if (x !== null && x !== a && x !== b && v !== a && v !== b) {
+        var fits = [b, a].filter(function (f) { return kernResolve(a, b, x, f); });
+        return fits.length ? 'ein Faktor bleibt gleich: Nimm ' + x + ' · ' + fits[0] + '.'
+          : 'mit ' + x + ' geht es hier nicht gut. Nimm eine Kernaufgabe mit 5 oder 10.';
+      }
+      if (x === null) return single(v) ? null : v + ' ist keine Kernaufgabe. Nimm 5 oder 10.';
+      var kept = x === a || x === b ? x : v, k = kept === x ? v : x, f = kept === a ? b : a;
+      if (k === f) return 'das ist schon die ganze Aufgabe. Nimm eine Kernaufgabe mit 5 oder 10.';
+      if (!has(KERN, k)) return k + ' · ' + kept + ' ist keine Kernaufgabe. Nimm 5 · ' + kept + ' oder 10 · ' + kept + '.';
+      return 'von ' + k + ' bis ' + f + ' ist es zu weit. Nimm eine Kernaufgabe nah an ' + f + ': 5 · ' + kept + ' oder 10 · ' + kept + '.';
+    };
+    var kx = IC('kx1', k1, single, function () { return k1; });
+    kx.why = function (v, vals) {
+      if (single(v)) return null;
+      var y = 'ky1' in vals ? vals.ky1 : null;
+      return y === null ? kernWhy(v, {}) : v + ' · ' + y + ' ist keine Kernaufgabe. Nimm 5 · ' + y + ' oder 10 · ' + y + '.';
+    };
     return row([
-      IC('kx1', k1, single, function () { return k1; }),
+      kx,
       T('·'),
-      IC('ky1', b, function (v, vals) { return 'kx1' in vals ? !!kernResolve(a, b, vals.kx1, v) : single(v); },
+      Object.assign(IC('ky1', b, function (v, vals) { return 'kx1' in vals ? !!kernResolve(a, b, vals.kx1, v) : single(v); },
         function (vals) {
           if (!('kx1' in vals)) return b;
           var x = vals.kx1;
@@ -1012,7 +1204,7 @@
           if (has(KERN, x) && asK !== undefined) return asK;
           var asKept = [5, 10, 2, 1].filter(function (k) { return kernResolve(a, b, x, k); })[0];
           return asKept !== undefined ? asKept : b;
-        }),
+        }), { why: kernWhy }),
       T('='), IC('p1', k1 * b, function (v, vals) { return v === calc(vals); }, calc, ['kx1', 'ky1'])
     ], {
       label: 'Kernaufgabe',
@@ -1067,7 +1259,9 @@
     var fFirstProd = function (x) { return a === f ? [x, T('·'), N(kept)] : [N(kept), T('·'), x]; };
     var rows = [
       // Schreibweise wie im Heft: 6 · 39 = 6 · 40 − 6 · 1
-      row([N(a), T('·'), N(b), T('=')].concat(fFirstProd(p ? IC('G', G, function (v) { return v > f && isGlatt(v, f, max); }) : N(G)),
+      row([N(a), T('·'), N(b), T('=')].concat(fFirstProd(p ? Object.assign(IC('G', G, function (v) { return v > f && isGlatt(v, f, max); }), {
+        why: function (v) { return v > f || v % 10 ? glattWhy(v, f, G) : 'nimm die glatte Zahl über ' + f + ': ' + G + '.'; }
+      }) : N(G)),
         [T('−')], fFirstProd(p ? IE('d', d, function (vals) { return vals.G - f; }, ['G']) : N(d))), {
         label: 'Hilfszahl', hint: f + ' ist fast ' + G + '. Wie viel fehlt bis ' + G + '? Rechne mit ' + G + ' und nimm das Zuviel wieder weg.'
       }),
@@ -1105,10 +1299,19 @@
     var single = function (v) { return v === a || v === b || isGlatt(v, a, max) || isGlatt(v, b, max); };
     var calc = function (vals) { return vals.hx * vals.hy; };
     var x0 = a === f ? G : kept, y0 = a === f ? kept : G;
+    var mhWhy = function (v, vals) {
+      var x = 'hx' in vals ? vals.hx : null;
+      if (x !== null && (x === a || x === b)) {
+        var o = x === a ? b : a;
+        return glattWhy(v, o, o >= 100 && Math.abs(hund(o) + 100 - o) <= 10 ? hund(o) + 100 : nearestGlatt(o));
+      }
+      if (x !== null && v !== a && v !== b) return 'die andere Zahl bleibt, wie sie ist: Nimm ' + (isGlatt(x, a, max) ? b : a) + '.';
+      return glattWhy(v, f, G);
+    };
     return row([
-      IC('hx', x0, single, function () { return x0; }),
+      Object.assign(IC('hx', x0, single, function () { return x0; }), { why: function (v) { return glattWhy(v, f, G); } }),
       T('·'),
-      IC('hy', y0, function (v, vals) { return 'hx' in vals ? !!mhResolve(a, b, vals.hx, v, max) : single(v); },
+      Object.assign(IC('hy', y0, function (v, vals) { return 'hx' in vals ? !!mhResolve(a, b, vals.hx, v, max) : single(v); },
         function (vals) {
           if (!('hx' in vals)) return y0;
           var x = vals.hx;
@@ -1119,7 +1322,7 @@
           }
           // x ist eine glatte Zahl: zuerst der Faktor der Musterlösung (bei 9 · 12 und 10 ginge auch 12 → 10)
           return [kept, f].filter(function (c) { return mhResolve(a, b, x, c, max); })[0] || y0;
-        }),
+        }), { why: mhWhy }),
       T('='), IC('s1', G * kept, function (v, vals) { return v === calc(vals); }, calc, ['hx', 'hy'])
     ], {
       label: 'Hilfsaufgabe',
@@ -1191,8 +1394,14 @@
       splitToks = ids.map(function (id, i) {
         var prev = ids.slice(0, i);
         var used = function (vals) { return sum(prev.map(function (x) { return vals[x]; })); };
-        if (i === nParts - 1) return IE(id, shown[i], function (vals) { return D - used(vals); }, prev);
-        return IC(id, shown[i], function (v, vals) { return v > 0 && v % d === 0 && used(vals) + v < D; }, null, prev);
+        if (i === nParts - 1) {
+          return Object.assign(IE(id, shown[i], function (vals) { return D - used(vals); }, prev), {
+            why: function () { return 'nimm, was von ' + D + ' noch übrig ist.'; }
+          });
+        }
+        return Object.assign(IC(id, shown[i], function (v, vals) { return v > 0 && v % d === 0 && used(vals) + v < D; }, null, prev), {
+          why: function (v, vals) { return divPartWhy(v, D - used(vals), d, i === 0 ? shown[0] : null, D); }
+        });
       });
     } else {
       splitToks = shown.map(N);
@@ -1260,6 +1469,18 @@
     task.more = function (vals) { return 'res' in vals && !('pD' in vals); };
     return task;
   }
+  /**
+   * Teil beim Teilen, der nicht passt: nicht in der Reihe oder zu groß. left: was von D noch übrig ist,
+   * sug: Vorschlag (sonst der größte leichte Teil, der noch passt)
+   */
+  function divPartWhy(v, left, d, sug, D) {
+    if (!(v > 0)) return null;
+    sug = sug || placeParts(Math.floor(left / d))[0] * d;
+    var take = ' Nimm zum Beispiel ' + sug + ', das kannst du leicht durch ' + d + ' teilen.';
+    if (v % d) return v + ' ist nicht in der ' + d + 'er-Reihe.' + take;
+    if (v > left) return v + ' ist mehr als ' + (left === D ? D : 'noch übrig ist: ' + left) + '.' + take;
+    return null;
+  }
   function divUsed(vals) { var s = 0; for (var k = 1; ('p' + k) in vals; k++) s += vals['p' + k]; return s; }
 
   function divPartRow(D, d, k, vals) {
@@ -1271,8 +1492,13 @@
       ? 'Nimm zuerst eine leichte Zahl aus der ' + d + 'er-Reihe, die in ' + D + ' steckt, z. B. ' + sug + ', und teile sie durch ' + d + '.'
       : 'Von ' + D + ' sind noch ' + left + ' übrig. Nimm wieder eine Zahl aus der ' + d + 'er-Reihe, z. B. ' + sug + '.' +
         (left % d ? ' Was am Ende nicht mehr passt, ist der Rest.' : '');
+    var pTok = IC(pId, sug, partOk, function () { return sug; });
+    pTok.why = function (v) {
+      if (k === 1 && v === D) return 'das ist schon alles. Zerlege ' + D + ' in leichte Teile, zum Beispiel ' + sug + '.';
+      return divPartWhy(v, left, d, sug, D);
+    };
     return row([
-      IC(pId, sug, partOk, function () { return sug; }), T(':'), I(dId, d),
+      pTok, T(':'), Object.assign(I(dId, d), { why: function () { return 'du teilst immer durch ' + d + '.'; } }),
       T('='), IE(qId, sug / d, function (v) { return v[pId] / d; }, [pId, dId])
     ], {
       label: k + '. Teil', hint: hint,
@@ -1423,8 +1649,11 @@
   /** Text der Aufgabe, z. B. "47 + 38"; mit task.terms auch mehr Zahlen: "235 + 123 + 418" */
   function taskText(task) { return (task.terms || [task.a, task.b]).join(' ' + task.op + ' '); }
 
+  // Gründe für die Rückmeldung, auch für die Knobel-Formate
+  var why = { nearest: nearest, takeNearest: takeNearest, round: roundWhy, glatt: glattWhy };
+
   var api = {
-    generate: generate, build: build, canBuild: canBuild, taskText: taskText, isEasySplit: isEasySplit, isGlatt: isGlatt, placeParts: placeParts, freeFields: freeFields,
+    why: why, generate: generate, build: build, canBuild: canBuild, taskText: taskText, isEasySplit: isEasySplit, isGlatt: isGlatt, placeParts: placeParts, freeFields: freeFields,
     LEVELS: LEVELS, GROUPS: GROUPS, register: register, STRATEGIES: STRATEGIES, OPS: OPS, MAX: MAX
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

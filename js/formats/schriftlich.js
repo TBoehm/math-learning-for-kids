@@ -180,6 +180,36 @@
     return s + (c < n - 1 && w.charAt(0) === 'S' ? 'Schreibe ' + col.digit + '. Kein Übertrag.' : w);
   }
 
+  // ---------- Gründe für die Rückmeldung (tok.why, siehe js/check.js) ----------
+  /** Plus: Übertrag vergessen oder die ganze Summe in ein Kästchen */
+  function addDigitWhy(col) {
+    return function (v) {
+      if (col.carryIn && v === (col.sum - col.carryIn) % 10) return 'denk an den Übertrag ' + col.carryIn + ' von den ' + PLACE_DAT[col.c - 1] + '!';
+      if (v === col.sum && v >= 10) return 'in ein Kästchen passt nur eine Ziffer: Schreibe ' + col.digit + ' und übertrage ' + col.carryOut + '.';
+      return null;
+    };
+  }
+  /** Ergänzen: Übertrag vergessen */
+  function ergDigitWhy(col) {
+    return function (v) {
+      return col.carryIn && v === col.target - (col.bottom || 0) ? 'denk an den Übertrag ' + col.carryIn + ': Ergänze von ' + col.need + '.' : null;
+    };
+  }
+  /** Abziehen: unten minus oben gerechnet, oder vergessen, dass die Ziffer 1 abgegeben hat */
+  function subDigitWhy(col) {
+    return function (v) {
+      var bottom = col.bottom || 0;
+      if (bottom > col.before && v === bottom - col.before) {
+        return 'du hast ' + bottom + ' − ' + col.before + ' gerechnet. Oben steht aber ' + col.before + ', und ' + col.before + ' − ' + bottom +
+          ' geht nicht: Wechsle um!';
+      }
+      if (col.before < col.orig && v === col.orig - bottom && col.top === col.before) {
+        return 'denk dran: Hier hast du 1 abgegeben. Oben steht jetzt ' + col.before + ', nicht mehr ' + col.orig + '.';
+      }
+      return null;
+    };
+  }
+
   // ---------- Überschlag ----------
   function ueberschlagRow(kind, terms, level, max) {
     var op = OP[kind];
@@ -201,6 +231,15 @@
     terms.forEach(function (x, i) {
       if (i) tokens.push(T(op));
       var tok = I(gids[i], r10[i], undefined, 'Überschlag: ' + (i + 1) + '. Zahl gerundet');
+      // Grund bei falsch gerundeter Zahl (376 -> 370: 380 ist näher)
+      tok.why = function (v, vals) {
+        var ms = i && 'g1' in vals ? modesFor(vals.g1) : modes;
+        if (i && 'g1' in vals && modes.some(function (m) { return ms.indexOf(m) < 0 && v === roundTo(x, m); })) {
+          return 'runde alle Zahlen gleich: Die erste hast du auf ' + (ms[0] === 10 ? 'Zehner' : 'Hunderter') + ' gerundet, also wird ' + x +
+            ' zu ' + roundTo(x, ms[0]) + '.';
+        }
+        return Tasks.why.round(x, v, ms.filter(function (m) { return v % m === 0 && Math.abs(v - x) < m; })[0] || ms[0]);
+      };
       if (i === 0) tok.check = function (v) { return modes.some(function (m) { return v === roundTo(x, m); }); };
       else {
         tok.check = function (v, vals) { return modesFor(vals.g1).some(function (m) { return v === roundTo(x, m); }); };
@@ -284,6 +323,7 @@
     if (kind === 'add' || kind === 'erg') {
       plan.cols.forEach(function (col) {
         var c = col.c, toks = [digitTok(c)];
+        toks[0].why = kind === 'add' ? addDigitWhy(col) : ergDigitWhy(col);
         if (c < n - 1) {
           var ct = carryTok(c + 1, col.carryOut);
           if (ct) toks.push(ct);
@@ -322,6 +362,7 @@
         ls.forEach(function (k) { small.push(smallTok('L', k)); });
         if (owner.B[c] === c) small.push(smallTok('B', c));
         var d = digitTok(c);
+        d.why = subDigitWhy(col);
         steps.push({ col: c, tokens: level === 'selbst' ? [d].concat(small) : small.concat([d]), hint: subHint(col, answer) });
       });
     }

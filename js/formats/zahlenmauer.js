@@ -116,7 +116,15 @@
       var hint = s.kind === 'sum'
         ? 'Rechne die zwei Steine darunter zusammen: ' + p[0].v + ' + ' + p[1].v + '.'
         : 'Oben steht ' + p[0].v + ', unten daneben ' + p[1].v + '. Was fehlt noch? Rechne ' + p[0].v + ' − ' + p[1].v + '.';
-      return { tokens: [brickInput(b, exp)], label: label(s.k, n), hint: hint };
+      var tok = brickInput(b, exp);
+      if (s.kind !== 'sum') {
+        tok.why = function (v, vals) {
+          var top = valueOf(p[0], vals), side = valueOf(p[1], vals);
+          return v === top + side ? 'du hast plus gerechnet. Der Stein oben ist die Summe – hier fehlt ein Stein darunter: ' +
+            top + ' − ' + side + '.' : null;
+        };
+      }
+      return { tokens: [tok], label: label(s.k, n), hint: hint };
     });
     return {
       op: '−', strategy: 'zahlenmauer', title: 'Zahlenmauer', answer: levels[last.k][last.j],

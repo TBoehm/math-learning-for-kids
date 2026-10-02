@@ -195,7 +195,8 @@
     var name = KIDS[Math.floor(rnd() * KIDS.length)];
     var rows = [{
       label: 'Welche Zeile ist falsch? Tippe sie an.',
-      tokens: [{ t: 'choice', id: 'zeile', options: shown.map(text), answer: L, check: function (v) { return v === L; } }],
+      tokens: [{ t: 'choice', id: 'zeile', options: shown.map(text), answer: L, check: function (v) { return v === L; },
+        why: function (v) { return 'Zeile ' + (v + 1) + ' stimmt: ' + text(shown[v]) + '. Der Fehler steckt in einer anderen Zeile.'; } }],
       hint: cand.flip ? 'Rechne jede Zeile nach – und schau dir auch die Rechenzeichen genau an!'
         : 'Rechne jede Zeile nach. Wo stimmt das Ergebnis nicht?',
       advice: function () { return 'Genau! In Zeile ' + (L + 1) + ' ' + NAMES[cand.type] + '. Verbessere sie!'; }

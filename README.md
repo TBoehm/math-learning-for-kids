@@ -31,6 +31,9 @@ oder in drei statt zwei Sprüngen ans Ziel kommt, bekommt trotzdem seinen Stern.
 - **Knobeln:** Zahlenmauern, Fehler finden, „Welcher Weg ist geschickt?“ und Überschlagen.
 - **Drei Hilfe-Stufen:** *Mit Hilfe* (Schritte vorgegeben), *Zerlegung selbst* und *Alles selbst* – so wie in der Arbeit.
 - **Hilfe, die nicht schimpft:** erst Ermutigung, dann ein Tipp, beim dritten Versuch die Lösung.
+- **Sagt, was genau nicht passt:** Rechnet das Kind mit einer unpassenden Zahl richtig weiter, erklärt der Begleiter
+  es sofort: „13 + 60 = 73 stimmt, aber 60 steckt nicht in 54, denn 54 = 50 + 4. Nimm die 50 – die ist am nächsten an 60.“
+  Genauso beim Runden, bei glatten Zahlen, beim Ergänzen, bei Kernaufgaben oder bei vertauschten Ziffern im Rechenraster.
 - **Zwei Welten:** die Einhorn-Ranch 🦄 und die Turbo-Rechenwerkstatt 🏎️ mit Baggern, Rennautos und Feuerwehr.
 - **Belohnungen:** Sterne, Serien, eine Galopp-Parade und neue Begleiter zum Freischalten.
 - **Für jedes Gerät:** Auf Tablets und Handys gibt es ein großes Zahlenfeld, die Tastatur bleibt zu.

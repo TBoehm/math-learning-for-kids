@@ -82,10 +82,13 @@
   /** Text nach dem n-ten Fehlversuch in einer Zeile: Ermutigung, Tipp, Tipp + Lösung. texts: Texte der Welt */
   function wrongText(row, result, rowMistakes, pickFn, texts) {
     var level = Check.hintLevel(rowMistakes);
+    // Weiß der Begleiter, warum die Zahl nicht passt, sagt er es gleich (ohne Tipp-Knopf)
+    if (result.why && level !== 'solution') return result.why;
     if (level === 'encourage') return (pickFn || pick)((texts || TEXTS).oops);
     if (level === 'hint') return 'Tipp: ' + row.hint;
     var sol = Check.solutionText(row, result);
-    return sol ? row.hint + ' Die Lösung ist ' + sol + '.' : row.hint;
+    var lead = result.why || row.hint;
+    return sol ? lead + ' Die Lösung ist ' + sol + '.' : lead;
   }
 
   /** Text nach einer richtigen Zeile: ein Rat geht vor, sonst Lob und der nächste Schritt. */
