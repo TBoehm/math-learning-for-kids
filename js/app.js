@@ -5,7 +5,7 @@
   var RR = window.RR;
   var Tasks = RR.Tasks, Check = RR.Check, Progress = RR.Progress;
   var Companion = RR.Companion, Sound = RR.Sound, Viz = RR.Viz;
-  var Settings = RR.Settings, UI = RR.UI, Themes = RR.Themes;
+  var Settings = RR.Settings, UI = RR.UI, Themes = RR.Themes, Explain = RR.Explain;
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var coarse = window.matchMedia('(pointer: coarse)');
@@ -185,6 +185,9 @@
     var t = cur.task;
     $('strategyBadge').textContent = UI.badgeText(t);
     $('strategyBadge').title = t.strategyDesc;
+    // So geht's: nur bei Rechenwegen, zu denen es eine Erklärung gibt (nicht bei Knobeleien)
+    $('infoBtn').hidden = !Explain.has(t.op, t.strategy);
+    $('infoBtn').setAttribute('aria-label', "So geht's: " + t.strategyName + ' erklärt');
     var rest = t.op === ':' && t.rest ? '<span class="final-rest" hidden> R ' + t.rest + '</span>' : '';
     // Knobel-Aufgaben ohne einzelne Rechnung (z. B. Zahlenmauer) zeigen nur ihren Titel
     $('equation').innerHTML = t.title ? '<span>' + t.title + '</span>'
@@ -427,6 +430,84 @@
     }
   }
 
+  // ---------- So geht's: Erklärung am Beispiel ----------
+  // Inhalt und Schritte kommen aus js/explain.js; das Beispiel wird gezeichnet wie eine Aufgabe in der App,
+  // die Felder sind schon ausgefüllt (nur lesen).
+  var lesson = null;
+  function openExplain() {
+    var t = cur && cur.task;
+    lesson = t && Explain.lesson(t.op, t.strategy, t.max);
+    if (!lesson) return;
+    Sound.tap();
+    $('explainTitle').textContent = lesson.title;
+    $('explainBuddy').innerHTML = Companion.svg(state.companion);
+    var box = $('explainRows'), lt = lesson.task;
+    box.innerHTML = '';
+    box.className = 'rows ex-rows' + (lt.layout ? ' layout-' + lt.layout : '');
+    var layout = lt.layout && RR.Layouts && RR.Layouts[lt.layout];
+    if (layout) layout.render(lt, box, { tokenHtml: tokenHtml, cellLabels: UI.cellLabels });
+    else lt.rows.forEach(function (row, i) { box.appendChild(rowElement(row, i)); });
+    var toks = {};
+    lt.rows.forEach(function (row) { row.tokens.forEach(function (tok) { if (tok.id) toks[tok.id] = tok; }); });
+    box.querySelectorAll('.cell').forEach(function (c) {
+      var tok = toks[c.dataset.id];
+      c.value = tok ? Explain.cellValue(tok, lesson.vals) : '';
+      c.readOnly = true;
+      c.tabIndex = -1;
+      c.classList.add('ok');
+    });
+    box.querySelectorAll('.choice').forEach(function (g) {
+      g.classList.add('ok');
+      g.querySelectorAll('.choice-btn').forEach(function (b) {
+        b.tabIndex = -1;
+        b.classList.toggle('picked', Number(b.dataset.k) === lesson.vals[g.dataset.for]);
+      });
+    });
+    box.querySelectorAll('.tok-ref').forEach(function (r) { r.textContent = lesson.vals[r.dataset.ref]; });
+    $('explainNote').textContent = lesson.note;
+    $('explainLinks').innerHTML = '';
+    lesson.sources.forEach(function (s) {
+      var li = document.createElement('li'), a = document.createElement('a');
+      a.href = s.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = s.title;
+      li.appendChild(a);
+      $('explainLinks').appendChild(li);
+    });
+    $('explainSources').open = false;
+    showExplainStep(0);
+    $('explainDlg').showModal();
+    $('explainNext').focus();
+  }
+  function showExplainStep(k) {
+    var v = Explain.view(lesson, k);
+    lesson.step = v.step;
+    $('explainSay').textContent = v.say;
+    var b = $('explainSay').parentNode;
+    b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+    $('explainEq').innerHTML = '';
+    $('explainEq').append(v.equation + ' = ');
+    var res = document.createElement('span');
+    res.className = 'final' + (v.solved ? ' solved' : '');
+    res.textContent = v.solved ? v.result : '?';
+    $('explainEq').appendChild(res);
+    var active = null;
+    $('explainRows').querySelectorAll('.row[data-i]').forEach(function (el) {
+      var st = v.rows[Number(el.dataset.i)];
+      el.classList.remove('future', 'active', 'done');
+      el.classList.add(st);
+      if (st === 'active') active = el;
+    });
+    $('explainBack').disabled = v.first;
+    $('explainNext').textContent = v.next;
+    $('explainCount').textContent = v.counter;
+    // aktuelle Zeile ins Bild holen (Spalten im Rechenraster haben keine eigene Box: dann das Raster)
+    if (active) {
+      var el = active.getClientRects().length ? active : active.closest('.cpaper');
+      if (el) el.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
+    }
+    var fig = $('explainBuddy');
+    fig.classList.remove('is-nod'); void fig.offsetWidth; fig.classList.add('is-nod');
+  }
+
   // ---------- Statistik ----------
   function updateStats(bump) {
     $('starCount').textContent = state.progress.stars;
@@ -651,6 +732,13 @@
       $('settingsDlg').close();
       openWelcome();
     });
+    $('infoBtn').addEventListener('click', openExplain);
+    $('explainNext').addEventListener('click', function () {
+      Sound.tap();
+      if (Explain.view(lesson, lesson.step).last) $('explainDlg').close();
+      else showExplainStep(lesson.step + 1);
+    });
+    $('explainBack').addEventListener('click', function () { Sound.tap(); showExplainStep(lesson.step - 1); });
     $('resetBtn').addEventListener('click', function () {
       if (!window.confirm('Wirklich alle Sterne und Freischaltungen löschen?')) return;
       state.progress = Settings.defaults().progress;

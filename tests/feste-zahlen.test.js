@@ -148,3 +148,72 @@ describe('Stellenweise, alles selbst: Zeilen heißen nach der gerechneten Stelle
     }
   });
 });
+
+// Mal und Geteilt zu festen Zahlen (z. B. für die Beispiele im „So geht's“-Dialog, js/explain.js)
+describe('Tasks.build: Mal und Geteilt zu festen Zahlen', () => {
+  const MG = { '·': ['zerlegen', 'kernaufgaben', 'hilfsaufgabe'], ':': ['zerlegen'] };
+
+  test('canBuild kennt die Rechenwege für Mal und Geteilt', () => {
+    for (const op of ['·', ':']) for (const key of MG[op]) assert.equal(Tasks.canBuild(op, key), true, op + ' ' + key);
+  });
+
+  test('zufällige Aufgaben lassen sich mit denselben Zahlen genau so nachbauen', () => {
+    for (const op of ['·', ':']) {
+      for (const key of MG[op]) {
+        for (const level of LEVELS) {
+          for (const max of [100, 1000]) {
+            for (const rest of op === ':' ? [false, true] : [false]) {
+              for (let i = 0; i < 15; i++) {
+                const t = Tasks.generate({ op, strategy: key, level, max, rest });
+                const u = Tasks.build(op, key, t.a, t.b, { level, max });
+                assert.deepEqual(shape(u), shape(t), `${t.a} ${op} ${t.b} ${key} ${level}`);
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  test('wie im Heft: 9 · 29 zerlegt, 5 · 49 mit Hilfsaufgabe, 6 · 8 mit Kernaufgaben, 852 : 4 zerlegt', () => {
+    const z = Tasks.build('·', 'zerlegen', 9, 29, { level: 'hilfe', max: 1000 });
+    assert.deepEqual(z.rows.map(text), ['9 · 29 = 9 · 20 + 9 · 9', '9 · 20 = [180]', '9 · 9 = [81]', '(p1) + (p2) = [261]']);
+    const h = Tasks.build('·', 'hilfsaufgabe', 5, 49, { level: 'hilfe', max: 1000 });
+    assert.deepEqual(h.rows.map(text), ['5 · 49 = 5 · 50 − 5 · 1', '5 · 50 = [250]', '(s1) − 5 = [245]']);
+    const n = Tasks.build('·', 'hilfsaufgabe', 9, 27, { level: 'hilfe', max: 1000 });
+    assert.deepEqual(n.rows.map(text), ['9 · 27 = 10 · 27 − 1 · 27', '10 · 27 = [270]', '(s1) − 27 = [243]']);
+    const k = Tasks.build('·', 'kernaufgaben', 6, 8, { level: 'hilfe', max: 100 });
+    assert.deepEqual(k.rows.map(text), ['6 · 8 = 5 · 8 + 1 · 8', '5 · 8 = [40]', '1 · 8 = [8]', '(p1) + (p2) = [48]']);
+    const d = Tasks.build(':', 'zerlegen', 852, 4, { level: 'hilfe', max: 1000 });
+    assert.deepEqual(d.rows.map(text), ['800 : 4 = [200]', '40 : 4 = [10]', '12 : 4 = [3]', '852 : 4 = [213]', '(res) · 4 = [852]']);
+    const r = Tasks.build(':', 'zerlegen', 87, 6, { level: 'hilfe', max: 100 });
+    assert.equal(r.answer, 14);
+    assert.equal(r.rest, 3);
+    assert.deepEqual(r.rows.map(text), ['60 : 6 = [10]', '27 : 6 = [4] R [3]', '87 : 6 = [14] R [3]', '(res) · 6 + (rf) = [87]']);
+  });
+
+  test('Zahlen, die nicht zum Rechenweg passen, werden abgelehnt', () => {
+    assert.throws(() => Tasks.build('·', 'zerlegen', 3, 245, { max: 1000 }), /Zerlegen/, 'drei Teile');
+    assert.throws(() => Tasks.build('·', 'zerlegen', 4, 20, { max: 100 }), /Zerlegen/, 'nichts zu zerlegen');
+    assert.throws(() => Tasks.build('·', 'kernaufgaben', 4, 7, { max: 100 }), /Kernaufgaben/, '4 hat keine Musterzerlegung');
+    assert.throws(() => Tasks.build('·', 'hilfsaufgabe', 4, 23, { max: 100 }), /Hilfsaufgabe/, 'keine Zahl fast glatt');
+    assert.throws(() => Tasks.build(':', 'zerlegen', 27, 3, { max: 100 }), /Geteilt/, 'Ergebnis einstellig');
+  });
+
+  test('jeder Weg lässt sich zu festen Zahlen in jeder Stufe lösen', () => {
+    const cases = { '·': { zerlegen: [[9, 29], [4, 23], [64, 3]], kernaufgaben: [[6, 8], [9, 6], [7, 4], [8, 7]], hilfsaufgabe: [[5, 49], [9, 27], [3, 29], [6, 198]] },
+      ':': { zerlegen: [[852, 4], [96, 8], [87, 6], [482, 2]] } };
+    for (const op of ['·', ':']) {
+      for (const key of MG[op]) {
+        for (const [a, b] of cases[op][key]) {
+          for (const level of LEVELS) {
+            const t = Tasks.build(op, key, a, b, { level, max: 1000 });
+            const r = play(fresh(t));
+            assert.ok(r.ok, `${a} ${op} ${b} ${key} ${level}`);
+            assert.equal(r.vals.res, t.answer);
+          }
+        }
+      }
+    }
+  });
+});

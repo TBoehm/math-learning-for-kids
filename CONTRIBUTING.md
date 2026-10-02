@@ -26,7 +26,8 @@ npm run stamp        # nach Änderungen an css/ oder js/: Cache-Sperre (?v=<Hash
 
 | Datei | Inhalt |
 |---|---|
-| `js/tasks.js` | Aufgaben-Generator für alle Rechenwege; `Tasks.build(op, weg, a, b, opt)` baut einen Rechenweg zu festen Zahlen (z. B. für „Welcher Weg?“) |
+| `js/tasks.js` | Aufgaben-Generator für alle Rechenwege; `Tasks.build(op, weg, a, b, opt)` baut einen Rechenweg zu festen Zahlen (alle Rechenarten, z. B. für „Welcher Weg?“ und „So geht's“) |
+| `js/explain.js` | „So geht's“: Erklärung je Rechenweg (Idee, Beispiel, Tipps, Quellen) und was der Dialog bei jedem Schritt zeigt (ohne DOM) |
 | `js/formats/*.js` | Knobel-Aufgaben: Zahlenmauer, Fehler finden, Welcher Weg?, Überschlagen |
 | `js/layouts/wall.js` | Darstellung der Zahlenmauer als Pyramide |
 | `js/check.js` | Prüf-Logik: Eingaben lesen, Zeilen bewerten, Hilfe-Stufen, Lösungstext |
@@ -58,6 +59,24 @@ Eingabefeld einen Grund liefern: `tok.why(wert, werte)` gibt einen Satz zurück,
 `result.why`. Stimmt die Gleichung mit den Zahlen des Kindes trotzdem (13 + 60 = 73), beginnt der Text mit
 „13 + 60 = 73 stimmt, aber …“. Felder, deren Ergebnis von einer frei gewählten Zahl abhängt, tragen dafür `deps`.
 So bleiben sie unmarkiert, statt rot zu werden. Tests: `tests/rueckmeldung.test.js`.
+
+### „So geht's“: Rechenwege erklären
+
+Neben dem Rechenweg-Schild steht ein Knopf „So geht's“. Er öffnet einen Dialog, in dem der Begleiter den Weg an einem
+Beispiel erklärt (`js/explain.js`, Dialog in `js/app.js`). Damit die Erklärung immer zur App passt, ist fast nichts von Hand
+geschrieben:
+
+- Das **Beispiel** ist eine echte Aufgabe aus dem Generator in der Stufe „Mit Hilfe“ (`Tasks.build` bzw. `Schriftlich.build`),
+  gezeichnet wie beim Üben, die Felder schon ausgefüllt.
+- Zu jeder Zeile sagt der Begleiter den **Tipp der App** (`row.hint`).
+- Von Hand geschrieben sind nur die **Idee** am Anfang, die **Tipps** am Ende und der **Hinweis für Erwachsene** mit Quellen.
+
+Die Rechenwege und Beispiele stammen aus den frei zugänglichen Seiten von KIRA, PIKAS und Mahiko (DZLM) – keine Lehrwerke.
+Wo möglich ist das Beispiel genau das aus der Quelle (z. B. 399 + 473 auf vier Wegen); `tests/explain.test.js` prüft, dass
+die App diese Rechnungen genau so aufschreibt, und dass **jeder** halbschriftliche Rechenweg und jedes schriftliche Verfahren
+eine Erklärung hat. Ein neuer Rechenweg braucht deshalb einen Eintrag in `Explain.LESSONS` (Beispiel je Zahlenraum, Idee,
+Tipps, Hinweis, Quellen) und, falls er zu festen Zahlen gebaut werden soll, einen Eintrag in `BUILD` in `js/tasks.js`.
+Knobeleien haben keinen Knopf.
 
 ## Veröffentlichung
 

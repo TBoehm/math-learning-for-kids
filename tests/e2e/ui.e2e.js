@@ -618,3 +618,123 @@ describe('Knobeln im Browser', () => {
     });
   }
 });
+
+// „So geht's“: Der Begleiter erklärt den Rechenweg im Dialog. Inhalte und Schritte prüft tests/explain.test.js;
+// hier nur Verdrahtung, Dialog und Layout.
+describe("So geht's", () => {
+  async function openExplain(page) {
+    await page.locator('#infoBtn').click();
+    await page.locator('#explainDlg[open]').waitFor();
+  }
+  async function clickNext(page, times) {
+    for (let i = 0; i < times; i++) await page.locator('#explainNext').click();
+  }
+
+  test('Knopf neben dem Rechenweg: Begleiter erklärt am Beispiel Schritt für Schritt, danach geht die Aufgabe weiter', async () => {
+    const { page, ctx, errors } = await openPage();
+    await setSettings(page, { op: '+', strategy: 'stellenweise', level: 'hilfe', range: 1000 });
+    await waitForInputRow(page);
+    const before = await page.evaluate(() => window.RR.app.current.id);
+    assert.match(await page.locator('#infoBtn').textContent(), /So geht's/);
+    await openExplain(page);
+    assert.equal(await page.locator('#explainTitle').textContent(), "So geht's: Stellenweise");
+    assert.equal(await page.locator('#explainBuddy svg').count(), 1, 'der eigene Begleiter erklärt');
+    assert.match(await page.locator('#explainSay').textContent(), /zerlegst du beide Zahlen/);
+    assert.equal(await page.locator('#explainEq').textContent(), '399 + 473 = ?');
+    assert.equal(await page.locator('#explainRows .row:visible').count(), 0, 'erst die Idee, noch keine Zeile');
+    assert.equal(await page.locator('#explainBack').isDisabled(), true);
+    // erste Zeile: Tipp der App, Zahlen eingetragen
+    await clickNext(page, 1);
+    assert.match(await page.locator('#explainSay').textContent(), /Rechne die Hunderter: 300 \+ 400/);
+    assert.equal(await page.locator('#explainRows .row.active .cell').inputValue(), '700');
+    assert.equal(await page.locator('#explainCount').textContent(), '2 / 6');
+    // zurück und wieder vor
+    await page.locator('#explainBack').click();
+    assert.equal(await page.locator('#explainRows .row:visible').count(), 0);
+    await clickNext(page, 4);
+    assert.equal(await page.locator('#explainEq').textContent(), '399 + 473 = 872');
+    assert.equal(await page.locator('#explainRows .row.done').count(), 3);
+    await clickNext(page, 1);
+    assert.match(await page.locator('#explainNext').textContent(), /Jetzt du/);
+    assert.ok(await page.locator('#explainSources a[href^="https://kira.dzlm.de/"]').count() >= 1, 'Quellen für Erwachsene');
+    assert.equal(await page.locator('#explainSources a').first().getAttribute('target'), '_blank');
+    await page.locator('#explainNext').click();
+    await page.locator('#explainDlg').waitFor({ state: 'hidden' });
+    // die Aufgabe ist noch dieselbe und lässt sich lösen
+    assert.equal(await page.evaluate(() => window.RR.app.current.id), before);
+    await solveTask(page);
+    // erneut öffnen beginnt wieder vorn; Escape schließt
+    await openExplain(page);
+    assert.equal(await page.locator('#explainCount').textContent(), '1 / 6');
+    await page.keyboard.press('Escape');
+    await page.locator('#explainDlg').waitFor({ state: 'hidden' });
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('Knobeleien haben keinen Knopf, Mal, Geteilt und schriftliche Verfahren schon', async () => {
+    const { page, ctx, errors } = await openPage();
+    for (const [op, strategy] of [['+', 'zahlenmauer'], ['+', 'welcherweg'], ['·', 'fehler']]) {
+      await setSettings(page, { op, strategy });
+      assert.equal(await page.locator('#infoBtn').isVisible(), false, strategy);
+    }
+    for (const [op, strategy, name] of [['·', 'kernaufgaben', 'Kernaufgaben'], [':', 'zerlegen', 'Zerlegen'], ['−', 'schriftlich-erg', 'Ergänzen']]) {
+      await setSettings(page, { op, strategy, range: 1000 });
+      await openExplain(page);
+      assert.match(await page.locator('#explainTitle').textContent(), new RegExp(name));
+      const n = await page.evaluate(() => document.querySelectorAll('#explainRows .row[data-i]').length);
+      await clickNext(page, n + 1);
+      assert.equal(await page.locator('#explainRows .row.future').count(), 0, 'am Ende ist alles ausgefüllt');
+      await page.locator('#explainNext').click();
+      await page.locator('#explainDlg').waitFor({ state: 'hidden' });
+    }
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  test('Schriftlich: das Beispiel steht im Rechenraster, Spalte für Spalte', async () => {
+    const { page, ctx, errors } = await openPage();
+    await setSettings(page, { op: '+', strategy: 'schriftlich', level: 'hilfe', range: 1000 });
+    await openExplain(page);
+    assert.equal(await page.locator('#explainRows .cgrid').count(), 1);
+    await clickNext(page, 2); // Überschlag, dann die Einer
+    assert.match(await page.locator('#explainSay').textContent(), /6 \+ 7 = 13/);
+    assert.equal(await page.locator('#explainRows .row.active .k-res .cell').inputValue(), '3');
+    assert.equal(await page.locator('#explainRows .k-carry.k-c1 .k-fixnum').textContent(), '1', 'Übertrag zu den Zehnern');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
+
+  for (const [w, h] of [[320, 640], [390, 844], [1024, 768]]) {
+    test(`${w}×${h}: Dialog passt, Weiter-Knopf bleibt sichtbar`, async () => {
+      const { page, ctx, errors } = await openPage({ viewport: { width: w, height: h }, isMobile: w < 700, hasTouch: w < 700 });
+      for (const [op, strategy] of [[':', 'zerlegen'], ['−', 'schriftlich']]) {
+        await setSettings(page, { op, strategy, level: 'hilfe', range: 1000 });
+        await openExplain(page);
+        const n = await page.evaluate(() => document.querySelectorAll('#explainRows .row[data-i]').length);
+        for (let i = 0; i <= n + 1; i++) {
+          const r = await page.evaluate(() => {
+            const inner = document.querySelector('#explainDlg .sheet-inner');
+            const next = document.getElementById('explainNext').getBoundingClientRect();
+            const active = document.querySelector('#explainRows .row.active');
+            const box = active && (active.getClientRects().length ? active : active.closest('.cpaper')).getBoundingClientRect();
+            const ib = inner.getBoundingClientRect();
+            return {
+              overflow: inner.scrollWidth - inner.clientWidth, page: document.documentElement.scrollWidth - window.innerWidth,
+              next: next.top >= 0 && next.bottom <= window.innerHeight && next.right <= window.innerWidth,
+              active: !box || (box.top >= ib.top - 1 && box.top < ib.bottom)
+            };
+          });
+          assert.ok(r.overflow <= 0 && r.page <= 0, `${strategy} Schritt ${i}: waagerechter Überlauf`);
+          assert.ok(r.next, `${strategy} Schritt ${i}: Weiter-Knopf sichtbar`);
+          assert.ok(r.active, `${strategy} Schritt ${i}: aktuelle Zeile im Bild`);
+          if (i <= n) await page.locator('#explainNext').click();
+        }
+        await page.locator('#explainNext').click();
+        await page.locator('#explainDlg').waitFor({ state: 'hidden' });
+      }
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    });
+  }
+});

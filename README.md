@@ -29,6 +29,10 @@ oder in drei statt zwei Sprüngen ans Ziel kommt, bekommt trotzdem seinen Stern.
 - **Schriftlich addieren und subtrahieren** (Abziehen mit Umwechseln oder Ergänzen) im Rechenraster auf Karopapier,
   mit Überschlag, Vergleich und Probe.
 - **Knobeln:** Zahlenmauern, Fehler finden, „Welcher Weg ist geschickt?“ und Überschlagen.
+- **„So geht's“ zu jedem Rechenweg:** Ein kleiner Knopf neben dem Rechenweg öffnet eine Erklärung. Der Begleiter rechnet
+  ein Beispiel Schritt für Schritt vor – mit genau den Zeilen und Tipps, die die App auch beim Üben verwendet. Die Rechenwege
+  und Beispiele folgen den frei zugänglichen Fachdidaktik-Seiten von KIRA, PIKAS und Mahiko (DZLM); die Quellen stehen für
+  Erwachsene im Dialog.
 - **Drei Hilfe-Stufen:** *Mit Hilfe* (Schritte vorgegeben), *Zerlegung selbst* und *Alles selbst* – so wie in der Arbeit.
 - **Hilfe, die nicht schimpft:** erst Ermutigung, dann ein Tipp, beim dritten Versuch die Lösung.
 - **Sagt, was genau nicht passt:** Rechnet das Kind mit einer unpassenden Zahl richtig weiter, erklärt der Begleiter
@@ -42,7 +46,8 @@ oder in drei statt zwei Sprüngen ans Ziel kommt, bekommt trotzdem seinen Stern.
 
 1. [App öffnen](https://tboehm.github.io/math-learning-for-kids/), Namen eingeben, Welt und Begleiter wählen.
 2. Oben die **Rechenart** antippen, darunter im Menü den **Rechenweg** und daneben den **Zahlenraum** wählen.
-3. Über ⚙️ lassen sich **Hilfe-Stufe**, Zehnerübergang (ohne / gemischt / mit), Geteilt mit Rest, Töne und Zahlenfeld einstellen.
+3. Unklar, wie ein Rechenweg geht? **„? So geht's“** neben dem Rechenweg antippen – der Begleiter erklärt ihn an einem Beispiel.
+4. Über ⚙️ lassen sich **Hilfe-Stufe**, Zehnerübergang (ohne / gemischt / mit), Geteilt mit Rest, Töne und Zahlenfeld einstellen.
 
 **Tipp für Eltern:** Neue Rechenwege mit *Mit Hilfe* beginnen, dann *Zerlegung selbst*, Ziel ist *Alles selbst*.
 Auf dem Tablet lässt sich die Seite über „Zum Home-Bildschirm“ wie eine App ablegen.
@@ -77,8 +82,8 @@ Jede Aufgabe wird zufällig neu erzeugt, die Knobeleien halten sich an den einge
   Wer die Browserdaten löscht, setzt die App zurück.
 - **Hosting:** Die öffentliche Version liegt auf GitHub Pages; GitHub verarbeitet dabei als Hoster die technisch
   nötigen Zugriffsdaten. Wer das vermeiden will, kann die App selbst hosten oder ganz offline nutzen (siehe unten).
-- Der einzige Link nach außen ist der kleine Chip „Agentic Engineering for Teams“ am Rand; er lädt nichts nach und
-  öffnet sich nur, wenn man ihn antippt.
+- Links nach außen gibt es nur beim kleinen Chip „Agentic Engineering for Teams“ am Rand und bei den Quellenangaben
+  in den „So geht's“-Erklärungen. Sie laden nichts nach und öffnen sich nur, wenn man sie antippt.
 
 ## Selbst hosten oder offline nutzen
 

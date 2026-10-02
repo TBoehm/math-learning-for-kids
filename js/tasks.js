@@ -944,8 +944,10 @@
     });
   }
 
-  function mulZerlegen(opt) {
-    var n = mulNumbers(opt), a = n.a, b = n.b, s = n.small, big = n.big, p = opt.profi;
+  // n: feste Zahlen { a, b, small, big } (Tasks.build), sonst zufällig
+  function mulZerlegen(opt, n) {
+    n = n || mulNumbers(opt);
+    var a = n.a, b = n.b, s = n.small, big = n.big, p = opt.profi;
     var parts = placeParts(big), bigFirst = a === big;
     var task = { op: '·', strategy: 'zerlegen', a: a, b: b, answer: a * b };
     if (opt.level === 'selbst') {
@@ -1105,9 +1107,10 @@
   // Musterzerlegung: 6 = 5 + 1, 7 = 5 + 2, 8 = 10 − 2, 9 = 10 − 1 (3 · ist keine Kernaufgabe)
   var KERN_CANON = { 6: [5, '+', 1], 7: [5, '+', 2], 8: [10, '−', 2], 9: [10, '−', 1] };
 
-  function mulKernaufgaben(opt) {
+  // n: feste Zahlen { a, b } (Tasks.build), sonst zufällig
+  function mulKernaufgaben(opt, n) {
     var p = opt.profi;
-    var n = attempt(function () {
+    n = n || attempt(function () {
       var a = rnd(6, 9), b = rnd(3, 9);
       if (b === 5 && chance(0.6)) return null; // · 5 ist selbst schon eine Kernaufgabe
       return { a: a, b: b };
@@ -1247,8 +1250,10 @@
     });
   }
 
-  function mulHilfsaufgabe(opt) {
-    var n = mulHilfsNumbers(opt), a = n.a, b = n.b, f = n.f, kept = n.kept, G = n.G, d = G - f, p = opt.profi, max = opt.max;
+  // n: feste Zahlen { a, b, f, kept, G } (Tasks.build), sonst zufällig
+  function mulHilfsaufgabe(opt, n) {
+    n = n || mulHilfsNumbers(opt);
+    var a = n.a, b = n.b, f = n.f, kept = n.kept, G = n.G, d = G - f, p = opt.profi, max = opt.max;
     var task = { op: '·', strategy: 'hilfsaufgabe', a: a, b: b, answer: a * b };
     if (opt.level === 'selbst') {
       task.rows = [mhFirstRow(a, b, f, kept, G, max)];
@@ -1375,9 +1380,10 @@
     });
   }
 
-  function divZerlegen(opt) {
-    var withRest = !!opt.rest, p = opt.profi;
-    var n = divNumbers(opt, withRest);
+  // n: feste Zahlen { d, q, r } (Tasks.build), sonst zufällig
+  function divZerlegen(opt, n) {
+    n = n || divNumbers(opt, !!opt.rest);
+    var withRest = n.r > 0, p = opt.profi;
     var d = n.d, q = n.q, r = n.r, D = q * d + r;
     // Musterzerlegung nach den Stellen des Ergebnisses: 852 : 4 -> 800 + 40 + 12
     var qParts = placeParts(q), parts = qParts.map(function (x) { return x * d; });
@@ -1521,6 +1527,31 @@
     });
   }
 
+  // ---------- Mal und Geteilt zu festen Zahlen (Tasks.build) ----------
+  // Dieselben Zahlen, die der Zufallsgenerator gewählt hätte; was nicht zum Rechenweg passt, wird abgelehnt.
+  function buildMulZerlegen(a, b, opt) {
+    var small = Math.min(a, b), big = Math.max(a, b);
+    // mit Hilfe stehen genau zwei Teile da (4 · 23 = 4 · 20 + 4 · 3)
+    if (small < 2 || small > 9 || placeParts(big).length !== 2) throw new Error('Zerlegen passt nicht zu ' + a + ' · ' + b);
+    return mulZerlegen(opt, { a: a, b: b, small: small, big: big });
+  }
+  function buildMulKernaufgaben(a, b, opt) {
+    if (!KERN_CANON[a] || !(b >= 1 && b <= 10)) throw new Error('Kernaufgaben passen nicht zu ' + a + ' · ' + b);
+    return mulKernaufgaben(opt, { a: a, b: b });
+  }
+  function buildMulHilfsaufgabe(a, b, opt) {
+    // glatt wird die Zahl kurz vor einem Zehner (29, 49, 198), sonst die 9
+    var big = Math.max(a, b), f = big >= 18 && ones(big) >= 8 ? big : a === 9 || b === 9 ? 9 : 0;
+    var kept = f === a ? b : a;
+    if (!f || kept === f) throw new Error('Hilfsaufgabe passt nicht zu ' + a + ' · ' + b);
+    return mulHilfsaufgabe(opt, { a: a, b: b, f: f, kept: kept, G: tens(f) + 10 });
+  }
+  function buildDivZerlegen(D, d, opt) {
+    var q = Math.floor(D / d);
+    if (!(d >= 2 && d <= 9) || q < 11) throw new Error('Geteilt mit Zerlegen passt nicht zu ' + D + ' : ' + d);
+    return divZerlegen(opt, { d: d, q: q, r: D % d });
+  }
+
   // ---------- Verzeichnis ----------
   var STRATEGIES = {
     '+': [
@@ -1617,7 +1648,7 @@
     return task;
   }
 
-  // Rechenwege, die es auch zu festen Zahlen gibt (Plus und Minus)
+  // Rechenwege, die es auch zu festen Zahlen gibt
   var BUILD = {
     '+': {
       stellenweise: buildStellenweise,
@@ -1630,14 +1661,16 @@
       ergaenzen: buildErgaenzen,
       hilfsaufgabe: function (a, b, o) { return buildHilfsaufgabe('−', a, b, o); },
       vereinfachen: function (a, b, o) { return buildVereinfachen('−', a, b, o); }
-    }
+    },
+    '·': { zerlegen: buildMulZerlegen, kernaufgaben: buildMulKernaufgaben, hilfsaufgabe: buildMulHilfsaufgabe },
+    ':': { zerlegen: buildDivZerlegen }
   };
   function canBuild(op, key) { return !!(BUILD[op] && BUILD[op][key]); }
 
   /**
    * Rechenweg zu festen Zahlen – dieselbe Aufgabe, die der Generator zu diesen Zahlen bauen würde,
-   * in jeder Stufe (z. B. für "Welcher Weg?"). opt: { level, max, round: 'a' | 'b' (welche Zahl
-   * bei Hilfsaufgabe und Vereinfachen glatt wird; nur bei Plus darf es die erste sein) }
+   * in jeder Stufe (z. B. für "Welcher Weg?" und die Beispiele in js/explain.js). opt: { level, max,
+   * round: 'a' | 'b' (welche Zahl bei Hilfsaufgabe und Vereinfachen glatt wird; nur bei Plus darf es die erste sein) }
    */
   function build(op, key, a, b, opt) {
     if (!canBuild(op, key)) throw new Error('Kein Rechenweg ' + key + ' zu festen Zahlen bei ' + op);
