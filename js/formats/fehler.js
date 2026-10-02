@@ -1,8 +1,11 @@
 /*
  * Knobeln: Fehler finden. Ein anderes Kind hat eine Aufgabe halbschriftlich gerechnet – in genau einer
  * Zeile steckt ein typischer Fehler (Zehnerübergang vergessen, verzählt, Einer vergessen, Null vergessen,
- * Einmaleins-Fehler, falsches Rechenzeichen beim Ausgleichen). Die Rechnung stammt aus einem echten
- * Rechenweg (Tasks.STRATEGIES, Stufe "Mit Hilfe"); Folgezeilen rechnen mit der falschen Zahl weiter.
+ * Einmaleins-Fehler, beim Ergebnis verrechnet). Die Rechnung stammt aus einem echten Rechenweg
+ * (Tasks.STRATEGIES, Stufe "Mit Hilfe"); Folgezeilen rechnen mit der falschen Zahl weiter.
+ * Es stehen nur Aufgaben der gewählten Rechenart da (pure): bei Mal und Geteilt die Teilaufgaben und unten
+ * die ganze Aufgabe, ohne Zusammenrechnen und Probe; bei Plus und Minus nur Wege ohne Gegenzeichen.
+ * Die falsche Zeile wird zufällig gewählt (jede mögliche Zeile gleich oft), dann die Fehlerart.
  *   Zeile 1: Welche Zeile ist falsch? (die Zeilen sind die Auswahl-Knöpfe)
  *   Zeile 2: die falsche Zeile verbessern – dann ist die Aufgabe fertig.
  * Oben steht keine eigene Rechenaufgabe, nur ein Titel (task.title).
@@ -21,7 +24,36 @@
   var KIDS = ['Emil', 'Lotta', 'Finn', 'Mila', 'Jonas', 'Ida', 'Ole', 'Frieda'];
   var OPS = { '+': function (x, y) { return x + y; }, '−': function (x, y) { return x - y; },
     '·': function (x, y) { return x * y; }, ':': function (x, y) { return Math.floor(x / y); } };
-  var FLIP = { '+': '−', '−': '+' };
+  var SIGNS = ['+', '−', '·', ':'];
+
+  // ---------- Nur Aufgaben der gewählten Rechenart ----------
+  function signsOf(r) {
+    return r.tokens.filter(function (t) { return t.t === 'txt' && SIGNS.indexOf(t.v) >= 0; }).map(function (t) { return t.v; });
+  }
+  function hasId(r, id) { return r.tokens.some(function (t) { return t.t === 'in' && t.id === id; }); }
+
+  /**
+   * Rechnung nur mit Zeilen der Rechenart der Aufgabe (oder null, wenn der Weg dafür nicht passt).
+   * Mal/Geteilt: ohne Zerlegung, Zusammenrechnen und Probe; unten steht die ganze Aufgabe (4 · 23 = 92).
+   * Plus/Minus: Wege mit dem Gegenzeichen (Hilfsaufgabe, Ergänzen) passen nicht.
+   */
+  function pure(base) {
+    var op = base.op;
+    var rows = base.rows.filter(function (r) { return r.label !== 'Probe'; });
+    var own = rows.filter(function (r) { return signsOf(r).every(function (o) { return o === op; }); });
+    if (op === '+' || op === '−') return own.length === rows.length ? Object.assign({}, base, { rows: own }) : null;
+    if (!own.some(function (r) { return hasId(r, 'res'); })) {
+      var toks = [N(base.a), T(op), N(base.b), T('='), I('res', base.answer)];
+      if (base.rest) toks.push(T('R'), I('rf', base.rest));
+      own.push({ label: 'Ergebnis', hint: '', tokens: toks });
+    }
+    // Verweise nur auf Zeilen, die stehen bleiben
+    var ids = {};
+    own.forEach(function (r) { r.tokens.forEach(function (t) { if (t.t === 'in') ids[t.id] = true; }); });
+    var dangling = own.some(function (r) { return r.tokens.some(function (t) { return t.t === 'ref' && !ids[t.id]; }); });
+    // mindestens zwei Teilaufgaben über der ganzen Aufgabe
+    return dangling || own.length < 3 ? null : Object.assign({}, base, { rows: own });
+  }
 
   // ---------- Rechnung als Zeilen ----------
   /**
@@ -73,40 +105,48 @@
 
   // ---------- Typische Fehler ----------
   /**
-   * Mögliche Fehler: [{ line, item (Stelle in der Zeile), type, w (falsche Zahl), flip (falsches Rechenzeichen) }]
-   * Nur Zeilen mit genau einem Ergebnis-Feld und ohne Rest.
+   * Mögliche Fehler: [{ line, item (Stelle in der Zeile), type, w (falsche Zahl) }]
+   * Nur Zeilen mit genau einem Ergebnis-Feld; beim Teilen mit Rest ist der Quotient falsch, der Rest bleibt.
    */
-  function candidates(ls, key) {
+  function candidates(ls) {
     var out = [];
     ls.forEach(function (items, L) {
-      var ins = items.filter(function (x) { return x.id; });
-      if (ins.length !== 1 || hasOp(items, 'R')) return;
-      var s = split(items), add = function (type, w, item, flip) {
-        if (w >= 0 && w !== items[item].v) out.push({ line: L, item: item, type: type, w: w, flip: flip || null });
+      var s = split(items);
+      var ins = s.left.concat(s.right).filter(function (x) { return x.id; });
+      if (ins.length !== 1 || (s.rest && !hasOp(s.left, ':'))) return;
+      var add = function (type, w, item) {
+        if (w >= 0 && w !== items[item].v) out.push({ line: L, item: item, type: type, w: w });
       };
-      var last = L === ls.length - 1;
+      var ri = s.left.length + 1;
       // x op y = [r]
       if (s.left.length === 3 && s.right.length === 1 && s.right[0].id) {
-        var x = s.left[0].v, op = s.left[1].v, y = s.left[2].v, r = s.right[0].v, ri = items.length - 1;
+        var x = s.left[0].v, op = s.left[1].v, y = s.left[2].v, r = s.right[0].v;
+        // Mal/Geteilt: unten die ganze Aufgabe – aus den Teilergebnissen falsch zusammengerechnet
+        if (s.right[0].id === 'res' && (op === '·' || op === ':')) {
+          var off = op === '·' ? 10 : 1;
+          add('ergebnis', r - off, ri); add('ergebnis', r + off, ri);
+          return;
+        }
         if (op === '+' || op === '−') {
           if (op === '+' ? x % 10 + y % 10 >= 10 : x % 10 < y % 10) add('uebertrag', op === '+' ? r - 10 : r + 10, ri);
           if (y >= 10 && y % 10 === 0) {
             var u = y % 100 === 0 ? 100 : 10;
-            add('verzaehlt', r - u, ri); add('verzaehlt', r + u, ri);
+            // nicht: gar nicht gerechnet (190 + 100 = 190)
+            [r - u, r + u].forEach(function (w) { if (w !== x) add('verzaehlt', w, ri); });
           }
           if (y >= 10 && y % 10 !== 0) add('einer', OPS[op](x, y - y % 10), ri);
-          // Ausgleichen bei der Hilfsaufgabe, Zuviel abziehen bei der Kernaufgabe mit 10
-          if (last && (key === 'hilfsaufgabe' || (key === 'kernaufgaben' && op === '−'))) {
-            add('vorzeichen', OPS[FLIP[op]](x, y), ri, FLIP[op]);
-          }
         } else if (op === '·') {
           if (y >= 10 && y % 10 === 0) add('null', x * y / 10, ri);
           else if (x >= 10 && x % 10 === 0) add('null', x * y / 10, ri);
-          else if (x > 1 && y > 1) [r + x, r - x, r + y, r - y].forEach(function (w) { if (w > 0) add('einmaleins', w, ri); });
+          else if (x > 1 && y > 1 && x <= 10 && y <= 10) [r + x, r - x, r + y, r - y].forEach(function (w) { if (w > 0) add('einmaleins', w, ri); });
         } else if (op === ':') {
           if (r >= 10 && r % 10 === 0) add('null', r / 10, ri);
-          else if (y > 1 && r > 1) [r + 1, r - 1].forEach(function (w) { if (w > 0) add('einmaleins', w, ri); });
+          else if (y > 1 && r > 1 && y <= 10 && r <= 10) [r + 1, r - 1].forEach(function (w) { if (w > 0) add('einmaleins', w, ri); });
         }
+      }
+      // Verändern: 169 + 77 = 170 + [76] – in die falsche Richtung verändert (170 + 78)
+      if (s.left.length === 3 && s.right.length === 3 && (s.left[1].v === '+' || s.left[1].v === '−') && s.right[1].v === s.left[1].v) {
+        [0, 2].forEach(function (k) { if (s.right[k].id) add('abgeben', 2 * s.left[k].v - s.right[k].v, s.left.length + 1 + k); });
       }
       // Ergänzen: von [x] + [?] = [z]
       if (s.left.length === 3 && s.left[2].id && s.right.length === 1) {
@@ -119,21 +159,16 @@
       if (s.left.length >= 5 && !hasOp(s.left, '−') && !hasOp(s.left, '·') && s.right.length === 1 && s.right[0].id) {
         var ones = 0;
         for (var k = 0; k < s.left.length; k += 2) ones += s.left[k].v % 10;
-        if (ones >= 10) add('uebertrag', s.right[0].v - 10, items.length - 1);
+        if (ones >= 10) add('uebertrag', s.right[0].v - 10, ri);
       }
     });
     return out;
   }
 
-  /**
-   * Alle Fehler, die sich in diese Rechnung einbauen lassen. Die Probe bleibt immer richtig: Sie gehört nicht
-   * zum Rechenweg (bei Geteilt wäre der Fehler sonst in einer Malaufgabe, beim Ergänzen in einer Plusaufgabe).
-   */
+  /** Alle Fehler, die sich in diese Rechnung einbauen lassen (genau eine Zeile wird falsch). */
   function mistakes(base, max) {
     var ls = lines(base);
-    return candidates(ls, base.strategy).filter(function (c) {
-      return base.rows[c.line].label !== 'Probe' && valid(ls, apply(ls, c), c, max || 1000);
-    });
+    return candidates(ls).filter(function (c) { return valid(ls, apply(ls, c), c, max || 1000); });
   }
 
   /** Fehler einbauen; Folgezeilen rechnen mit der falschen Zahl weiter. */
@@ -142,8 +177,14 @@
     var changed = {};
     var bad = shown[cand.line];
     bad[cand.item].v = cand.w;
-    if (cand.flip) bad[1].v = cand.flip;
     if (bad[cand.item].id) changed[bad[cand.item].id] = cand.w;
+    // Verändern (169 + 77 = 170 + 78): die leichte Aufgabe darunter rechnet mit den veränderten Zahlen
+    var was = split(ls[cand.line]), now = split(bad), next = shown[cand.line + 1];
+    if (was.right.length === 3 && next && text(split(next).left) === text(was.right)) {
+      var nx = split(next);
+      nx.left.forEach(function (x, k) { x.v = now.right[k].v; });
+      if (nx.right.length === 1 && nx.right[0].id) { nx.right[0].v = chain(nx.left); changed[nx.right[0].id] = nx.right[0].v; }
+    }
     for (var L = cand.line + 1; L < shown.length; L++) {
       var items = shown[L], touched = false;
       items.forEach(function (x) { if (x.ref && x.ref in changed) { x.v = changed[x.ref]; touched = true; } });
@@ -157,13 +198,12 @@
     return shown;
   }
 
-  /** Genau eine Zeile falsch (beim falschen Rechenzeichen: rechnerisch richtig, aber anders als richtig). */
+  /** Genau eine Zeile falsch. */
   function valid(ls, shown, cand, max) {
     return shown.every(function (items, L) {
       // auch die falschen Zahlen bleiben im Zahlenraum
       if (items.some(function (x) { return x.num && (x.v < 0 || x.v > max); })) return false;
-      if (L !== cand.line) return lineOk(items);
-      return cand.flip ? lineOk(items) && text(items) !== text(ls[L]) : !lineOk(items);
+      return L !== cand.line ? lineOk(items) : !lineOk(items);
     });
   }
 
@@ -173,10 +213,11 @@
     einer: 'wurden die Einer vergessen',
     null: 'fehlt eine Null',
     einmaleins: 'steckt ein Einmaleins-Fehler',
-    vorzeichen: 'steht das falsche Rechenzeichen'
+    abgeben: 'wurde in die falsche Richtung verändert',
+    ergebnis: 'wurde beim Ergebnis verrechnet'
   };
 
-  function fixHint(cand, items, key) {
+  function fixHint(cand, items) {
     var s = split(items), x = s.left[0].v, op = s.left[1].v, y = s.left[2].v;
     switch (cand.type) {
       case 'uebertrag': return 'Rechne ' + text(s.left) + ' noch einmal. Achtung, Zehnerübergang!';
@@ -186,10 +227,13 @@
       case 'null': return op === '·' ? 'Denk an die Null: ' + x + ' · ' + y + ' ist zehnmal so viel wie ' +
         (y % 10 === 0 ? x + ' · ' + y / 10 : x / 10 + ' · ' + y) + '.'
         : 'Denk an die Null: Wie oft passt ' + y + ' in ' + x + '?';
+      case 'abgeben': return op === '+'
+        ? 'Beim Plus gibt eine Zahl der anderen etwas ab: Wird die eine größer, muss die andere kleiner werden.'
+        : 'Beim Minus verändern sich beide Zahlen gleich: Wird die eine größer, muss die andere auch größer werden.';
       case 'einmaleins': return 'Das ist eine Einmaleins-Aufgabe. Rechne ' + x + ' ' + op + ' ' + y + ' noch einmal genau.';
-      default: return key === 'kernaufgaben' ? 'Mit 10 mal hast du zu viel gerechnet. Das Zuviel musst du abziehen!'
-        : op === '−' ? 'Du hast ' + y + ' zu viel dazugerechnet. Also musst du ' + y + ' wieder abziehen!'
-          : 'Du hast ' + y + ' zu viel weggenommen. Also musst du ' + y + ' wieder dazutun!';
+      default: return op === ':'
+        ? 'Zähl die Teilergebnisse in den Zeilen darüber noch einmal zusammen. Wie oft passt ' + y + ' in ' + x + '?'
+        : 'Rechne mit den Teilergebnissen in den Zeilen darüber noch einmal genau: Was ist ' + x + ' · ' + y + '?';
     }
   }
 
@@ -208,11 +252,10 @@
       label: 'Welche Zeile ist falsch? Tippe sie an.',
       tokens: [{ t: 'choice', id: 'zeile', options: shown.map(text), answer: L, check: function (v) { return v === L; },
         why: function (v) { return 'Zeile ' + (v + 1) + ' stimmt: ' + text(shown[v]) + '. Der Fehler steckt in einer anderen Zeile.'; } }],
-      hint: cand.flip ? 'Rechne jede Zeile nach – und schau dir auch die Rechenzeichen genau an!'
-        : 'Rechne jede Zeile nach. Wo stimmt das Ergebnis nicht?',
+      hint: 'Rechne jede Zeile nach. Wo stimmt das Ergebnis nicht?',
       advice: function () { return 'Genau! In Zeile ' + (L + 1) + ' ' + NAMES[cand.type] + '. Verbessere sie!'; }
     }, {
-      label: 'Zeile ' + (L + 1) + ' verbessern', tokens: fixTokens, hint: fixHint(cand, truth, base.strategy)
+      label: 'Zeile ' + (L + 1) + ' verbessern', tokens: fixTokens, hint: fixHint(cand, truth)
     }];
     return {
       op: base.op, strategy: 'fehler', a: base.a, b: base.b, answer: truth[cand.item].v, title: 'Wo steckt der Fehler?',
@@ -235,14 +278,17 @@
       } catch (e) { continue; }
       if (!base || !base.rows) continue;
       base.strategy = base.strategy || s.key;
-      if (!lines(base).every(lineOk)) continue;
-      // jede Fehlerart gleich oft, dann eine Stelle dazu
+      base = pure(base);
+      if (!base || !lines(base).every(lineOk)) continue;
       var cands = mistakes(base, max);
       if (!cands.length) continue;
-      var types = cands.map(function (c) { return c.type; }).filter(function (t, k, a) { return a.indexOf(t) === k; });
-      var type = types[Math.floor(rnd() * types.length)];
-      var pool = cands.filter(function (c) { return c.type === type; });
-      return build(base, pool[Math.floor(rnd() * pool.length)], { rnd: rnd });
+      // erst die Zeile (jede gleich oft), dann die Fehlerart, dann die falsche Zahl
+      var pick = function (xs) { return xs[Math.floor(rnd() * xs.length)]; };
+      var uniq = function (xs) { return xs.filter(function (v, k, a) { return a.indexOf(v) === k; }); };
+      var line = pick(uniq(cands.map(function (c) { return c.line; })));
+      var here = cands.filter(function (c) { return c.line === line; });
+      var type = pick(uniq(here.map(function (c) { return c.type; })));
+      return build(base, pick(here.filter(function (c) { return c.type === type; })), { rnd: rnd });
     }
     throw new Error('Keine Fehler-Aufgabe gefunden');
   }
@@ -255,7 +301,7 @@
     });
   });
 
-  var api = { lines: lines, text: text, lineOk: lineOk, candidates: candidates, mistakes: mistakes, apply: apply, build: build, gen: gen };
+  var api = { lines: lines, text: text, lineOk: lineOk, candidates: candidates, pure: pure, mistakes: mistakes, apply: apply, build: build, gen: gen };
   if (node) module.exports = api;
   else root.RR.Formats = Object.assign(root.RR.Formats || {}, { fehler: api });
 })(typeof window !== 'undefined' ? window : this);
