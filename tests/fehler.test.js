@@ -12,7 +12,7 @@ const T = (v) => ({ t: 'txt', v });
 const N = (v) => ({ t: 'num', v });
 const R = (id) => ({ t: 'ref', id });
 const I = (id, answer) => ({ t: 'in', id, answer, check: (x) => x === answer });
-const row = (tokens) => ({ tokens, label: '', hint: '' });
+const row = (tokens, label = '') => ({ tokens, label, hint: '' });
 
 // 47 + 38 schrittweise
 const schritt = () => ({
@@ -46,6 +46,15 @@ const geteilt = () => ({
     row([N(60), T(':'), N(6), T('='), I('q1', 10)]),
     row([N(27), T(':'), N(6), T('='), I('q2', 4), T('R'), I('r', 3)]),
     row([R('q1'), T('+'), R('q2'), T('='), I('res', 14), T('R'), R('r')])
+  ]
+});
+// 72 : 6 zerlegen, danach die Probe als Malaufgabe
+const mitProbe = () => ({
+  op: ':', strategy: 'zerlegen', a: 72, b: 6, answer: 12, rows: [
+    row([N(60), T(':'), N(6), T('='), I('q1', 10)]),
+    row([N(12), T(':'), N(6), T('='), I('q2', 2)]),
+    row([N(72), T(':'), N(6), T('='), I('res', 12)]),
+    row([R('res'), T('·'), N(6), T('='), I('pD', 72)], 'Probe')
   ]
 });
 const text = (r) => r.tokens.map((x) => x.t === 'in' ? '[' + x.answer + ']' : x.v).join(' ');
@@ -94,6 +103,33 @@ describe('Typische Fehler', () => {
     assert.equal(find(c, 1, 'null').w, 1);
     assert.equal(c.filter((x) => x.line === 2).length, 0);
   });
+});
+
+describe('Die Probe bleibt richtig', () => {
+  test('in der Probe wird kein Fehler eingebaut (bei Geteilt wäre das eine Malaufgabe)', () => {
+    const c = FE.mistakes(mitProbe());
+    assert.ok(c.length > 0);
+    assert.equal(c.filter((x) => x.line === 3).length, 0, JSON.stringify(c));
+  });
+  test('ein Fehler weiter oben wird in der Probe mitgerechnet – die Probe selbst stimmt', () => {
+    const base = mitProbe();
+    const cand = FE.mistakes(base).find((x) => x.line === 2);
+    const t = FE.build(base, cand, { rnd: seeded(5) });
+    assert.ok(FE.lineOk(t.shown[3]), FE.text(t.shown[3]));
+    assert.equal(fields(t.rows[0])[0].answer, 2);
+  });
+  for (const op of [':', '−']) {
+    test(`${op}: bei zufälligen Aufgaben ist nie die Probe falsch`, () => {
+      const rnd = seeded(op.charCodeAt(0) + 7);
+      for (let i = 0; i < 600; i++) {
+        const t = FE.gen({ max: i % 3 ? 100 : 1000, rnd, rest: i % 2 === 0 }, op);
+        const k = fields(t.rows[0])[0].answer, bad = t.shown[k], last = t.shown.length - 1;
+        if (op === ':') assert.ok(!bad.some((x) => x.v === '·'), 'Malaufgabe falsch: ' + FE.text(bad));
+        // Ergänzen mit mehreren Sprüngen endet mit der Probe als Plusaufgabe: 37 + 45 = 82
+        else if (t.base === 'ergaenzen' && t.shown[last].some((x) => x.v === '+')) assert.notEqual(k, last, FE.text(bad));
+      }
+    });
+  }
 });
 
 describe('Aufgabe: Fehler finden und verbessern', () => {
