@@ -88,9 +88,30 @@ describe('Typische Fehler', () => {
     assert.ok([67, 87].includes(find(c, 1, 'verzaehlt').w));
     assert.equal(c.filter((x) => x.line === 0).length, 0, 'Zerlegung hat kein Ergebnis');
   });
-  test('Hilfsaufgabe: falsches Rechenzeichen beim Ausgleichen', () => {
-    const v = find(FE.candidates(FE.lines(hilfs()), 'hilfsaufgabe'), 2, 'vorzeichen');
-    assert.equal(v.w, 88);
+  test('Vereinfachen: in die falsche Richtung verändert', () => {
+    const plus = { op: '+', strategy: 'vereinfachen', a: 169, b: 77, answer: 246, rows: [
+      row([N(169), T('+'), N(77), T('='), N(170), T('+'), I('vy', 76)]),
+      row([N(170), T('+'), N(76), T('='), I('res', 246)])
+    ] };
+    assert.equal(find(FE.mistakes(plus), 0, 'abgeben').w, 78);
+    const minus = { op: '−', strategy: 'vereinfachen', a: 697, b: 669, answer: 28, rows: [
+      row([N(697), T('−'), N(669), T('='), I('vx', 698), T('−'), N(670)]),
+      row([N(698), T('−'), N(670), T('='), I('res', 28)])
+    ] };
+    assert.equal(find(FE.mistakes(minus), 0, 'abgeben').w, 696);
+    const t = FE.build(minus, find(FE.mistakes(minus), 0, 'abgeben'), { rnd: seeded(6) });
+    // die nächste Zeile rechnet mit den falsch veränderten Zahlen weiter
+    assert.deepEqual(fields(t.rows[0])[0].options, ['697 − 669 = 696 − 670', '696 − 670 = 26']);
+    assert.equal(text(t.rows[1]), '697 − 669 = [698] − 670');
+    assert.match(t.rows[1].hint, /beide/);
+    solve(t);
+  });
+  test('verzählt heißt nicht: gar nicht gerechnet (190 + 100 = 190)', () => {
+    const t = { op: '+', strategy: 'schrittweise', a: 190, b: 190, answer: 380, rows: [
+      row([N(190), T('+'), N(100), T('='), I('s1', 290)]),
+      row([R('s1'), T('+'), N(90), T('='), I('res', 380)])
+    ] };
+    assert.deepEqual(FE.candidates(FE.lines(t)).filter((c) => c.line === 0).map((c) => c.w), [390]);
   });
   test('Mal: Null vergessen, Einmaleins-Fehler, Einer vergessen', () => {
     const c = FE.candidates(FE.lines(mal()), 'zerlegen');
@@ -98,35 +119,61 @@ describe('Typische Fehler', () => {
     assert.ok([16, 8, 15, 9].includes(find(c, 2, 'einmaleins').w));
     assert.equal(find(c, 3, 'einer').w, 90);
   });
-  test('Geteilt: Null vergessen; Zeilen mit Rest bleiben richtig', () => {
+  test('Geteilt: Null vergessen; mit Rest: falsch geteilt, der Rest bleibt', () => {
     const c = FE.candidates(FE.lines(geteilt()), 'zerlegen');
     assert.equal(find(c, 1, 'null').w, 1);
-    assert.equal(c.filter((x) => x.line === 2).length, 0);
+    assert.ok([3, 5].includes(find(c, 2, 'einmaleins').w));
   });
 });
 
-describe('Die Probe bleibt richtig', () => {
-  test('in der Probe wird kein Fehler eingebaut (bei Geteilt wäre das eine Malaufgabe)', () => {
-    const c = FE.mistakes(mitProbe());
-    assert.ok(c.length > 0);
-    assert.equal(c.filter((x) => x.line === 3).length, 0, JSON.stringify(c));
+const OPS_SYM = ['+', '−', '·', ':'];
+const opsIn = (items) => items.filter((x) => !x.num && OPS_SYM.includes(x.v)).map((x) => x.v);
+
+describe('Nur Aufgaben der gewählten Rechenart', () => {
+  test('Mal: Zerlegung und Zusammenrechnen fallen weg, unten steht die ganze Aufgabe', () => {
+    const p = FE.pure(mal());
+    assert.deepEqual(FE.lines(p).map(FE.text), ['4 · 20 = 80', '4 · 3 = 12', '4 · 23 = 92']);
+    assert.ok(FE.lines(p).every(FE.lineOk));
   });
-  test('ein Fehler weiter oben wird in der Probe mitgerechnet – die Probe selbst stimmt', () => {
-    const base = mitProbe();
-    const cand = FE.mistakes(base).find((x) => x.line === 2);
-    const t = FE.build(base, cand, { rnd: seeded(5) });
-    assert.ok(FE.lineOk(t.shown[3]), FE.text(t.shown[3]));
-    assert.equal(fields(t.rows[0])[0].answer, 2);
+  test('Geteilt: keine Plus- und keine Malaufgabe, die Ergebniszeile mit Rest bleibt', () => {
+    const p = FE.pure(mitProbe());
+    assert.deepEqual(FE.lines(p).map(FE.text), ['60 : 6 = 10', '12 : 6 = 2', '72 : 6 = 12']);
+    assert.deepEqual(FE.lines(FE.pure(geteilt())).map(FE.text), ['60 : 6 = 10', '27 : 6 = 4 R 3', '87 : 6 = 14 R 3']);
   });
-  for (const op of [':', '−']) {
-    test(`${op}: bei zufälligen Aufgaben ist nie die Probe falsch`, () => {
+  test('Plus mit Hilfsaufgabe braucht Minus – solche Wege kommen nicht dran', () => {
+    // sonst: 23 + 20 = 43, 43 + 2 = 45 „falsches Rechenzeichen“ – ohne die Aufgabe 23 + 18 nicht zu finden
+    assert.equal(FE.pure(hilfs()), null);
+    assert.equal(FE.pure(Object.assign(hilfs(), { rows: hilfs().rows.slice(1) })), null);
+    assert.deepEqual(FE.lines(FE.pure(schritt())).map(FE.text), ['38 = 30 + 8', '47 + 30 = 77', '77 + 8 = 85']);
+  });
+  test('auch Zeilen mit Rest und die Ergebniszeile können falsch sein', () => {
+    const c = FE.mistakes(FE.pure(geteilt()));
+    assert.ok([3, 5].includes(find(c, 1, 'einmaleins').w));
+    assert.ok([13, 15].includes(find(c, 2, 'ergebnis').w));
+    assert.ok([82, 102].includes(find(FE.mistakes(FE.pure(mal())), 2, 'ergebnis').w));
+    // die Einmaleins-Fehler gibt es nur beim kleinen Einmaleins
+    assert.equal(FE.mistakes(FE.pure(mal())).filter((x) => x.line === 2 && x.type === 'einmaleins').length, 0);
+  });
+  for (const op of Tasks.OPS) {
+    test(`${op}: nur ${op}-Aufgaben, die falsche Zeile steht an zufälliger Stelle`, () => {
       const rnd = seeded(op.charCodeAt(0) + 7);
-      for (let i = 0; i < 600; i++) {
-        const t = FE.gen({ max: i % 3 ? 100 : 1000, rnd, rest: i % 2 === 0 }, op);
-        const k = fields(t.rows[0])[0].answer, bad = t.shown[k], last = t.shown.length - 1;
-        if (op === ':') assert.ok(!bad.some((x) => x.v === '·'), 'Malaufgabe falsch: ' + FE.text(bad));
-        // Ergänzen mit mehreren Sprüngen endet mit der Probe als Plusaufgabe: 37 + 45 = 82
-        else if (t.base === 'ergaenzen' && t.shown[last].some((x) => x.v === '+')) assert.notEqual(k, last, FE.text(bad));
+      const pos = {};
+      for (let i = 0; i < 800; i++) {
+        const cfg = (i % 2 ? 100 : 1000) + (i % 4 < 2 ? '' : ' Rest');
+        const t = FE.gen({ max: i % 2 ? 100 : 1000, rnd, rest: i % 4 >= 2 }, op);
+        t.shown.forEach((items) => opsIn(items).forEach((o) => assert.equal(o, op, FE.text(items))));
+        const n = t.shown.length, k = fields(t.rows[0])[0].answer;
+        const key = cfg + ', ' + n + ' Zeilen';
+        pos[key] = pos[key] || { n: 0, at: new Array(n).fill(0) };
+        pos[key].n++; pos[key].at[k]++;
+      }
+      for (const [key, p] of Object.entries(pos)) {
+        if (p.n < 40) continue;
+        // nicht fast immer die letzte Zeile, und die Stelle wechselt
+        assert.ok(p.at[p.at.length - 1] <= p.n * 0.75, key + ': ' + p.at);
+        assert.ok(p.at.filter((c) => c > 0).length >= 2, key + ': ' + p.at);
+        // bei Mal und Geteilt kann jede Zeile die falsche sein, ungefähr gleich oft
+        if (op === '·' || op === ':') p.at.forEach((c, k) => assert.ok(c >= p.n / p.at.length * 0.5, key + ', Zeile ' + (k + 1) + ': ' + p.at));
       }
     });
   }
@@ -164,14 +211,6 @@ describe('Aufgabe: Fehler finden und verbessern', () => {
     assert.equal(Check.isSolved(t, solve(t)), true);
   });
 
-  test('falsches Rechenzeichen: verbessert wird mit dem richtigen Zeichen', () => {
-    const base = hilfs();
-    const t = FE.build(base, find(FE.candidates(FE.lines(base), 'hilfsaufgabe'), 2, 'vorzeichen'), { rnd: seeded(3) });
-    assert.deepEqual(fields(t.rows[0])[0].options, ['39 = 40 − 1', '47 + 40 = 87', '87 + 1 = 88']);
-    assert.equal(text(t.rows[1]), '87 − 1 = [86]');
-    solve(t);
-  });
-
   test('Geteilt mit Rest: auch hier nur die falsche Zeile', () => {
     const base = geteilt();
     const t = FE.build(base, find(FE.candidates(FE.lines(base), 'zerlegen'), 1, 'null'), { rnd: seeded(4) });
@@ -197,8 +236,7 @@ describe('Zufällige Fehler-Aufgaben aus echten Rechenwegen', () => {
         shown.forEach((items) => items.forEach((x) => { if (x.num) assert.ok(x.v >= 0 && x.v <= 100, FE.text(items)); }));
         shown.forEach((items, k) => {
           if (k === c.answer) {
-            if (t.mistake === 'vorzeichen') assert.ok(FE.lineOk(items));
-            else assert.equal(FE.lineOk(items), false, FE.text(items));
+            assert.equal(FE.lineOk(items), false, FE.text(items));
           } else assert.ok(FE.lineOk(items), 'Zeile ' + k + ' sollte stimmen: ' + FE.text(items));
         });
         c.options.forEach((o, k) => { if (k !== c.answer) assert.equal(c.check(k), false); });
@@ -211,7 +249,8 @@ describe('Zufällige Fehler-Aufgaben aus echten Rechenwegen', () => {
         const vals = solve(t);
         assert.equal(Check.isSolved(t, vals), true);
       }
-      const want = { '+': ['uebertrag', 'verzaehlt', 'vorzeichen'], '−': ['uebertrag', 'verzaehlt', 'vorzeichen'], '·': ['null', 'einmaleins', 'einer'], ':': ['null', 'einmaleins'] }[op];
+      const want = { '+': ['uebertrag', 'verzaehlt'], '−': ['uebertrag', 'verzaehlt'], '·': ['null', 'einmaleins', 'ergebnis'], ':': ['null', 'einmaleins', 'ergebnis'] }[op];
+      assert.ok(!types.has('vorzeichen'));
       for (const w of want) assert.ok(types.has(w), op + ': Fehlerart ' + w + ' kommt vor (' + [...types] + ')');
       assert.ok(bases.size >= Math.min(2, Tasks.STRATEGIES[op].filter((s) => s.group === 'weg').length));
     });

@@ -61,7 +61,7 @@ Auf dem Tablet lässt sich die Seite über „Zum Home-Bildschirm“ wie eine Ap
 | Knobelei | Rechenarten | So geht's |
 |---|---|---|
 | **Zahlenmauer** | + − | Jeder Stein ist die Summe der zwei Steine darunter – nach oben rechnen oder fehlende Steine finden. |
-| **Fehler finden** | + − · : | In einer fertigen Rechnung steckt ein typischer Fehler (Zehnerübergang vergessen, verzählt, Null vergessen …). Finden und verbessern. |
+| **Fehler finden** | + − · : | In einer fertigen Rechnung steckt ein typischer Fehler (Zehnerübergang vergessen, verzählt, Null vergessen …) – in einer zufälligen Zeile. Es stehen nur Aufgaben der gewählten Rechenart da (bei Geteilt nur Geteilt-Aufgaben). Finden und verbessern. |
 | **Welcher Weg?** | + − | Welcher Rechenweg ist hier geschickt? (328 + 99 → Hilfsaufgabe, 702 − 698 → Ergänzen) Danach wird mit dem gewählten Weg gerechnet. |
 | **Überschlagen** | + − · | Grob rechnen, genau rechnen, vergleichen: Passt das Ergebnis zum Überschlag? |
 
