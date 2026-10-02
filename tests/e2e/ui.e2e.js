@@ -217,6 +217,21 @@ describe('Zahlenfeld, Dialoge und Speichern', () => {
     assert.match(await page.locator('#strategyBadge').textContent(), /Mit Hilfe/);
     await ctx.close();
   });
+
+  test('zwei Tabs: Sterne aus beiden bleiben erhalten, der andere Tab zeigt sie gleich an', async () => {
+    const { page: a, ctx, errors } = await openPage();
+    const b = await ctx.newPage();
+    b.on('pageerror', (e) => errors.push(e.message));
+    await b.goto(base);
+    await solveTask(a);
+    await b.waitForFunction(() => document.getElementById('starCount').textContent === '1');
+    await solveTask(b);
+    await a.waitForFunction(() => document.getElementById('starCount').textContent === '2');
+    await a.reload();
+    assert.equal(await a.locator('#starCount').textContent(), '2');
+    assert.deepEqual(errors, []);
+    await ctx.close();
+  });
 });
 
 describe('Responsives Layout', () => {

@@ -185,3 +185,116 @@ describe('Stufen', () => {
     assert.equal(Settings.levelInfo('turbo'), undefined);
   });
 });
+
+// Issue #3: Die App ist in zwei Tabs offen. Jeder Tab hat seinen eigenen Stand im Speicher (Arbeitsspeicher)
+// und darf beim Speichern nicht überschreiben, was der andere Tab inzwischen gespeichert hat.
+describe('Mehrere Tabs', () => {
+  const Progress = require('../js/progress.js');
+  const copy = (s) => JSON.parse(JSON.stringify(s));
+  // ein Tab: Stand beim Laden merken (Basis), ändern, mit Settings.sync speichern
+  function tab(storage) {
+    const t = { state: Settings.load(storage) };
+    t.base = copy(t.state);
+    t.save = () => { t.state = Settings.sync(storage, t.base, t.state); t.base = copy(t.state); };
+    t.solve = (mistakes = 0) => { t.state.progress = Progress.applyResult(t.state.progress, { mistakes }).state; t.save(); };
+    return t;
+  }
+  const start = { progress: { stars: 5, streak: 2, bestStreak: 4, solved: 9 } };
+
+  test('Sterne aus beiden Tabs gehen nicht verloren', () => {
+    const store = saved(start);
+    const a = tab(store), b = tab(store);
+    a.solve();
+    b.solve();
+    const s = Settings.load(store);
+    assert.equal(s.progress.stars, 7);
+    assert.equal(s.progress.solved, 11);
+    assert.equal(b.state.progress.stars, 7, 'Tab B kennt danach auch den Stern aus Tab A');
+  });
+
+  test('eine Einstellung im einen Tab löscht keine Sterne aus dem anderen', () => {
+    const store = saved(start);
+    const a = tab(store), b = tab(store);
+    a.solve();
+    b.state.settings.sound = false;
+    b.save();
+    const s = Settings.load(store);
+    assert.equal(s.progress.stars, 6);
+    assert.equal(s.settings.sound, false);
+  });
+
+  test('Sterne im einen Tab löschen keine Einstellung aus dem anderen', () => {
+    const store = saved(start);
+    const a = tab(store), b = tab(store);
+    a.state.settings.op = '·';
+    a.state.settings.level = 'hilfe';
+    a.save();
+    b.solve();
+    const s = Settings.load(store);
+    assert.equal(s.settings.op, '·');
+    assert.equal(s.settings.level, 'hilfe');
+    assert.equal(s.progress.stars, 6);
+  });
+
+  test('ändern beide Tabs dieselbe Einstellung, gilt die zuletzt gespeicherte', () => {
+    const store = saved(start);
+    const a = tab(store), b = tab(store);
+    a.state.settings.op = '·'; a.save();
+    b.state.settings.op = ':'; b.save();
+    assert.equal(Settings.load(store).settings.op, ':');
+  });
+
+  test('Name, Welt und Begleiter aus verschiedenen Tabs bleiben alle erhalten', () => {
+    const store = saved(start);
+    const a = tab(store), b = tab(store);
+    a.state.name = 'Mia'; a.state.welcomed = true; a.save();
+    b.state.companion = 'blitz'; b.state.companions = Object.assign({}, b.state.companions, { ranch: 'blitz' }); b.save();
+    const s = Settings.load(store);
+    assert.equal(s.name, 'Mia');
+    assert.equal(s.welcomed, true);
+    assert.equal(s.companion, 'blitz');
+    assert.equal(s.companions.ranch, 'blitz');
+  });
+
+  test('Serie zählt im eigenen Tab weiter, die beste Serie bleibt die größte', () => {
+    const store = saved(start);
+    const a = tab(store), b = tab(store);
+    a.solve(); a.solve(); a.solve();      // Serie in A: 5, beste 5
+    b.solve(1);                           // Fehler in B: Serie 0
+    const s = Settings.load(store);
+    assert.equal(s.progress.streak, 0);
+    assert.equal(s.progress.bestStreak, 5);
+    assert.equal(s.progress.stars, 9);
+  });
+
+  test('Neu anfangen setzt die Sterne zurück, auch wenn der andere Tab nichts geändert hat', () => {
+    const store = saved(start);
+    const a = tab(store);
+    a.state.progress = Settings.defaults().progress;
+    a.save();
+    assert.deepEqual(Settings.load(store).progress, Settings.defaults().progress);
+  });
+
+  test('ohne Speicher (privater Modus) bleibt der eigene Stand erhalten', () => {
+    const a = tab(brokenStorage);
+    a.solve(); a.solve();
+    assert.equal(a.state.progress.stars, 2);
+  });
+
+  test('beim ersten Speichern (noch nichts gespeichert) wird der eigene Stand geschrieben', () => {
+    const store = memoryStorage();
+    const a = tab(store);
+    a.solve();
+    assert.equal(Settings.load(store).progress.stars, 1);
+  });
+
+  test('merge ohne Änderung im eigenen Tab übernimmt den Stand des anderen Tabs', () => {
+    const base = Settings.fromSaved(start);
+    const theirs = Settings.fromSaved(Object.assign({}, start, { theme: 'werkstatt', settings: { op: ':' } }));
+    theirs.progress.stars = 12;
+    const m = Settings.merge(base, copy(base), theirs);
+    assert.equal(m.theme, 'werkstatt');
+    assert.equal(m.settings.op, ':');
+    assert.equal(m.progress.stars, 12);
+  });
+});

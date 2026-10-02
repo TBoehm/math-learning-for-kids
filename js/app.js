@@ -13,9 +13,12 @@
   // ---------- Speicher ----------
   // schon der Zugriff auf localStorage kann im privaten Modus einen Fehler werfen
   function storage() { try { return window.localStorage; } catch (e) { return null; } }
-  function save() { Settings.save(storage(), state); }
+  function copy(s) { return JSON.parse(JSON.stringify(s)); }
+  // Speichern führt mit dem zusammen, was ein anderer Tab inzwischen gespeichert hat (Basis: saved)
+  function save() { state = Settings.sync(storage(), saved, state); saved = copy(state); }
 
   var state = Settings.load(storage());
+  var saved = copy(state); // zuletzt gelesener/geschriebener Stand
   var cur = null;      // aktuelle Aufgabe
   var lastInput = null;
   var taskSeq = 0;
@@ -722,6 +725,21 @@
       switchWorld(Themes.next(state.theme));
       react('happy', 1000);
       say(theme().welcome);
+    });
+
+    // Ein anderer Tab hat gespeichert: dessen Stand übernehmen und anzeigen
+    window.addEventListener('storage', function (e) {
+      if (e.key !== Settings.STORE) return;
+      var taskKey = function () { return JSON.stringify([state.settings.op, state.settings.strategy, Settings.taskKey(state.settings)]); };
+      var before = { theme: state.theme, task: taskKey() };
+      var theirs = Settings.load(storage());
+      state = Settings.merge(saved, state, theirs);
+      saved = copy(theirs);
+      Sound.setEnabled(state.settings.sound);
+      if (state.theme !== before.theme) applyTheme(); else renderBuddy();
+      updateStats(); renderOps(); applyInputMode();
+      if ($('settingsDlg').open) syncSettingsUI();
+      else if (taskKey() !== before.task) newTask();
     });
 
     newTask();

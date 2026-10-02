@@ -31,7 +31,7 @@ npm run stamp        # nach Änderungen an css/ oder js/: Cache-Sperre (?v=<Hash
 | `js/layouts/wall.js` | Darstellung der Zahlenmauer als Pyramide |
 | `js/check.js` | Prüf-Logik: Eingaben lesen, Zeilen bewerten, Hilfe-Stufen, Lösungstext |
 | `js/progress.js` | Sterne, Serien, Parade, Freischaltungen |
-| `js/settings.js` | Einstellungen: Standardwerte, alte Speicherstände anpassen, Laden/Speichern, Auswahl der Rechenwege |
+| `js/settings.js` | Einstellungen: Standardwerte, alte Speicherstände anpassen, Laden/Speichern (bei mehreren offenen Tabs werden die Stände zusammengeführt, statt sich zu überschreiben), Auswahl der Rechenwege |
 | `js/ui-logic.js` | Logik der Oberfläche ohne DOM: Eingaben, Zahlenfeld, Felder nach dem Prüfen, Texte des Begleiters |
 | `js/viz-logic.js` | Inhalte der Anschauungen ohne DOM: Malkreuz, Zerlegungsbaum, Punktefeld, Lage auf dem Rechenstrich |
 | `js/viz.js` | Rechenstrich, Malkreuz, Punktefeld, Zerlegungsbaum |

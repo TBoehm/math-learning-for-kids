@@ -1,6 +1,6 @@
 /*
  * Einstellungen und Speicherstand: Standardwerte, alte Speicherstände anpassen,
- * Laden/Speichern (mit austauschbarem Speicher), Auswahl der Rechenwege.
+ * Laden/Speichern (mit austauschbarem Speicher, auch bei mehreren Tabs), Auswahl der Rechenwege.
  * Reine Funktionen ohne DOM – getestet in tests/settings.test.js.
  */
 (function (root) {
@@ -64,6 +64,44 @@
     try { storage.setItem(STORE, JSON.stringify(state)); return true; } catch (e) { return false; }
   }
 
+  // ---------- Mehrere Tabs ----------
+  // Jeder Tab hält seinen Stand im Arbeitsspeicher. Beim Speichern werden nur die Änderungen dieses Tabs
+  // (gegenüber dem zuletzt gelesenen/geschriebenen Stand `base`) in den gespeicherten Stand eingearbeitet –
+  // so überschreibt ein Tab nicht, was ein anderer Tab inzwischen gespeichert hat.
+  function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  /** Je Feld: im eigenen Tab geändert -> eigener Wert, sonst der gespeicherte. */
+  function mergeFields(base, mine, theirs) {
+    var out = Object.assign({}, theirs);
+    Object.keys(mine).forEach(function (k) { out[k] = same(mine[k], base[k]) ? theirs[k] : mine[k]; });
+    return out;
+  }
+  /** Sterne und gelöste Aufgaben beider Tabs zählen; die Serie ist die des eigenen Tabs. */
+  function mergeProgress(base, mine, theirs) {
+    if (same(mine, base)) return theirs;
+    if (same(theirs, base)) return mine;
+    var n = function (o, k) { return Number(o[k]) || 0; };
+    var add = function (k) { return Math.max(0, n(theirs, k) + n(mine, k) - n(base, k)); };
+    return { stars: add('stars'), solved: add('solved'), streak: n(mine, 'streak'),
+      bestStreak: Math.max(n(mine, 'bestStreak'), n(theirs, 'bestStreak')) };
+  }
+  /** Drei-Wege-Zusammenführung: base = zuletzt bekannter Stand, mine = eigener Tab, theirs = gespeichert. */
+  function merge(base, mine, theirs) {
+    base = base || {};
+    var m = mergeFields(base, mine, theirs);
+    m.settings = mergeFields(base.settings || {}, mine.settings || {}, theirs.settings || {});
+    m.companions = mergeFields(base.companions || {}, mine.companions || {}, theirs.companions || {});
+    m.progress = mergeProgress(base.progress || {}, mine.progress || {}, theirs.progress || {});
+    return fromSaved(m);
+  }
+  /** Speichern mit Zusammenführen; gibt den neuen Stand zurück (ohne Speicher: den eigenen). */
+  function sync(storage, base, mine) {
+    var theirs = null;
+    try { theirs = JSON.parse(storage.getItem(STORE) || 'null'); } catch (e) { /* privater Modus o. Ä. */ }
+    var next = theirs ? merge(base, mine, fromSaved(theirs)) : mine;
+    save(storage, next);
+    return next;
+  }
+
   /** Rechenwege zum Auswählen, nach Gruppen geordnet; "Alle Wege" nur, wenn es mehrere gibt. */
   function strategyChoices(op) {
     if (op === 'mix') return [];
@@ -105,7 +143,7 @@
   }
 
   var api = {
-    STORE: STORE, defaults: defaults, fromSaved: fromSaved, load: load, save: save, levelInfo: levelInfo,
+    STORE: STORE, defaults: defaults, fromSaved: fromSaved, load: load, save: save, merge: merge, sync: sync, levelInfo: levelInfo,
     strategyChoices: strategyChoices, strategyLabel: strategyLabel, withRange: withRange, validStrategy: validStrategy, taskKey: taskKey, numpadVisible: numpadVisible
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
