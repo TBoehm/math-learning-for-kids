@@ -26,5 +26,7 @@ muss dabei mitgeliefert werden (`fonts/OFL.txt`); die Schrift selbst darf nicht 
   Es werden keine Emoji-Grafiken mitgeliefert.
 - **Playwright** (Apache License 2.0, © Microsoft Corporation) dient nur als Entwicklungs-Abhängigkeit
   (`devDependencies`) für die Browser-Tests und ist nicht Teil der veröffentlichten App.
+- **http-server** (MIT) ist ebenfalls nur Entwicklungs-Abhängigkeit (lokaler Testserver für `npm start`) und
+  nicht Teil der veröffentlichten App.
 - Zur Laufzeit lädt die App **nichts** von fremden Servern: keine CDNs, keine Webfonts von Dritten,
   keine Analyse- oder Werbedienste.

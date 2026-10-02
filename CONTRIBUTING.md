@@ -17,12 +17,18 @@ und KI-Agenten gleichermaßen. Die Kurzfassung:
 Reines HTML/CSS/JavaScript ohne Build-Schritt – `index.html` funktioniert sogar direkt per Doppelklick.
 
 ```bash
+npm ci               # Entwicklungs-Werkzeuge genau nach package-lock.json (Testserver, Playwright)
 npm start            # lokaler Server auf http://localhost:8080
 npm test             # Unit-Tests (Node, ohne Abhängigkeiten)
-npm ci && npx playwright install chromium
+npx playwright install chromium
 npm run test:e2e     # Browser-Tests: Oberfläche auf Handy, Tablet, Desktop
 npm run stamp        # nach Änderungen an css/ oder js/: Cache-Sperre (?v=<Hash>) in index.html setzen
 ```
+
+Werkzeuge werden nie ungeprüft nachgeladen: alle stehen mit fester Version in `package-lock.json`, und die
+GitHub Actions in `.github/workflows/ci.yml` sind per Commit-Hash festgelegt (Versions-Tags lassen sich
+verschieben). Beim Aktualisieren den Hash des neuen Release-Tags eintragen und die Version als Kommentar dahinter
+(`tests/toolchain.test.js` prüft das).
 
 | Datei | Inhalt |
 |---|---|
