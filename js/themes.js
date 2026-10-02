@@ -38,10 +38,10 @@
         solved: ['Geschafft! Fehler machen schlau. 💪', 'Super, du hast nicht aufgegeben! 🌈',
           'Richtig! Übung macht den Meister. ⭐', 'Juhu, gelöst! 🎉'],
         oops: ['Fast! Schau noch mal genau hin. 🔍', "Hoppla! Probier's noch einmal. 🐎",
-          'Nicht ganz – du schaffst das! 💪', 'Hmm, rechne noch mal nach. 🤔'],
+          'Nicht ganz. Du schaffst das! 💪', 'Hmm, rechne noch mal nach. 🤔'],
         poke: ['Hihi, das kitzelt! 🦄', 'Ich mag Zahlen fast so gern wie Möhren! 🥕',
           'Zusammen rechnen macht Spaß! 💖', 'Wiehern ist meine Lieblingssprache! 🐴',
-          'Ich glaub an dich! ⭐', 'Jede Aufgabe macht dich stärker! 💪']
+          'Ich glaub an dich! ⭐', 'Mit jeder Aufgabe wirst du besser! 💪']
       }
     },
     {
@@ -61,19 +61,19 @@
       confetti: ['⭐', '🏁', '🔧', '⚡', '🏆', '🔩', '💥', '🚧'],
       colors: ['#ff8a1f', '#ffd23f', '#2f80ed', '#e63946', '#3d4451', '#2ec4b6'],
       decor: ['🚧', '🌳', '🚧', '🌲', '🚧', '🌳'],
-      paradeBanner: function (n) { return n + ' richtig in Folge – Turbo! 🏁'; },
+      paradeBanner: function (n) { return n + ' richtig hintereinander. Turbo! 🏁'; },
       texts: {
         rowOk: ['Richtig!', 'Zack!', 'Stimmt!', 'Sauber!', 'Passt!', 'Genau!', 'Läuft!'],
-        perfect: ['Volltreffer! 🎯', 'Hammer! 🔨', 'Zack – gelöst! ⚡', 'Vollgas – richtig! 🏎️',
+        perfect: ['Volltreffer! 🎯', 'Hammer! 🔨', 'Zack, gelöst! ⚡', 'Mit Vollgas richtig! 🏎️',
           'Boxenstopp? Brauchst du nicht! 🏁', 'Turbo-Rechner! 🚀', 'Läuft wie geschmiert! 🔧',
           'Saubere Arbeit, Chef! 👷', 'Bärenstark! 💪', 'Ziel erreicht! 🏆'],
-        solved: ['Ziel erreicht! Weiter geht die Fahrt. 🏁', 'Geschafft – jetzt weißt du mehr! 💪',
-          'Baustelle erledigt! 🚧', 'Richtig! Auch Profis justieren mal nach. 🔧'],
-        oops: ['Fast! Nimm nochmal Anlauf. 🏎️', 'Kurzer Boxenstopp – du schaffst das. 🔧',
-          "Kleiner Umweg – probier's nochmal! 🚧", 'Schraub nochmal kurz dran. 🔩',
-          'Motor läuft noch – neuer Versuch! 💪'],
-        poke: ['Wrrrumm! 🏎️', 'Brumm brumm – los geht\'s! 🚜', 'Mit Vollgas zum Ergebnis! ⚡',
-          'Ich mag Zahlen fast so gern wie Matsch! 💦', 'Tank ist voll – ich bin bereit! ⛽',
+        solved: ['Ziel erreicht! Weiter geht die Fahrt. 🏁', 'Geschafft! Jetzt weißt du mehr. 💪',
+          'Baustelle erledigt! 🚧', 'Richtig! Auch Profis müssen mal nachjustieren. 🔧'],
+        oops: ['Fast! Nimm noch mal Anlauf. 🏎️', "Kurzer Boxenstopp, dann klappt's! 🔧",
+          "Kleiner Umweg. Probier's noch mal! 🚧", 'Schraub noch mal kurz dran. 🔩',
+          'Der Motor läuft noch. Neuer Versuch! 💪'],
+        poke: ['Wrrrumm! 🏎️', 'Brumm brumm, los geht\'s! 🚜', 'Mit Vollgas zum Ergebnis! ⚡',
+          'Ich mag Zahlen fast so gern wie Matsch! 💦', 'Der Tank ist voll. Ich bin startklar! ⛽',
           'Zusammen sind wir ein Super-Team! 🏆']
       }
     }

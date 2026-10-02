@@ -268,8 +268,8 @@
       label: 'Vergleich',
       tokens: [T('Überschlag'), R('gs'), T('Ergebnis'), R('res'), choice],
       hint: gs !== null
-        ? 'Überschlag ' + gs + ' und Ergebnis ' + answer + ' liegen nah beieinander – das passt.'
-        : 'Vergleiche dein Ergebnis ' + answer + ' mit deinem Überschlag: Sie sind ungefähr gleich groß – das passt.'
+        ? 'Überschlag ' + gs + ' und Ergebnis ' + answer + ' liegen nah beieinander. Das passt.'
+        : 'Vergleiche dein Ergebnis ' + answer + ' mit deinem Überschlag. Sind beide ungefähr gleich groß, dann passt es.'
     };
   }
 
@@ -403,7 +403,7 @@
       : ['head'].concat(termLines, lineUsed.carry ? ['carry'] : [], ['res']);
 
     var intro = {
-      add: 'rechne schriftlich: erst der Überschlag, dann von rechts nach links – ' + PLACE.slice(0, n).join(', ') + '.',
+      add: 'rechne schriftlich: erst der Überschlag, dann von rechts nach links, also ' + PLACE.slice(0, n).join(', ') + '.',
       sub: 'rechne schriftlich mit Abziehen: erst der Überschlag, dann von rechts nach links. Geht es nicht, wechsle um!',
       erg: 'rechne schriftlich mit Ergänzen: erst der Überschlag, dann von rechts nach links. Ergänze von unten bis oben!'
     }[kind];
@@ -474,7 +474,7 @@
   });
   register('−', {
     key: 'schriftlich', name: 'Schriftlich subtrahieren', group: 'schriftlich',
-    desc: 'Abziehen – geht es nicht, wird umgewechselt (entbündelt)',
+    desc: 'Abziehen, und wenn es nicht geht, umwechseln (entbündeln)',
     gen: function (opt) { return build('sub', genSub(opt), opt); }
   });
   register('−', {

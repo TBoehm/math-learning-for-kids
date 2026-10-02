@@ -28,7 +28,7 @@
     kiraDiv: { title: 'KIRA (DZLM): Halbschriftliche Division', url: KIRA + 'arithmetik/halbschriftliches-rechnen/halbschriftliche-division' },
     pikas: { title: 'PIKAS (DZLM): Halbschriftliche Strategien bei Addition und Subtraktion', url: PIKAS + 'schumas/arithmetik-12/modul-4/mini-module/42-halbschriftliche-strategien' },
     pikasSub: { title: 'PIKAS (DZLM): Halbschriftliche Subtraktion im Tausenderraum', url: PIKAS + 'schumas/arithmetik-34/modul-3/mini-module/41-halbschriftliche-subtraktion' },
-    mahiko: { title: 'Mahiko (DZLM): Sicher im Einmaleins – Grundlagen', url: 'https://mahiko.dzlm.de/node/73' },
+    mahiko: { title: 'Mahiko (DZLM): Grundlagen zu „Sicher im Einmaleins“', url: 'https://mahiko.dzlm.de/node/73' },
     kiraSchriftAdd: { title: 'KIRA (DZLM): Der schriftliche Additionsalgorithmus', url: KIRA + 'der-schriftliche-additionsalgorithmus' },
     kiraSchriftSub: { title: 'KIRA (DZLM): Zu den Verfahren der schriftlichen Subtraktion', url: KIRA + 'zu-den-verfahren-der-schriftlichen-subtraktion' }
   };
@@ -39,7 +39,7 @@
 
   // ---------- Erklärungen ----------
   // ex: Beispiel je Zahlenraum [a, b, round]; idea(big, task): was der Begleiter zuerst sagt; tips: zum Schluss;
-  // note: für Erwachsene – Name in der Fachliteratur, Herkunft des Beispiels, was die App zusätzlich annimmt.
+  // note: für Erwachsene: Name in der Fachliteratur, Herkunft des Beispiels, was die App zusätzlich annimmt.
   // kind: schriftliches Verfahren (Schriftlich.build), sonst Tasks.build.
   var LESSONS = {
     '+': {
@@ -51,7 +51,7 @@
         },
         tips: ['Schreib immer die ganze Zahl hin: 90 + 70 = 160, nicht 16.',
           'Bei „Alles selbst“ darfst du selbst wählen, mit welcher Stelle du anfängst.'],
-        note: 'In der Fachdidaktik „Stellenweise“ (auch „Stellen extra“): Beide Summanden werden in Stellenwerte zerlegt, ' +
+        note: 'In der Fachdidaktik heißt dieser Weg „Stellenweise“ oder „Stellen extra“. Beide Summanden werden in Stellenwerte zerlegt, ' +
           'die Stellen einzeln addiert und die Teilergebnisse zusammengefasst. 399 + 473 und 19 + 39 sind Kinderlösungen aus KIRA. ' +
           'Bei „Alles selbst“ nimmt die App die Stellen in jeder Reihenfolge an.',
         sources: [SRC.kiraAdd, SRC.pikas]
@@ -62,9 +62,9 @@
           return 'Bei „Schrittweise“ bleibt die erste Zahl ganz. Die zweite Zahl zerlegst du und rechnest sie Stück für Stück dazu: ' +
             order(big, 'dazu') + ' Jedes Ergebnis ist der Start für den nächsten Schritt.';
         },
-        tips: ['Bei „Alles selbst“ darfst du deine Schritte selbst wählen – zum Beispiel erst bis zum nächsten Zehner.',
+        tips: ['Bei „Alles selbst“ darfst du deine Schritte selbst wählen, zum Beispiel erst bis zum nächsten Zehner.',
           'Auf dem Rechenstrich siehst du jeden Sprung.'],
-        note: 'In der Fachdidaktik „Schrittweise“: Der erste Summand bleibt erhalten, der zweite wird (meist nach Stellenwerten) ' +
+        note: 'In der Fachdidaktik heißt dieser Weg „Schrittweise“. Der erste Summand bleibt erhalten, der zweite wird (meist nach Stellenwerten) ' +
           'zerlegt und nacheinander addiert; das letzte Zwischenergebnis ist das Ergebnis. 399 + 473 ist eine Kinderlösung aus KIRA. ' +
           'Bei „Alles selbst“ nimmt die App auch andere Schritte an, etwa erst bis zum nächsten Zehner.',
         sources: [SRC.kiraAdd, SRC.pikas]
@@ -72,13 +72,13 @@
       hilfsaufgabe: {
         ex: { 100: [19, 39], 1000: [399, 473, 'a'] },
         idea: function () {
-          return 'Bei der „Hilfsaufgabe“ suchst du dir eine leichtere Aufgabe: Eine Zahl, die fast glatt ist, machst du glatt – ' +
-            'zum Beispiel wird 99 zu 100. Dann rechnest du die leichte Aufgabe. Zum Schluss gleichst du aus: ' +
+          return 'Bei der „Hilfsaufgabe“ suchst du dir eine leichtere Aufgabe. Eine Zahl, die fast glatt ist, machst du glatt: ' +
+            'Aus 99 wird zum Beispiel 100. Dann rechnest du die leichte Aufgabe. Zum Schluss gleichst du aus: ' +
             'Was du zu viel dazugerechnet hast, nimmst du wieder weg.';
         },
-        tips: ['Gut, wenn eine Zahl fast glatt ist – wie 99, 198 oder 39.',
+        tips: ['Das klappt gut bei Zahlen, die fast glatt sind, wie 99, 198 oder 39.',
           'Pass beim Ausgleichen auf: Zu viel dazugerechnet? Dann nimmst du es wieder weg.'],
-        note: 'In der Fachdidaktik „Hilfsaufgabe“: Eine Zahl wird zum vollen Zehner oder Hunderter verändert, die leichtere Aufgabe ' +
+        note: 'In der Fachdidaktik heißt dieser Weg „Hilfsaufgabe“. Eine Zahl wird zum vollen Zehner oder Hunderter verändert, die leichtere Aufgabe ' +
           'gerechnet und das Ergebnis nachträglich korrigiert (KIRA: 399 + 473 = 400 + 473 − 1). Typischer Fehler: Korrektur in die ' +
           'falsche Richtung. Bei „Alles selbst“ nimmt die App jede der beiden Zahlen als Hilfszahl an.',
         sources: [SRC.kiraAdd, SRC.pikas]
@@ -87,11 +87,11 @@
         ex: { 100: [19, 39], 1000: [399, 473, 'a'] },
         idea: function () {
           return 'Beim „Vereinfachen“ gibt eine Zahl der anderen etwas ab, bis eine Zahl glatt ist. Was die eine bekommt, gibt die ' +
-            'andere ab – so bleibt das Ergebnis gleich. Danach ist die Aufgabe leicht, und du musst nichts mehr ausgleichen.';
+            'andere ab. So bleibt das Ergebnis gleich. Danach ist die Aufgabe leicht, und du musst nichts mehr ausgleichen.';
         },
-        tips: ['Gut, wenn eine Zahl fast glatt ist.', 'Wichtig: Die eine Zahl bekommt genau so viel, wie die andere abgibt.'],
-        note: 'In der Fachdidaktik „Vereinfachen“: Beide Summanden werden gegensinnig verändert (Konstanz der Summe), sodass eine ' +
-          'leichtere Aufgabe mit demselben Ergebnis entsteht; ein Korrekturschritt entfällt. 399 + 473 = 400 + 472 ist eine ' +
+        tips: ['Das klappt gut, wenn eine Zahl fast glatt ist.', 'Wichtig: Die eine Zahl bekommt genau so viel, wie die andere abgibt.'],
+        note: 'In der Fachdidaktik heißt dieser Weg „Vereinfachen“. Beide Summanden werden gegensinnig verändert (Konstanz der Summe). ' +
+          'So entsteht eine leichtere Aufgabe mit demselben Ergebnis, und ein Korrekturschritt entfällt. 399 + 473 = 400 + 472 ist eine ' +
           'Kinderlösung aus KIRA.',
         sources: [SRC.kiraAdd, SRC.pikas]
       }
@@ -103,9 +103,9 @@
           return 'Bei „Schrittweise“ bleibt die erste Zahl ganz. Die zweite Zahl zerlegst du und nimmst sie Stück für Stück weg: ' +
             order(big, 'weg') + ' Jedes Ergebnis ist der Start für den nächsten Schritt.';
         },
-        tips: ['Schreib jedes Zwischenergebnis genau ab – damit geht es weiter.',
-          'Bei „Alles selbst“ darfst du deine Schritte selbst wählen – zum Beispiel erst bis zum nächsten Zehner.'],
-        note: 'In der Fachdidaktik „Schrittweise“: Der Minuend bleibt erhalten, der Subtrahend wird zerlegt und nacheinander ' +
+        tips: ['Schreib jedes Zwischenergebnis genau ab. Damit rechnest du weiter.',
+          'Bei „Alles selbst“ darfst du deine Schritte selbst wählen, zum Beispiel erst bis zum nächsten Zehner.'],
+        note: 'In der Fachdidaktik heißt dieser Weg „Schrittweise“. Der Minuend bleibt erhalten, der Subtrahend wird zerlegt und nacheinander ' +
           'abgezogen. 526 − 283 ist ein Beispiel aus PIKAS. Häufiger Merkfehler laut KIRA: ein Zwischenergebnis falsch abschreiben. ' +
           'Bei „Alles selbst“ nimmt die App auch andere Schritte an.',
         sources: [SRC.pikas, SRC.kiraSub]
@@ -114,24 +114,24 @@
         ex: { 100: [62, 58], 1000: [702, 698] },
         idea: function () {
           return 'Beim „Ergänzen“ fragst du: Wie weit ist es von der kleinen Zahl bis zur großen? Du springst von der kleinen Zahl ' +
-            'nach oben – am besten zu glatten Zahlen. Alle Sprünge zusammen sind das Ergebnis.';
+            'nach oben, am besten zu glatten Zahlen. Alle Sprünge zusammen sind das Ergebnis.';
         },
-        tips: ['Gut, wenn die beiden Zahlen nah beieinander liegen – wie bei 702 − 698.',
+        tips: ['Das klappt gut, wenn die beiden Zahlen nah beieinander liegen, wie bei 702 − 698.',
           'Bei „Alles selbst“ darfst du deine Sprünge selbst wählen.', 'Die Probe zeigt dir, ob alles stimmt.'],
-        note: 'In der Fachdidaktik „Ergänzen“ (Sonderfall der Subtraktion): Vom Subtrahenden wird schrittweise bis zum Minuenden ' +
-          'ergänzt, die Teilschritte ergeben zusammen die Differenz (PIKAS). Besonders geschickt, wenn die Zahlen nah beieinander ' +
+        note: 'In der Fachdidaktik heißt dieser Weg „Ergänzen“, ein Sonderfall der Subtraktion. Vom Subtrahenden wird schrittweise ' +
+          'bis zum Minuenden ergänzt; die Teilschritte ergeben zusammen die Differenz (PIKAS). Besonders geschickt, wenn die Zahlen nah beieinander ' +
           'liegen (KIRA: 701 − 698). Bei „Alles selbst“ nimmt die App beliebige Sprünge an.',
         sources: [SRC.pikas, SRC.pikasSub]
       },
       hilfsaufgabe: {
         ex: { 100: [82, 39], 1000: [845, 399] },
         idea: function () {
-          return 'Bei der „Hilfsaufgabe“ machst du die Zahl, die du wegnimmst, glatt – zum Beispiel wird 399 zu 400. ' +
+          return 'Bei der „Hilfsaufgabe“ machst du die Zahl, die du wegnimmst, glatt: Aus 399 wird zum Beispiel 400. ' +
             'Dann rechnest du die leichte Aufgabe. Weil du so zu viel weggenommen hast, gibst du es am Ende wieder dazu.';
         },
-        tips: ['Gut, wenn die Zahl, die du wegnimmst, fast glatt ist – wie 99, 199 oder 39.',
-          'Zu viel weggenommen? Dann gibst du es wieder dazu – nicht noch mal wegnehmen!'],
-        note: 'In der Fachdidaktik „Hilfsaufgabe“: Der Subtrahend (oder der Minuend) wird zur glatten Zahl verändert, die leichtere ' +
+        tips: ['Das klappt gut, wenn die Zahl, die du wegnimmst, fast glatt ist, wie 99, 199 oder 39.',
+          'Zu viel weggenommen? Dann gibst du es wieder dazu und nimmst nicht noch mal etwas weg!'],
+        note: 'In der Fachdidaktik heißt dieser Weg „Hilfsaufgabe“. Der Subtrahend (oder der Minuend) wird zur glatten Zahl verändert, die leichtere ' +
           'Aufgabe gerechnet und das Ergebnis korrigiert. Fehler beim Ausgleichen sind typisch (KIRA). Bei „Alles selbst“ nimmt die ' +
           'App beide Varianten mit dem passenden Ausgleich an.',
         sources: [SRC.kiraSub, SRC.pikas]
@@ -140,11 +140,11 @@
         ex: { 100: [73, 29], 1000: [773, 299] },
         idea: function () {
           return 'Beim „Vereinfachen“ veränderst du beide Zahlen um gleich viel, bis die Zahl, die du wegnimmst, glatt ist. ' +
-            'Der Abstand zwischen den Zahlen bleibt dabei gleich – also auch das Ergebnis.';
+            'Der Abstand zwischen den Zahlen bleibt dabei gleich, also auch das Ergebnis.';
         },
         tips: ['Bei Minus bekommen beide Zahlen gleich viel dazu.',
           'Achtung, anders als bei Plus: Dort gibt eine Zahl der anderen etwas ab.'],
-        note: 'In der Fachdidaktik „Vereinfachen“: Minuend und Subtrahend werden gleichsinnig verändert (Konstanz der Differenz). ' +
+        note: 'In der Fachdidaktik heißt dieser Weg „Vereinfachen“. Minuend und Subtrahend werden gleichsinnig verändert (Konstanz der Differenz). ' +
           'Typischer Fehler laut KIRA: gegensinnig verändern wie bei der Addition (773 − 299 wird fälschlich zu 772 − 300).',
         sources: [SRC.kiraSub, SRC.pikas]
       }
@@ -157,10 +157,10 @@
           return 'Beim „Zerlegen“ teilst du die große Zahl in ihre Stellen: ' + n + ' = ' + parts.join(' + ') + '. Jeden Teil ' +
             'nimmst du einzeln mal. Dann rechnest du die Teilergebnisse zusammen.';
         },
-        tips: ['Zerlege in Zehner und Einer: 29 = 20 + 9 – nicht 2 und 9.',
+        tips: ['Zerlege in Zehner und Einer: 29 = 20 + 9, nicht 2 und 9.',
           'Vergiss keinen Teil: Jeder Teil wird mit derselben Zahl malgenommen.'],
         note: 'In der Fachliteratur heißt dieser Weg bei der Multiplikation meist „Schrittweise“: Ein Faktor wird in seine ' +
-          'Stellenwerte zerlegt, die Teilprodukte werden addiert. 9 · 29 = 9 · 20 + 9 · 9 ist eine Kinderlösung aus KIRA. ' +
+          'Stellenwerte zerlegt, und die Teilprodukte werden addiert. 9 · 29 = 9 · 20 + 9 · 9 ist eine Kinderlösung aus KIRA. ' +
           'Typischer Fehler: ziffernweise statt stellengerecht zerlegen. Bei „Alles selbst“ nimmt die App auch andere Zerlegungen an.',
         sources: [SRC.kiraMul]
       },
@@ -168,7 +168,7 @@
         ex: { 100: [6, 8], 1000: [9, 6] },
         idea: function () {
           return 'Kernaufgaben sind die leichten Malaufgaben mit 1, 2, 5 und 10. Eine schwere Aufgabe baust du daraus: Du rechnest ' +
-            'eine Kernaufgabe und nimmst noch etwas dazu – oder wieder weg.';
+            'eine Kernaufgabe und nimmst noch etwas dazu oder wieder weg.';
         },
         tips: ['5 mal ist die Hälfte von 10 mal. 2 mal ist das Doppelte.',
           'Bei 9 mal und 8 mal ist es oft leichter, von 10 mal etwas wegzunehmen.'],
@@ -180,12 +180,12 @@
       hilfsaufgabe: {
         ex: { 100: [3, 29], 1000: [5, 49] },
         idea: function () {
-          return 'Bei der „Hilfsaufgabe“ machst du eine Zahl glatt, die fast glatt ist – zum Beispiel wird 49 zu 50. ' +
+          return 'Bei der „Hilfsaufgabe“ machst du eine Zahl glatt, die fast glatt ist: Aus 49 wird zum Beispiel 50. ' +
             'Die leichte Malaufgabe rechnest du zuerst. Dann nimmst du weg, was zu viel war.';
         },
-        tips: ['Wie viel ist zu viel? Bei 5 · 50 statt 5 · 49 sind es 5 · 1 = 5.', 'Gut bei Zahlen kurz vor einem Zehner: 9, 19, 49, 98.'],
-        note: 'In der Fachdidaktik „Hilfsaufgabe“: Ein Faktor wird zur glatten Zahl verändert, das Ergebnis der leichteren Aufgabe ' +
-          'anschließend korrigiert. 5 · 49 = 5 · 50 − 5 · 1 ist eine Kinderlösung aus KIRA.',
+        tips: ['Wie viel ist zu viel? Bei 5 · 50 statt 5 · 49 sind es 5 · 1 = 5.', 'Das klappt gut bei Zahlen kurz vor einem Zehner: 9, 19, 49, 98.'],
+        note: 'In der Fachdidaktik heißt dieser Weg „Hilfsaufgabe“. Ein Faktor wird zur glatten Zahl verändert, und das Ergebnis ' +
+          'der leichteren Aufgabe wird anschließend korrigiert. 5 · 49 = 5 · 50 − 5 · 1 ist eine Kinderlösung aus KIRA.',
         sources: [SRC.kiraMul]
       }
     },
@@ -193,13 +193,13 @@
       zerlegen: {
         ex: { 100: [96, 8], 1000: [852, 4] },
         idea: function () {
-          return 'Beim Geteilt-Rechnen zerlegst du die große Zahl in leichte Teile. Leicht sind Teile, die du sofort teilen ' +
-            'kannst – aus dem Einmaleins, auch mal 10 oder mal 100. Jeden Teil teilst du einzeln. Die Ergebnisse zusammen sind das Ergebnis.';
+          return 'Beim Geteilt-Rechnen zerlegst du die große Zahl in leichte Teile. Leicht sind Teile, bei denen du das Ergebnis ' +
+            'sofort weißt, wie 80 : 8 oder 400 : 4. Jeden Teil teilst du einzeln, dann rechnest du die Ergebnisse zusammen.';
         },
         tips: ['Mit der Probe prüfst du: Ergebnis mal Teiler gibt wieder die große Zahl.',
           'Bleibt am Ende etwas übrig, das nicht mehr passt, ist das der Rest (R).'],
-        note: 'In der Fachdidaktik „Schrittweise“ (Zerlegen des Dividenden): Die Zahl wird in leicht teilbare Teile zerlegt, ' +
-          'z. B. 482 : 2 = 400 : 2 + 80 : 2 + 2 : 2 (KIRA); die Teilergebnisse werden addiert, die Probe nutzt die Umkehraufgabe. ' +
+        note: 'In der Fachdidaktik heißt dieser Weg „Schrittweise“. Der Dividend wird in leicht teilbare Teile zerlegt, ' +
+          'z. B. 482 : 2 = 400 : 2 + 80 : 2 + 2 : 2 (KIRA), und die Teilergebnisse werden addiert. Zur Probe dient die Umkehraufgabe. ' +
           'Bei „Zerlegung selbst“ und „Alles selbst“ nimmt die App jede passende Zerlegung an.',
         sources: [SRC.kiraDiv]
       }
@@ -214,8 +214,8 @@
         'Übertrag zur nächsten Stelle.';
     },
     tips: ['Den Übertrag rechnest du in der nächsten Stelle mit.', 'Erst der Überschlag, am Ende der Vergleich: Passt dein Ergebnis?'],
-    note: 'Schriftliche Addition: Die Zahlen stehen stellengerecht untereinander, gerechnet wird von rechts nach links, der Übertrag ' +
-      'steht am unteren Rand der nächsten Spalte (KIRA, Beispiel 596 + 247). In der App kommen Überschlag und Vergleich dazu.',
+    note: 'Schriftliche Addition: Die Zahlen stehen stellengerecht untereinander. Gerechnet wird von rechts nach links, und der ' +
+      'Übertrag steht am unteren Rand der nächsten Spalte (KIRA, Beispiel 596 + 247). In der App kommen Überschlag und Vergleich dazu.',
     sources: [SRC.kiraSchriftAdd]
   };
   LESSONS['−'].schriftlich = {
@@ -225,7 +225,7 @@
         'von rechts nach links: oben minus unten. Ist oben zu wenig, wechselst du um: Ein Zehner wird zu 10 Einern. Die alte ' +
         'Ziffer streichst du durch und schreibst die neue darüber.';
     },
-    tips: ['Beim Umwechseln wird links eins weniger – und die Stelle rechts daneben bekommt 10 dazu.',
+    tips: ['Beim Umwechseln wird links eins weniger, und die Stelle rechts daneben bekommt 10 dazu.',
       'Mit der Probe prüfst du: Ergebnis plus untere Zahl gibt wieder die obere Zahl.'],
     note: 'Verfahren „Abziehen mit Entbündeln“: Nur der Minuend wird umgeformt; reicht eine Stelle nicht, wird ein Bündel der ' +
       'nächsthöheren Stelle entbündelt („3 − 8 geht nicht …“, KIRA). Mit Überschlag, Vergleich und Probe.',
@@ -235,13 +235,13 @@
     kind: 'erg', ex: { 100: [73, 28], 1000: [736, 328] },
     idea: function () {
       return 'Beim schriftlichen Subtrahieren mit Ergänzen fragst du in jeder Stelle: Wie viel fehlt von unten bis oben? ' +
-        'Geht das nicht, ergänzt du bis zur Zahl mit einer 1 davor – zum Beispiel von 8 bis 13. Dann schreibst du eine 1 als ' +
+        'Geht das nicht, ergänzt du bis zur Zahl mit einer 1 davor, zum Beispiel von 8 bis 13. Dann schreibst du eine 1 als ' +
         'Übertrag zur nächsten Stelle der unteren Zahl.';
     },
     tips: ['Den Übertrag zählst du in der nächsten Stelle zur unteren Ziffer dazu.',
       'Mit der Probe prüfst du: Ergebnis plus untere Zahl gibt wieder die obere Zahl.'],
     note: 'Verfahren „Ergänzen mit Erweitern“: Reicht eine Stelle nicht, werden Minuend (10 Einer) und Subtrahend (1 Zehner) ' +
-      'gleich erweitert, die Differenz bleibt gleich („8 + ? = 3 geht nicht …“, KIRA). Mit Überschlag, Vergleich und Probe.',
+      'gleich erweitert; die Differenz bleibt dabei gleich („8 + ? = 3 geht nicht …“, KIRA). Mit Überschlag, Vergleich und Probe.',
     sources: [SRC.kiraSchriftSub]
   };
 

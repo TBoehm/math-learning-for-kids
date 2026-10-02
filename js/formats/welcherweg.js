@@ -77,12 +77,12 @@
     if (c === 'hilfsaufgabe') return 'Schau dir ' + roundPick(a, b, max, op)[0] + ' genau an. Ist das fast eine glatte Zahl?';
     if (c === 'vereinfachen') return 'Schau dir die Einer an: ' + a % 10 + ' und ' + b % 10 + ' ergeben zusammen 10!';
     if (c === 'ergaenzen') return 'Die Zahlen liegen ganz nah beieinander. Wie weit ist es von ' + b + ' bis ' + a + '?';
-    return 'Keine Zahl ist fast eine glatte Zahl. Dann rechne Schritt für Schritt' + (op === '+' ? ' oder Stelle für Stelle.' : '.');
+    return 'Keine Zahl ist fast glatt. Dann rechnest du am besten Schritt für Schritt' + (op === '+' ? ' oder Stelle für Stelle.' : '.');
   }
   function advice(key, a, op, b, max) {
     if (key === 'ergaenzen') return 'Genau! Spring einfach von ' + b + ' bis ' + a + '. Das ist nicht weit!';
-    if (key === 'stellenweise') return 'Genau! Keine Zahl ist fast glatt – rechne Stelle für Stelle.';
-    if (key === 'schrittweise') return 'Genau! Keine Zahl ist fast glatt – rechne Schritt für Schritt.';
+    if (key === 'stellenweise') return 'Genau! Keine Zahl ist fast glatt. Also rechnest du Stelle für Stelle.';
+    if (key === 'schrittweise') return 'Genau! Keine Zahl ist fast glatt. Also rechnest du Schritt für Schritt.';
     // Hilfsaufgabe und Vereinfachen gibt es nur, wenn eine Zahl fast glatt ist
     var r = roundPick(a, b, max, op);
     return key === 'hilfsaufgabe'

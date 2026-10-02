@@ -18,8 +18,8 @@
     solved: ['Geschafft! Fehler machen schlau. 💪', 'Super, du hast nicht aufgegeben! ⭐',
       'Richtig! Übung macht den Meister. ⭐', 'Juhu, gelöst! 🎉'],
     oops: ['Fast! Schau noch mal genau hin. 🔍', "Hoppla! Probier's noch einmal. 🙂",
-      'Nicht ganz – du schaffst das! 💪', 'Hmm, rechne noch mal nach. 🤔'],
-    poke: ['Zusammen rechnen macht Spaß! 🎉', 'Ich glaub an dich! ⭐', 'Jede Aufgabe macht dich stärker! 💪']
+      'Nicht ganz. Du schaffst das! 💪', 'Hmm, rechne noch mal nach. 🤔'],
+    poke: ['Zusammen rechnen macht Spaß! 🎉', 'Ich glaub an dich! ⭐', 'Mit jeder Aufgabe wirst du besser! 💪']
   };
 
   /** Zufälliges Element; rnd ist austauschbar (Standard: Math.random). */
@@ -149,7 +149,7 @@
       vereinfachen: task.op === '+' ? 'vereinfache: Eine Zahl gibt der anderen etwas ab, bis eine glatt ist.'
         : 'vereinfache: Verändere beide Zahlen um gleich viel, bis eine glatt ist.',
       ergaenzen: 'ergänze von ' + task.b + ' bis ' + task.a + '. Wie weit musst du springen?',
-      zerlegen: task.op === ':' ? 'zerlege ' + task.a + ' in leichte Teile.' : 'zerlege die Malaufgabe in zwei leichte.',
+      zerlegen: task.op === ':' ? 'zerlege ' + task.a + ' in leichte Teile.' : 'zerlege die Aufgabe in zwei leichte Malaufgaben.',
       kernaufgaben: 'nutze eine leichte Kernaufgabe.'
     }[task.strategy] || '';
     if (task.level === 'selbst' && !task.intro) intro += ' Schreib jeden Schritt selbst auf. ✏️';

@@ -119,7 +119,7 @@
     var exactRow = {
       label: 'Genau',
       tokens: [N(a), T(op), N(b), T('='), IC('res', exact, function (v) { return v === exact; })],
-      hint: 'Jetzt rechne genau – mit deinem Lieblings-Rechenweg. Das Ergebnis liegt nah bei ' + estimate(a, op, b, 10) + '.'
+      hint: 'Rechne jetzt genau. Nimm deinen Lieblings-Rechenweg. Das Ergebnis liegt nah bei ' + estimate(a, op, b, 10) + '.'
     };
 
     var variant = opt.variant || (rnd() < 0.5 ? 'selbst' : 'fremd');
@@ -130,10 +130,10 @@
       rows = [ueRow, ask(exactRow, 'Passt dein Ergebnis zum Überschlag?'), {
         label: 'Passt dein Ergebnis zum Überschlag?',
         tokens: [R('res'), T('und Ü'), R('rs'), choice('passt', 0, OPTIONS, function (v, vals) {
-          return 'dein Ergebnis ' + vals.res + ' liegt nah bei deinem Überschlag ' + vals.rs + ' – dann passt es.';
+          return 'dein Ergebnis ' + vals.res + ' liegt nah bei deinem Überschlag ' + vals.rs + '. Dann passt es.';
         })],
         hint: 'Liegt dein Ergebnis nah bei deinem Überschlag? Dann passt es.',
-        advice: function () { return 'Super! Es passt – so kannst du dich immer selbst prüfen. 🔍'; }
+        advice: function () { return 'Super, es passt! So kannst du dich immer selbst prüfen. 🔍'; }
       }];
     } else {
       other = opt.other !== undefined ? opt.other : pickOther(a, op, b, max, rnd);
@@ -143,13 +143,13 @@
         // klar sagen, wer gerechnet hat; in der Zeile steht nur der Vergleich (wie bei "Passt dein Ergebnis …")
         label: name + ' hat ' + a + ' ' + op + ' ' + b + ' = ' + other + ' gerechnet. Passt das zum Überschlag?',
         tokens: [N(other), T('und Ü'), R('rs'), choice('passt', ok ? 0 : 1, OPTIONS, function (v, vals) {
-          return ok ? other + ' liegt nah bei deinem Überschlag ' + vals.rs + ' – das kann passen.'
-            : other + ' ist weit weg von deinem Überschlag ' + vals.rs + ' – das kann nicht stimmen.';
+          return ok ? other + ' liegt nah bei deinem Überschlag ' + vals.rs + '. Das kann passen.'
+            : other + ' ist weit weg von deinem Überschlag ' + vals.rs + '. Das kann nicht stimmen.';
         })],
         hint: 'Vergleiche ' + other + ' mit deinem Überschlag. Liegt es nah dran oder weit weg?',
         advice: function () {
           return ok ? 'Genau! ' + other + ' liegt nah beim Überschlag. Rechne nach, ob es auch genau stimmt.'
-            : 'Genau! ' + other + ' ist viel zu weit weg vom Überschlag – da stimmt was nicht. Rechne du genau!';
+            : 'Genau! ' + other + ' ist viel zu weit weg vom Überschlag. Da stimmt etwas nicht. Rechne du genau!';
         }
       }, exactRow];
     }
