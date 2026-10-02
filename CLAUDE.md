@@ -1,7 +1,8 @@
 # Einhorn-Rechenranch – Hinweise für die Entwicklung
 
 Statische Lern-App (HTML/CSS/JS ohne Build) für halbschriftliches (und schriftliches) Rechnen, Klasse 3, Zahlenraum bis 1000 (bis 100 zur Wiederholung).
-Veröffentlicht über GitHub Pages ("Deploy from a branch: main"): jeder Push auf `main` geht live.
+Veröffentlicht über GitHub Pages (erforderliche Source: „GitHub Actions“): Nach einem Push auf `main` geht die App erst live,
+wenn Unit- und Browser-Tests erfolgreich waren (`deploy` benötigt beide Test-Jobs).
 
 ## Tests – verbindliche Regeln
 

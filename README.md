@@ -100,7 +100,8 @@ und Tests. Seitdem ist die App Wunsch für Wunsch gewachsen.
 Damit dabei verlässliche Software herauskommt, gelten feste Leitplanken (nachzulesen in [`CLAUDE.md`](CLAUDE.md)):
 testgetriebene Entwicklung, jede richtige Alternative muss angenommen werden, und alles Prüfbare wird als schneller
 Unit-Test geprüft. Die Tests erzeugen zehntausende Zufallsaufgaben und kontrollieren jede Zeile; Browser-Tests prüfen
-die Oberfläche auf Handy, Tablet und Desktop. Jeder Push läuft durch die CI, bevor er live geht.
+die Oberfläche auf Handy, Tablet und Desktop. Pull Requests werden vollständig geprüft; nach einem Push auf `main`
+veröffentlicht derselbe Workflow die App erst, wenn Unit- und Browser-Tests erfolgreich waren.
 
 Wie man so etwas im eigenen Team aufsetzt, zeige ich im Workshop
 **[Agentic Engineering for Teams](https://toboehm.de/agentic-engineering)**.
